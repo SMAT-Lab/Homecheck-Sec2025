@@ -1,0 +1,65 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+const b = 900719.9254740994
+const n = -900719.9254740994
+const t = 900_719.92_54740_994
+const l = 900_719.92_54740_994
+const y = 5123000000000000000000000000001
+const u = -5123000000000000000000000000001
+const i = 1230000000000000000000000.0
+const o = 1.0000000000000000000000123
+const az = 2e999
+const aa = .1230000000000000000000000
+const zv = 5123_00000000000000000000000000_1
+const ab= -5_12300000000000000000000_0000001
+const  zn= 123_00000000000000000000_00.0_0
+const amx = 1.0_00000000000000000_0000123
+const cz = .1_23000000000000_00000_0000_0
+const z = 9007199254740993
+const x = 9007199254740.993e3
+const c = 9.007199254740993e15
+const v = -9007199254740993
+const q = 900719925474099_3
+const w = 90_0719925_4740.9_93e3
+const e = 9.0_0719925_474099_3e15
+const r = 9.0_0719925_474099_3e15
+const as = 17498005798264095394980017816940970922825355447145699491406164851279623993595007385788105416184430592
+const ad = 0b100000000000000000000000000000000000000000000000000001
+const af = 0B100000000000000000000000000000000000000000000000000001
+const ag = 0o400000000000000001
+const ae = 0O400000000000000001
+const ah = 0400000000000000001
+const zx = 0x20000000000001
+const zc = 0X20000000000001
+const mk= 174_980057982_640953949800178169_409709228253554471456994_914061648512796239935950073857881054_1618443059_2
+const cc = 2e9_99
+const zb= 0b1_0000000000000000000000000000000000000000000000000000_1
+const vb = 0B10000000000_0000000000000000000000000000_000000000000001
+const gh = 0o4_00000000000000_001
+const jk = 0O4_0000000000000000_1
+const hj = 0x2_0000000000001
+const fu = 0X200000_0000000_1
+@Entry
+@Component
+struct NoLossOfPrecisionNoReport {
+  build() {
+    Column() {
+      Row() {
+        Button().onClick(()=>{
+        })
+      }
+    }
+  }
+}

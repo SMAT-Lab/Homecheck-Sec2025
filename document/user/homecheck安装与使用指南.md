@@ -1,0 +1,84 @@
+# homecheck安装与使用指南
+
+## 安装
+
+工程根目录下执行命令：
+
+```
+npm install homecheck
+```
+
+安装成功示例：
+
+```
+$ npm install homecheck
+
+added 3 packages in 9s
+
+39 packages are looking for funding
+  run `npm fund` for details
+```
+node_modules目录下新增文件夹homecheck
+
+## 配置文件
+
+config目录下新建**projectConfig.json**和**ruleConfig.json**，内容参考：[homecheck配置文件使用指南](homecheck配置文件使用指南.md)
+
+projectConfig.json示例：
+
+```
+{
+  "projectName": "TestProject",
+  "projectPath": "/path/to/project",
+  "logPath": "./HomeCheck.log",
+  "ohosSdkPath": "/path/to/ohosSdk",
+  "hmsSdkPath": "/path/to/hmsSdk",
+  "arkCheckPath": "./node_modules/homecheck"
+}
+```
+
+ruleConfig.json示例：
+```
+{
+  "files": [
+    "**/*.ets",
+    "**/*.ts"
+  ],
+  "ignore": [
+    "**/ohosTest/**/*",
+    "**/node_modules/**/*",
+    "**/build/**/*",
+    "**/hvigorfile/**/*",
+    "**/oh_modules/**/*",
+    "**/.preview/**/*"
+  ],
+  "rules": {
+  },
+  "ruleSet": [
+    "plugin:@ArkTS-eslint/all",
+    "plugin:@performance/all",
+    "plugin:@correctness/all"
+  ],
+  "overrides": [],
+  "extRuleSet": []
+}
+```
+
+## run文件
+
+在src目录下新建run.js文件，内容示例：
+
+```
+import { run } from 'homecheck';
+
+run();
+```
+
+## 运行
+
+1. 命令行启动，示例：
+
+根目录下执行
+```
+node ./src/run.js --projectConfigPath=./config/projectConfig.json --configPath=./config/ruleConfig.json
+```

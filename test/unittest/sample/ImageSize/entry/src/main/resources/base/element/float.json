@@ -1,0 +1,12 @@
+{
+  "float": [
+    {
+      "name": "icon_width",
+      "value": "20vp"
+    },
+    {
+      "name": "signal_component_icon_long_width",
+      "value": "24.5vp"
+    }
+  ]
+}

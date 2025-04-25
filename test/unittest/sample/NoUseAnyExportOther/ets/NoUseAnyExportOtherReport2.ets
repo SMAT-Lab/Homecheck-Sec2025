@@ -1,0 +1,1 @@
+export * as pro from './pojo/Product';

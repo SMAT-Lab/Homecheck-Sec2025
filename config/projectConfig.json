@@ -1,0 +1,22 @@
+{
+  "projectName": "TestProject",
+  "projectPath": "D:\\arkProject",
+  "logPath": "./HomeCheck.log",
+  "ohosSdkPath": "D:\\DevEco Studio\\sdk\\default\\openharmony\\ets",
+  "hmsSdkPath": "D:\\DevEco Studio\\sdk\\default\\hms\\ets",
+  "checkPath": "",
+  "sdkVersion": 14,
+  "fix": "false",
+  "npmPath": "",
+  "npmInstallDir": "./",
+  "reportDir": "./report",
+  "arkCheckPath": "./",
+  "product": "default",
+  "sdksThirdParty": [
+    {
+      "name": "thirdParty",
+      "path": "./resources/thirdPartyModules",
+      "moduleName": ""
+    }
+  ]
+}

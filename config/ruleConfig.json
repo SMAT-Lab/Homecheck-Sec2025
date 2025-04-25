@@ -1,0 +1,24 @@
+{
+  "files": [
+    "**/*.ets",
+    "**/*.ts"
+  ],
+  "ignore": [
+    "**/ohosTest/**/*",
+    "**/node_modules/**/*",
+    "**/build/**/*",
+    "**/hvigorfile/**/*",
+    "**/oh_modules/**/*",
+    "**/.preview/**/*"
+  ],
+  "rules": {
+    "@performance/foreach-args-check": 3
+  },
+  "ruleSet": [
+    "plugin:@ArkTS-eslint/all",
+    "plugin:@performance/all",
+    "plugin:@correctness/all"
+  ],
+  "overrides": [],
+  "extRuleSet": []
+}
