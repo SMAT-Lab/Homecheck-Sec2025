@@ -1,9 +1,9 @@
 {
-  "projectName": "KikaInput",
-  "projectPath": "D:/File/Research/Abc2ArkIR/applications_app_samples/code/Solutions/InputMethod/KikaInput",
+  "projectName": "TestProject",
+  "projectPath": "D:\\arkProject",
   "logPath": "./HomeCheck.log",
-  "ohosSdkPath": "D:/Resource/SDKs/DecEcoSDK/OpenHarmonySDK/13/ets",
-  "hmsSdkPath": "",
+  "ohosSdkPath": "D:\\DevEco Studio\\sdk\\default\\openharmony\\ets",
+  "hmsSdkPath": "D:\\DevEco Studio\\sdk\\default\\hms\\ets",
   "checkPath": "",
   "sdkVersion": 14,
   "fix": "false",
