@@ -23,7 +23,7 @@ import { AstTreeUtils } from "arkanalyzer";
 
 const gmetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/require-await-check.md",
+    ruleDocPath: "docs/require-await.md",
     description: "Disallow async functions which have no `await` expression."
 };
 

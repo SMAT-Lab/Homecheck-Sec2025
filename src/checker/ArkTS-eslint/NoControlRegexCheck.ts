@@ -31,7 +31,7 @@ export class NoControlRegexCheck implements BaseChecker {
     public issues: IssueReport[] = [];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: "docs/no-control-regex-check.md",
+        ruleDocPath: "docs/no-control-regex.md",
         description: "Suggestion: Disallow control characters in regular expressions."
     };
 

@@ -28,7 +28,7 @@ type Options = {
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'DefaultCaseCheck');
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: 'docs/default-case-check.md',
+  ruleDocPath: 'docs/default-case.md',
   description: 'Expected a default case',
 };
 

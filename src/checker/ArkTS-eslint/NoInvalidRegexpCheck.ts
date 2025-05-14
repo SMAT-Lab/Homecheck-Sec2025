@@ -35,7 +35,7 @@ export class NoInvalidRegexpCheck implements BaseChecker {
     public issues: IssueReport[] = [];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: "docs/no-invalid-regexp-check.md",
+        ruleDocPath: "docs/no-invalid-regexp.md",
         description: "Suggestion: Disallow empty character classes in regular expressions."
     };
 

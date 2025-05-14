@@ -55,7 +55,7 @@ type InferredType =
 export class EqeqeqCheck implements BaseChecker {
     metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/eqeqeq-check.md',
+        ruleDocPath: 'docs/eqeqeq.md',
         description: 'Require the use of === and !==.'
     };
     //默认

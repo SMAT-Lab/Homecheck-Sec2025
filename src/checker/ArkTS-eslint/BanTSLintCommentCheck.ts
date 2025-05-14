@@ -50,7 +50,7 @@ export class BanTSLintCommentCheck implements BaseChecker {
     private filePath: string = '';
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/ban-tslint-comment-check.md',
+        ruleDocPath: 'docs/ban-tslint-comment.md',
         description: 'tslint comment detected: ',
     };
 

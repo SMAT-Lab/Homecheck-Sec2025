@@ -24,7 +24,7 @@ import { RuleListUtil } from "../../utils/common/DefectsList";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'DefaultParamLastCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/default-param-last-check.md",
+    ruleDocPath: "docs/default-param-last.md",
     description: "Default parameters should be last.",
 };
 

@@ -41,7 +41,7 @@ const logger = Logger.getLogger(
 );
 const gMetaData: BaseMetaData = {
   severity: 1,
-  ruleDocPath: 'docs/func-call-spacing-check.md',
+  ruleDocPath: 'docs/func-call-spacing.md',
   description: ' Unexpected whitespace between function name and paren.',
 };
 //要求或不允许函数标识符和它们的调用之间有空格

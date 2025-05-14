@@ -128,7 +128,7 @@ export class BanTypesCheck implements BaseChecker {
 
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/ban-types-check.md',
+        ruleDocPath: 'docs/ban-types.md',
         description: 'Disallow certain types.',
     };
 

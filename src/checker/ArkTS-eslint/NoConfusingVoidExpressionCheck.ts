@@ -68,7 +68,7 @@ const messages: { [key in MessageId]: string } = {
 export class NoConfusingVoidExpressionCheck implements BaseChecker {
     metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-confusing-void-expression-check.md',
+        ruleDocPath: 'docs/no-confusing-void-expression.md',
         description: 'Require expressions of type void to appear in statement position'
     };
     public rule: Rule;

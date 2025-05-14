@@ -25,7 +25,7 @@ import { IssueReport } from '../../model/Defects';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'SparseArrayCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/sparse-array-check.md",
+    ruleDocPath: 'docs/sparse-array-check.md',
     description: 'Sparse array detected. Avoid using sparse arrays.'
 };
 
@@ -43,11 +43,11 @@ export class SparseArrayCheck implements BaseChecker {
         const matchFileCb: MatcherCallback = {
             matcher: this.fileMatcher,
             callback: this.check
-        }
+        };
         return [matchFileCb];
     }
 
-    public check = (arkFile: ArkFile) => {
+    public check = (arkFile: ArkFile): void => {
         let arkFilePath = arkFile.getFilePath();
         this.issueColumnInTs.set(arkFilePath, new Array<string>());
         let parentScope = CheckerStorage.getInstance().getScope(arkFilePath);
@@ -61,18 +61,18 @@ export class SparseArrayCheck implements BaseChecker {
             this.findSparseArrayInScope(arkFile, scope);
         }
         this.issueColumnInTs.clear();
-    }
+    };
 
-    private findSparseArrayInScope(arkFile: ArkFile, scope: Scope) {
+    private findSparseArrayInScope(arkFile: ArkFile, scope: Scope): void {
         for (let varDef of scope.defList) {
             for (let leftUsedVarInfo of varDef.leftUsedInfo) {
                 let useStmt = leftUsedVarInfo.stmt;
                 let def = useStmt.getDef();
                 if (!def || !(def instanceof ArkArrayRef)) {
-                    continue
+                    continue;
                 }
                 let pIndex = def.getIndex();
-                this.valueCalculate(arkFile, useStmt, leftUsedVarInfo, pIndex)
+                this.valueCalculate(arkFile, useStmt, leftUsedVarInfo, pIndex);
             }
             let defStmt = varDef.defStmt;
             if (!(defStmt instanceof ArkAssignStmt)) {
@@ -95,7 +95,7 @@ export class SparseArrayCheck implements BaseChecker {
         }
     }
 
-    private valueCalculate(arkFile: ArkFile, stmt: Stmt, varInfo: VarInfo, value: Value) {
+    private valueCalculate(arkFile: ArkFile, stmt: Stmt, varInfo: VarInfo, value: Value): void {
         if (NumberUtils.isValueSupportCalculation(arkFile, varInfo, value)) {
             let index = NumberUtils.getNumberByScope(arkFile, varInfo, value);
             if ((value instanceof Local) && (index.value > 1024)) {
@@ -106,7 +106,7 @@ export class SparseArrayCheck implements BaseChecker {
         }
     }
 
-    private traverseScope(parentScope: Scope, scopes: Scope[]) {
+    private traverseScope(parentScope: Scope, scopes: Scope[]): void {
         scopes.push(parentScope);
         if (parentScope.childScopeList.length !== 0) {
             for (let child of parentScope.childScopeList) {
@@ -115,7 +115,7 @@ export class SparseArrayCheck implements BaseChecker {
         }
     }
 
-    private reportIssue(arkFile: ArkFile, stmt: Stmt, value: Value) {
+    private reportIssue(arkFile: ArkFile, stmt: Stmt, value: Value): void {
         let filePath = arkFile.getFilePath();
         let originalPosition = stmt.getOriginPositionInfo();
         let lineNum = originalPosition.getLineNo();
@@ -137,11 +137,12 @@ export class SparseArrayCheck implements BaseChecker {
             this.issueColumnInTs.get(filePath)?.push(lineNum + '%' + startColum);
         }
         filePath = arkFile.getFilePath();
-        let defects = new Defects(lineNum, startColum, endColum, this.metaData.description, severity, this.rule.ruleId, filePath, this.metaData.ruleDocPath, true, false, false);
+        let defects = new Defects(lineNum, startColum, endColum, this.metaData.description, severity,
+            this.rule.ruleId, filePath, this.metaData.ruleDocPath, true, false, false);
         this.issues.push(new IssueReport(defects, undefined));
     }
 
-    private getRealStartColum(filePath: string, lineNum: number, orgStmtColumn: number, orgStmtStr: string, valStr: string, stmt: Stmt) {
+    private getRealStartColum(filePath: string, lineNum: number, orgStmtColumn: number, orgStmtStr: string, valStr: string, stmt: Stmt): number {
         let startColumn = -1;
         if (!(stmt instanceof ArkAssignStmt)) {
             return -1;
@@ -155,7 +156,7 @@ export class SparseArrayCheck implements BaseChecker {
             if (!this.hasReported(filePath, lineNum, startColumn)) {
                 break;
             }
-            tmpOrgStmtStr = tmpOrgStmtStr.replace(realStmtStr, '-'.repeat(realStmtStr.length))
+            tmpOrgStmtStr = tmpOrgStmtStr.replace(realStmtStr, '-'.repeat(realStmtStr.length));
         }
         return startColumn;
     }

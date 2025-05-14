@@ -25,7 +25,7 @@ export interface Message {
     progressNotify(progress: number, msg: string): void;
 }
 
-export class defaultMessage implements Message {
+export class DefaultMessage implements Message {
     /**
      * 发送消息
      *
@@ -39,7 +39,6 @@ export class defaultMessage implements Message {
         }
     }
 
-    
     /**
      * 消息通知函数
      *
@@ -50,7 +49,6 @@ export class defaultMessage implements Message {
         logger.error(JSON.stringify(msg));
         return;
     }
-
 
     /**
      * 通知进度更新

@@ -26,7 +26,7 @@ export class PreferAsConstCheck implements BaseChecker {
     public issues: IssueReport[] = [];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/prefer-as-const-check.md',
+        ruleDocPath: 'docs/prefer-as-const.md',
         description: 'Enforce the use of `as const` over literal type assertions.'
     };
 

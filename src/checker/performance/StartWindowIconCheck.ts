@@ -170,7 +170,7 @@ export class StartWindowIconCheck implements BaseChecker {
                 }
             }
         } catch (err) {
-            logger.warn(`Error for check icon: ${err}`)
+            logger.warn(`Error for check icon: ${err}`);
         }
         return false;
     }

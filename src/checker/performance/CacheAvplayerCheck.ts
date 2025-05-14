@@ -98,7 +98,7 @@ export class CacheAvplayerCheck implements BaseChecker {
                 continue;
             }
             let busyMethods = new Set<MethodSignature>();
-            this.findSymbolInMethod(arkMethod, arkMethod.getDeclaringArkFile().getScene(), busyMethods)
+            this.findSymbolInMethod(arkMethod, arkMethod.getDeclaringArkFile().getScene(), busyMethods);
         }
     }
 

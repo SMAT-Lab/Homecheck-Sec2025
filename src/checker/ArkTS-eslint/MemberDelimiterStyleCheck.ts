@@ -25,7 +25,7 @@ import {RuleFix} from "../../model/Fix";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'AwaitThenableCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/member-delimiter-style-check.md",
+    ruleDocPath: "docs/member-delimiter-style.md",
     description: "Require a specific member delimiter style for interfaces and type literals",
 };
 type MultiLineOption = 'comma' | 'none' | 'semi';

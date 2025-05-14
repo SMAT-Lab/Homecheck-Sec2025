@@ -32,7 +32,7 @@ export class NoTrailingSpacesCheck implements BaseChecker {
     public issues: IssueReport[] = [];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-trailing-spaces-check.md',
+        ruleDocPath: 'docs/no-trailing-spaces.md',
         description: 'Disallow trailing spaces at the end of lines.'
     };
 

@@ -23,7 +23,7 @@ import Logger, { LOG_MODULE_TYPE } from "arkanalyzer/lib/utils/logger";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, "PreferFunctionTypeCheck");
 const gMetaData: BaseMetaData = {
   severity: 3,
-  ruleDocPath: 'docs/prefer-function-type-check.md',
+  ruleDocPath: 'docs/prefer-function-type.md',
   description: 'Type literal only has a call signature, you should use a function type instead.',
 };
 export class PreferFunctionTypeCheck implements BaseChecker {

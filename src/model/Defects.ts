@@ -12,24 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AIFix, FunctionFix, RuleFix } from "./Fix";
+import { AIFix, FunctionFix, RuleFix } from './Fix';
 
 export const engine = {
     engineName: ''
-}
+};
 
 export class Defects {
     reportLine: number;
     reportColumn: number;
     description: string = '';
-    severity: number = -1;  // 0:info, 1:warning, 2:error
+    severity: number = -1; // 0:info, 1:warning, 2:error
     ruleId: string = '@perforce/<checker-name>';
-    mergeKey: string = '';  // 文件路径%行号%开始列号%结束列号%规则%规则描述
+    mergeKey: string = ''; // 文件路径%行号%开始列号%结束列号%规则%规则描述
     ruleDocPath: string = 'doc/<checker-name>.md';
     disabled: boolean = true;
     checked: boolean = false;
-    fixable: boolean = false;  // 是否可以修复
-    fixKey: string = '';  // 行号%开始列号%结束列号%规则id
+    fixable: boolean = false; // 是否可以修复
+    fixKey: string = ''; // 行号%开始列号%结束列号%规则id
     showIgnoreIcon: boolean = true;
     engineName: string = engine.engineName;
 

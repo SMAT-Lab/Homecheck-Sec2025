@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { ts } from "arkanalyzer";
+import { ts } from 'arkanalyzer';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'Json5parser');
@@ -106,7 +106,7 @@ export class Json5parser {
      * @param file - 所属的 JSON 源文件
      * @returns 解析后的数组
      */
-    private static parseArrayLiteral(node: ts.Expression, file: ts.JsonSourceFile) {
+    private static parseArrayLiteral(node: ts.Expression, file: ts.JsonSourceFile): unknown[] {
         const res: unknown[] = [];
         (node as ts.ArrayLiteralExpression).elements.forEach(n => {
             res.push(this.parsePropertyInitializer(n, file));

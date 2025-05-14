@@ -102,7 +102,7 @@ export class NoTypeAliasCheck implements BaseChecker {
 
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-type-alias-check.md',
+        ruleDocPath: 'docs/no-type-alias.md',
         description: '',
     };
 

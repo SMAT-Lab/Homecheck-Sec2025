@@ -13,20 +13,20 @@
  * limitations under the License.
  */
 
-import { ArkField } from "arkanalyzer/lib";
-import { ArkClass } from "arkanalyzer/lib/core/model/ArkClass";
+import { ArkField } from 'arkanalyzer/lib';
+import { ArkClass } from 'arkanalyzer/lib/core/model/ArkClass';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
-import { Rule, Defects, ClassMatcher, MatcherTypes, MatcherCallback } from "../../Index";
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
+import { Rule, Defects, ClassMatcher, MatcherTypes, MatcherCallback } from '../../Index';
 import { ViewTreeTool } from '../../utils/checker/ViewTreeTool';
-import { IssueReport } from "../../model/Defects";
+import { IssueReport } from '../../model/Defects';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'RemoveRedundantStateVarCheck');
 let viewTreeTool: ViewTreeTool = new ViewTreeTool();
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/remove-redundant-state-var-check.md",
-    description: "You are advised to remove the status variable settings that are not associated with UI components."
+    ruleDocPath: 'docs/remove-redundant-state-var-check.md',
+    description: 'You are advised to remove the status variable settings that are not associated with UI components.'
 };
 
 export class RemoveRedundantStateVarCheck implements BaseChecker {
@@ -44,11 +44,11 @@ export class RemoveRedundantStateVarCheck implements BaseChecker {
         const matchClazzCb: MatcherCallback = {
             matcher: this.clsMatcher,
             callback: this.check
-        }
+        };
         return [matchClazzCb];
     }
 
-    public check = (target: ArkClass) => {
+    public check = (target: ArkClass): void => {
         if (viewTreeTool.hasTraverse(target)) {
             return;
         }
@@ -61,7 +61,7 @@ export class RemoveRedundantStateVarCheck implements BaseChecker {
                 this.addIssueReport(target, arkField);
             }
         }
-    }
+    };
 
     private isStateAssociated(clazz: ArkClass, arkField: ArkField): boolean {
         let viewTree = clazz.getViewTree();
@@ -77,7 +77,7 @@ export class RemoveRedundantStateVarCheck implements BaseChecker {
         return false;
     }
 
-    private addIssueReport(target: ArkClass, arkField: ArkField) {
+    private addIssueReport(target: ArkClass, arkField: ArkField): void {
         const severity = this.rule.alert ?? this.metaData.severity;
         const warnInfo = this.getLineAndColumn(target, arkField);
         if (warnInfo) {
@@ -87,7 +87,12 @@ export class RemoveRedundantStateVarCheck implements BaseChecker {
         }
     }
 
-    private getLineAndColumn(target: ArkClass, arkField: ArkField) {
+    private getLineAndColumn(target: ArkClass, arkField: ArkField): {
+        lineNum: number;
+        startCol: number;
+        endCol: number;
+        filePath: string;
+    } {
         const originPosition = arkField.getOriginPosition();
         const lineNum = originPosition.getLineNo();
         const arkFile = target.getDeclaringArkFile();

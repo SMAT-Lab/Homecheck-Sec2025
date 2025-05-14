@@ -25,7 +25,7 @@ import { RuleFix } from '../../model/Fix';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoUnnecessaryQualifierCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/no-unnecessary-qualifier-check.md",
+    ruleDocPath: "docs/no-unnecessary-qualifier.md",
     description: "Disallow unnecessary namespace qualifiers.",
 };
 

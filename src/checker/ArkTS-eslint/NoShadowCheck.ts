@@ -25,7 +25,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoShadowCheck');
 
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-shadow-check.md',
+    ruleDocPath: 'docs/no-shadow.md',
     description: 'Disallow variable declarations from shadowing variables declared in the outer scope.'
 };
 
@@ -212,11 +212,16 @@ export class NoShadowCheck implements BaseChecker {
 
     private handleTypeNode(aNode: ts.TypeAliasDeclaration | ts.InterfaceDeclaration): CheckMember[] {
         let members: CheckMember[] = [];
-        if (!this.ruleOptions.ignoreTypeValueShadow) {
-            const member = this.getBindingNameNode(aNode.name, ts.isInterfaceDeclaration(aNode) ? CheckType.interface : CheckType.typeAlias);
-            if (member) {
-                members.push(member);
+        let member: CheckMember | undefined = undefined;
+        if (this.ruleOptions.ignoreTypeValueShadow) {
+            if (ts.isTypeAliasDeclaration(aNode) && ts.isTypeQueryNode(aNode.type)) {
+                member = this.getBindingNameNode(aNode.name, CheckType.typeAlias);
             }
+        } else {
+            member = this.getBindingNameNode(aNode.name, ts.isInterfaceDeclaration(aNode) ? CheckType.interface : CheckType.typeAlias);
+        }
+        if (member) {
+            members.push(member);
         }
         return members;
     }

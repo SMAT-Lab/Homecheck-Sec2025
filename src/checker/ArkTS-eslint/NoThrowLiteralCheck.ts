@@ -24,7 +24,7 @@ import {IssueReport} from '../../model/Defects';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoThrowLiteralCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/no-throw-literal-check.md",
+    ruleDocPath: "docs/no-throw-literal.md",
     description: "Expected an error object to be thrown.",
 };
 

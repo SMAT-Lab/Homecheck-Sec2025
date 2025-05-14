@@ -88,7 +88,7 @@ const messagePromiseArrayVoid =
 const gMetaData: BaseMetaData = {
     name: 'no-floating-promises',
     severity: 2,
-    ruleDocPath: 'docs/no-floating-promises-check.md',
+    ruleDocPath: 'docs/no-floating-promises.md',
     description: 'Require Promise-like statements to be handled appropriately',
     messages: {
         floating: messageBase,

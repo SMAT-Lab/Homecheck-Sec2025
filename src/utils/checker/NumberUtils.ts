@@ -121,7 +121,7 @@ export class NumberUtils {
     private static getValueImportInfo(arkFile: ArkFile, value: Local): ImportInfo | undefined {
         let importInfos = arkFile.getImportInfos();
         for (let importInfo of importInfos) {
-            if (importInfo.getImportClauseName() == value.getName()) {
+            if (importInfo.getImportClauseName() === value.getName()) {
                 return importInfo;
             }
         }
@@ -305,7 +305,7 @@ export class NumberUtils {
             }
 
             let stmt = stmts[0];
-            new VarInfo(stmt, (stmt as StmtExt).scope)
+            new VarInfo(stmt, (stmt as StmtExt).scope);
             if (!(stmt instanceof ArkAssignStmt)) {
                 return new NumberValue(0, ValueType.UNKNOWN);
             }
@@ -319,7 +319,7 @@ export class NumberUtils {
     public static getOriginalValueText(stmt: Stmt, value: Value): string {
         let valStr = '';
         if (value instanceof Constant) {
-            valStr = value.toString()
+            valStr = value.toString();
         } else if (value instanceof Local) {
             if (!value.toString().includes('%')) {
                 valStr = value.toString();
@@ -335,13 +335,13 @@ export class NumberUtils {
             } else {
                 let originalPosition = stmt.getOperandOriginalPosition(value);
                 if (!originalPosition) {
-                    return this.getOriginalValueText(stmt, value.getOp1()) + ' ' + value.getOperator() + ' '
-                        + this.getOriginalValueText(stmt, value.getOp2());
+                    return this.getOriginalValueText(stmt, value.getOp1()) + ' ' + value.getOperator() + ' ' +
+                        this.getOriginalValueText(stmt, value.getOp2());
                 }
                 const text = stmt.getOriginalText();
                 if (!text || text.length === 0) {
-                    return this.getOriginalValueText(stmt, value.getOp1()) + ' ' + value.getOperator() + ' '
-                        + this.getOriginalValueText(stmt, value.getOp2());
+                    return this.getOriginalValueText(stmt, value.getOp1()) + ' ' + value.getOperator() + ' ' +
+                        this.getOriginalValueText(stmt, value.getOp2());
                 }
                 let startColum = stmt.getOriginPositionInfo().getColNo();
                 return text.substring(originalPosition.getFirstCol() - startColum, originalPosition.getLastCol() - startColum);

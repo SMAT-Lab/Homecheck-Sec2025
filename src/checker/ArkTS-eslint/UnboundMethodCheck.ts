@@ -55,7 +55,7 @@ export class UnboundMethodCheck implements BaseChecker {
     private shortMessageStr = 'Avoid referencing unbound methods which may cause unintentional scoping of `this`.';
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/unbound-method-check.md',
+        ruleDocPath: 'docs/unbound-method.md',
         description:
             'Avoid referencing unbound methods which may cause unintentional scoping of `this`.\nIf your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.',
     };

@@ -48,11 +48,11 @@ export class WebOnActiveCheck implements BaseChecker {
         const matchBuildCb: MatcherCallback = {
             matcher: this.buildMatcher,
             callback: this.check
-        }
+        };
         return [matchBuildCb];
     }
 
-    public check = (arkClass: ArkClass) => {
+    public check = (arkClass: ArkClass): void => {
         if (viewTreeTool.hasTraverse(arkClass)) {
             return;
         }
@@ -61,7 +61,7 @@ export class WebOnActiveCheck implements BaseChecker {
             return;
         }
         this.traverseViewTree(viewtreeRoot, arkClass);
-    }
+    };
 
     private traverseViewTree(viewtreeRoot: ViewTreeNode, arkClass: ArkClass): void {
         if (viewtreeRoot === undefined || viewTreeTool.hasTraverse(viewtreeRoot)) {
@@ -159,7 +159,7 @@ export class WebOnActiveCheck implements BaseChecker {
         }
     }
 
-    private reportIssue(arkFile: ArkFile, stmt: Stmt | undefined) {
+    private reportIssue(arkFile: ArkFile, stmt: Stmt | undefined): void {
         if (!stmt) {
             return;
         }

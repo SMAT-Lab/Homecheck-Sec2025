@@ -68,7 +68,7 @@ export class ConstantPropertyReferencingInLoopsCheck implements BaseChecker {
 
     public check = (arkFile: ArkFile): void => {
         for (let clazz of arkFile.getClasses()) {
-            this.constantCheckByArkMethods(clazz.getMethods())
+            this.constantCheckByArkMethods(clazz.getMethods());
         }
         for (let namespace of arkFile.getAllNamespacesUnderThisFile()) {
             for (let clazz of namespace.getClasses()) {
@@ -298,7 +298,7 @@ export class ConstantPropertyReferencingInLoopsCheck implements BaseChecker {
 
     private checkReportAndInit(leftName: string, stmt: Stmt): void {
         if (this.isStaticFieldConstant && ((!leftName.startsWith('%') && !this.isRecursiveStart) ||
-            (this.isRecursiveStart && this.recursiveTime == 0))) {
+            (this.isRecursiveStart && this.recursiveTime === 0))) {
             this.pushIssueReports(this.valueStr, stmt);
         }
         if (this.recursiveTime === 0) {

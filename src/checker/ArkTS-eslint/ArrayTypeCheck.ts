@@ -91,7 +91,7 @@ export class ArrayTypeCheck implements BaseChecker {
 
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/array-type-check.md',
+        ruleDocPath: 'docs/array-type.md',
         description: 'Require consistently using either T[] or Array<T> for arrays.',
     };
 

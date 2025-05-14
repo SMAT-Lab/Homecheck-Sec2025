@@ -22,7 +22,7 @@ node_modules目录下新增文件夹homecheck
 
 ## 配置文件
 
-config目录下新建**projectConfig.json**，内容参考:[homecheck配置文件使用指南](homecheck配置文件使用指南.md)
+新建config目录并新建**projectConfig.json**，内容参考:[homecheck配置文件使用指南](homecheck配置文件使用指南.md)
 
 示例：
 
@@ -33,7 +33,7 @@ config目录下新建**projectConfig.json**，内容参考:[homecheck配置文�
   "logPath": "./HomeCheck.log",
   "ohosSdkPath": "/path/to/ohosSdk",
   "hmsSdkPath": "/path/to/hmsSdk",
-  "arkCheckPath": "./node_modules/homecheck"
+  "arkCheckPath": "/path/to/homecheck"
 }
 ```
 

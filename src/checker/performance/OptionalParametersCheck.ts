@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-import { ArkFile, ArkMethod } from "arkanalyzer/lib";
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
+import { ArkFile, ArkMethod } from 'arkanalyzer/lib';
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { MethodParameter } from "arkanalyzer/lib/core/model/builder/ArkMethodBuilder";
-import { Rule, Defects, MethodMatcher, MatcherTypes, MatcherCallback } from "../../Index";
-import { IssueReport } from "../../model/Defects";
+import { MethodParameter } from 'arkanalyzer/lib/core/model/builder/ArkMethodBuilder';
+import { Rule, Defects, MethodMatcher, MatcherTypes, MatcherCallback } from '../../Index';
+import { IssueReport } from '../../model/Defects';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'OptionalParametersCheck');
 const gMetaData: BaseMetaData = {
     severity: 3,
-    ruleDocPath: "docs/optional-parameters-check.md",
-    description: "Declare function parameters as mandatory parameters."
+    ruleDocPath: 'docs/optional-parameters-check.md',
+    description: 'Declare function parameters as mandatory parameters.'
 };
 
 export class OptionalParametersCheck implements BaseChecker {
@@ -41,11 +41,11 @@ export class OptionalParametersCheck implements BaseChecker {
         const matchMethodCb: MatcherCallback = {
             matcher: this.methodMatcher,
             callback: this.check
-        }
+        };
         return [matchMethodCb];
     }
 
-    public check = (targetMethod: ArkMethod) => {
+    public check = (targetMethod: ArkMethod): void => {
         let parameters = targetMethod.getParameters();
         if (!parameters) {
             return;
@@ -64,7 +64,7 @@ export class OptionalParametersCheck implements BaseChecker {
             let endColunm = startColumn + name.length - 1;
             this.reportIssue(targetMethod.getDeclaringArkClass().getDeclaringArkFile(), lineNum, startColumn, endColunm);
         }
-    }
+    };
 
     private getStartColumn(method: ArkMethod, parameter: MethodParameter, index: number): number {
         let code = method.getCode();
@@ -86,7 +86,7 @@ export class OptionalParametersCheck implements BaseChecker {
         return (mtdCol !== -1) ? mtdCol + indexOfParameterStr + pos : -1;
     }
 
-    private reportIssue(arkFile: ArkFile, lineNum: number, startColumn: number, endColunm: number) {
+    private reportIssue(arkFile: ArkFile, lineNum: number, startColumn: number, endColunm: number): void {
         const severity = this.rule.alert ?? this.metaData.severity;
         const filePath = arkFile.getFilePath();
         let defects = new Defects(lineNum, startColumn, endColunm, this.metaData.description, severity, this.rule.ruleId,

@@ -110,7 +110,7 @@ export class HighFrequencyLogCheck implements BaseChecker {
                     this.issues.push(new IssueReport(defects, undefined));
                 });
             }
-        })
+        });
     }
 
     private getFilePathInUsedChain(usedChain: string): string {
@@ -163,7 +163,7 @@ export class HighFrequencyLogCheck implements BaseChecker {
             const scopeType = (stmt as StmtExt).scope?.scopeType;
             if (!(stmt instanceof ArkInvokeStmt) || (scopeType === undefined) ||
                 (busyMethods.size === 2 && this.conditionScopeTypes.includes(scopeType))) {
-                continue
+                continue;
             }
             const invokeExpr = stmt.getInvokeExpr();
             const invokeSignature = invokeExpr.getMethodSignature();
@@ -185,7 +185,7 @@ export class HighFrequencyLogCheck implements BaseChecker {
                     warnInfoList.push({
                         line: tempInfo.line, startCol: tempInfo.startCol, endCol: tempInfo.endCol,
                         usedChain: tempInfo.usedChain + warnInfo.usedChain
-                    })
+                    });
                 }
             }
         }

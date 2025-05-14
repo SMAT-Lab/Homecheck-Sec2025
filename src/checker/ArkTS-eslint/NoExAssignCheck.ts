@@ -36,7 +36,7 @@ export class NoExAssignCheck implements BaseChecker {
     public issues: IssueReport[] = [];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-ex-assign-check.md',
+        ruleDocPath: 'docs/no-ex-assign.md',
         description: 'Disallow reassigning exceptions in `catch` clauses.',
     };
 

@@ -37,7 +37,7 @@ interface lineColumn {
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoDynamicDeleteCheck');
 const gmetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/no-dynamic-delete-check.md", // TODO: support url
+    ruleDocPath: "docs/no-dynamic-delete.md", // TODO: support url
     description: "Do not delete dynamically computed property keys."
 };
 export class NoDynamicDeleteCheck implements BaseChecker {

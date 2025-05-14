@@ -157,7 +157,7 @@ export class CombineSameArgAnimatetoCheck implements BaseChecker {
         let warnInfoStmt: WarnInfo = {
             stmt: stmt,
             arkFile: file
-        }
+        };
         if (curFinishedMap.has(code)) {
             let warnInfoList = curFinishedMap.get(code);
             if (warnInfoList) {

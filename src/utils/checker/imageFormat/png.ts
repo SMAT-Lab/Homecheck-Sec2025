@@ -40,11 +40,11 @@ export const PNG: ImageData = {
             return {
                 height: readUInt32BE(input, 36),
                 width: readUInt32BE(input, 32),
-            }
+            };
         }
         return {
             height: readUInt32BE(input, 20),
             width: readUInt32BE(input, 16),
-        }
+        };
     },
 };

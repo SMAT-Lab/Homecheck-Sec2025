@@ -24,7 +24,7 @@ import { RuleListUtil } from "../../utils/common/DefectsList";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoCondAssignCheck');
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: "docs/no-cond-assign-check.md",
+  ruleDocPath: "docs/no-cond-assign.md",
   description: "Disallow assignment operators in conditional expressions.",
 };
 

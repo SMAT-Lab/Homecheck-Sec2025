@@ -43,7 +43,7 @@ export class ReturnAwaitCheck implements BaseChecker {
   public issues: IssueReport[] = [];
   public metaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/return-await-check.md',
+    ruleDocPath: 'docs/return-await.md',
     description: 'Enforce consistent returning of awaited values.',
   };
   private fileMatcher: FileMatcher = {
@@ -628,7 +628,7 @@ export class ReturnAwaitCheck implements BaseChecker {
       returnString: returnString,
       testObjectText: targetNode.getText()
     };
-    const defect = new Defects(loc.line, loc.character, loc.endCol, description, this.metaData.severity, this.rule.ruleId,
+    const defect = new Defects(loc.line, loc.character, loc.endCol, description, this.rule.alert ?? this.metaData.severity, this.rule.ruleId,
       filePath, this.metaData.ruleDocPath, true, false, true);
     let fix: RuleFix = this.ruleFix(this.sourceFile, loc);
     this.issues.push(new IssueReport(defect, fix));

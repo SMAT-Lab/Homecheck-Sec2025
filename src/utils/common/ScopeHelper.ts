@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ArkArrayRef, ArkAssignStmt, ArkClass, ArkIfStmt, ArkThisRef, BasicBlock, DEFAULT_ARK_METHOD_NAME, Local, Scene, Stmt } from "arkanalyzer";
+import { ArkArrayRef, ArkAssignStmt, ArkClass, ArkIfStmt, ArkThisRef, BasicBlock, DEFAULT_ARK_METHOD_NAME, Local, Scene, Stmt } from 'arkanalyzer';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { CheckerStorage, CheckerUtils, Scope, ScopeType, TempLocation } from "../../Index";
-import { Variable } from "../../model/Variable";
-import { VarInfo } from "../../model/VarInfo";
-import { FixUtils } from "./FixUtils";
+import { CheckerStorage, CheckerUtils, Scope, ScopeType, TempLocation } from '../../Index';
+import { Variable } from '../../model/Variable';
+import { VarInfo } from '../../model/VarInfo';
+import { FixUtils } from './FixUtils';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'ScopeHelper');
 
@@ -84,7 +84,7 @@ export class ScopeHelper {
                 curScope = this.genChildScope(curScope, ScopeType.FOR_CONDITION_TYPE);
                 nextScopeType = ScopeType.UNKNOWN_TYPE;
             }
-            if (!FixUtils.hasOwnProperty(stmt, 'scope')) {
+            if (!FixUtils.hasOwnPropertyOwn(stmt, 'scope')) {
                 Object.defineProperty(stmt, 'scope', { value: curScope });
             }
             if (stmt instanceof ArkAssignStmt && !this.assignStmtProcess(stmt, curScope)) {

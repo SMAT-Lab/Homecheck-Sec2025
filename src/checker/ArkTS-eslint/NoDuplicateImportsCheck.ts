@@ -29,7 +29,7 @@ const NAMESPACE_TYPES: string[] = [
 ];
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-duplicate-imports-check.md',
+    ruleDocPath: 'docs/no-duplicate-imports.md',
     description: '"module" import is duplicated.'
 };
 let filePath = '';
@@ -278,8 +278,9 @@ export class NoDuplicateImportsCheck implements BaseChecker {
     };
 
     private reportErrors(node: ts.Node, errorMessages: string[]): void {
+        const severity = this.rule.alert ?? this.metaData.severity;
         errorMessages.forEach(errorMessage => {
-            this.addIssueReport(node, errorMessage, this.metaData.severity);
+            this.addIssueReport(node, errorMessage, severity);
         });
     };
     private addIssueReport(node: ts.Node, description: string, severity: number): void {

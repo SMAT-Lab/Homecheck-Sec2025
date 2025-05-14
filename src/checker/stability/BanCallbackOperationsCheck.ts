@@ -127,7 +127,6 @@ export class BanCallbackOperationsCheck implements BaseChecker {
         }
         const index = text.indexOf(keyword);
         if (index === -1) {
-            logger.debug(`Can not find ${keyword} in ${text}.`);
             return;
         }
         const severity = this.rule.alert ?? this.metaData.severity;

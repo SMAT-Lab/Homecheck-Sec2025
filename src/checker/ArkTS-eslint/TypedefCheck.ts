@@ -53,7 +53,7 @@ export class TypedefCheck implements BaseChecker {
 
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/typedef-check.md',
+        ruleDocPath: 'docs/typedef.md',
         description: 'Expected a type annotation.',
     };
 

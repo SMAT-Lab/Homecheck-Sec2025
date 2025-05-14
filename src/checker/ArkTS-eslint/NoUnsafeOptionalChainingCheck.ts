@@ -47,7 +47,7 @@ export class NoUnsafeOptionalChainingCheck implements BaseChecker {
     public issues: IssueReport[] = [];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-unsafe-optional-chaining-check.md',
+        ruleDocPath: 'docs/no-unsafe-optional-chaining.md',
         description: 'Disallow use of optional chaining in contexts where the undefined value is not allowed',
     };
     public messages: MessageInfo = {

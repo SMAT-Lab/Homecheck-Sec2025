@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { ArkFile, ts, AstTreeUtils, ArkMethod, LineColPosition } from "arkanalyzer";
+import { ArkFile, ts, AstTreeUtils, ArkClass, ArkMethod, Stmt, ArkAssignStmt, ClassType, AbstractInvokeExpr } from "arkanalyzer";
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
 import { BaseChecker, BaseMetaData } from "../BaseChecker";
 import { FileMatcher, MatcherCallback, MatcherTypes } from '../../Index';
@@ -24,7 +24,7 @@ import { RuleListUtil } from "../../utils/common/DefectsList";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'AwaitThenableCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/await-thenable-check.md",
+    ruleDocPath: "docs/await-thenable.md",
     description: 'Unexpected `await` of a non-Promise (non-"Thenable") value.',
 };
 // 定义一个接口，用于存储问题的行列信息
@@ -61,12 +61,50 @@ export class AwaitThenableCheck implements BaseChecker {
             const sourceFile = AstTreeUtils.getSourceFileFromArkFile(arkFile);
             // 构建符号表
             this.buildSymbolTable(sourceFile);
+            arkFile.getClasses().forEach(cls => this.checkClass(cls));
 
             const issues = this.checkAwaitThenable(sourceFile);
             // 输出结果
             issues.forEach(info => {
                 this.addIssueReportNode(info.line, info.character, filePath!);
             });
+        }
+    }
+
+    private checkClass(arkClass: ArkClass): void {
+        const methods = arkClass.getMethods(true);
+        methods.forEach(method => {
+            this.checkMethod(method);
+        });
+    }
+
+    private checkMethod(arkMethod: ArkMethod): void {
+        const stmts = arkMethod.getBody()?.getCfg().getStmts();
+        stmts?.forEach(stmt => {
+            this.checkStmt(stmt);
+        });
+    }
+
+    private checkStmt(stmt: Stmt): void {
+        let originCode = stmt.getOriginalText();
+        if (!originCode) {
+            return;
+        }
+        if (!originCode.includes('await')) {
+            return;
+        }
+        if (stmt instanceof ArkAssignStmt) {
+            const rightOp = stmt.getRightOp();
+            if (rightOp instanceof AbstractInvokeExpr) {
+                const methodSignature = rightOp.getMethodSignature();
+                let returnType = methodSignature.getMethodSubSignature().getReturnType();
+                let methodName = methodSignature.getMethodSubSignature().getMethodName();
+                if (returnType instanceof ClassType && returnType.getClassSignature().getClassName() === 'Promise') {
+                    // 创建一个表示 Promise 节点
+                    const promiseNode = AstTreeUtils.getASTNode('temp', 'Promise');
+                    this.symbolTable.set(methodName, promiseNode);
+                }
+            }
         }
     }
 
@@ -163,6 +201,27 @@ export class AwaitThenableCheck implements BaseChecker {
         return null;
     }
 
+    private checkParameterTypeNode(parameterDeclaration: ts.ParameterDeclaration): boolean {
+        const typeNode = parameterDeclaration.type;
+        if (!typeNode) {
+            return true;
+        }
+        if (typeNode.kind === ts.SyntaxKind.AnyKeyword || typeNode.kind === ts.SyntaxKind.UndefinedKeyword) {
+            return true;
+        }
+        // 检查是否是函数类型且返回 Promise
+        if (ts.isFunctionTypeNode(typeNode)) {
+            const returnType = typeNode.type;
+            if (ts.isTypeReferenceNode(returnType)) {
+                const typeName = returnType.typeName;
+                if (ts.isIdentifier(typeName) && typeName.text === 'Promise') {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private checkOptionalChain(operand: ts.PropertyAccessChain | ts.ElementAccessChain | ts.CallChain | ts.NonNullChain): boolean | null {
         // 检查可选链操作符的调用是否可能返回一个 Promise 或 Thenable
         const callee = operand.expression;
@@ -170,6 +229,11 @@ export class AwaitThenableCheck implements BaseChecker {
             const calleeDefinition = this.symbolTable.get(callee.text);
             if (!calleeDefinition) {
                 return true;
+            }
+            if (ts.isParameter(calleeDefinition)) {
+                if (this.checkParameterTypeNode(calleeDefinition)) {
+                    return true;
+                }
             }
             if (calleeDefinition && ts.isArrowFunction(calleeDefinition)) {
                 // 检查函数是否被标记为 async
@@ -209,6 +273,12 @@ export class AwaitThenableCheck implements BaseChecker {
         const definition = this.symbolTable.get(operand.text);
         if (!definition) {
             return false;
+        }
+        // 检查是否是参数且类型为 any
+        if (ts.isParameter(definition)) {
+            if (this.checkParameterTypeNode(definition)) {
+                return true;
+            }
         }
         // 如果变量的定义没有明确的类型注解，假设它可能是 Promise 或 thenable 对象
         if (ts.isVariableDeclaration(definition) && !definition.type) {
@@ -251,6 +321,13 @@ export class AwaitThenableCheck implements BaseChecker {
         }
         if (ts.isPropertyAccessExpression(callee)) {
             const name = callee.name.text;
+            const definition = this.symbolTable.get(name);
+            if (definition) {
+                const definitionText = definition.getText();
+                if (definitionText === 'Promise') {
+                    return true;
+                }
+            }
             if (name === 'reject' && ts.isIdentifier(callee.expression) && callee.expression.text === 'Promise') {
                 return true; // Promise.reject 返回一个 Promise
             }
@@ -271,6 +348,12 @@ export class AwaitThenableCheck implements BaseChecker {
         const calleeDefinition = this.symbolTable.get(callee.text);
         if (!calleeDefinition) {
             return false;
+        }
+        if (calleeDefinition) {
+            const definitionText = calleeDefinition.getText();
+            if (definitionText === 'Promise') {
+                return true;
+            }
         }
         if (ts.isArrowFunction(calleeDefinition)) {
             // 检查函数是否被标记为 async
@@ -495,6 +578,10 @@ export class AwaitThenableCheck implements BaseChecker {
                 if (name) {
                     this.symbolTable.set(name, node);
                 }
+                // 处理函数参数
+                if (node.parameters) {
+                    this.buildSymbolTableAddParam(node.parameters);
+                }
             } else if (ts.isClassDeclaration(node)) {
                 const name = node.name?.getText();
                 if (name) {
@@ -506,6 +593,10 @@ export class AwaitThenableCheck implements BaseChecker {
                     const name = parent.name.getText();
                     this.symbolTable.set(name, node);
                 }
+                // 处理箭头函数参数
+                if (node.parameters) {
+                    this.buildSymbolTableAddParam(node.parameters);
+                }
             }
 
             // 递归遍历子节点
@@ -513,6 +604,14 @@ export class AwaitThenableCheck implements BaseChecker {
         };
 
         visit(sourceFile);
+    }
+
+    private buildSymbolTableAddParam(parameters: ts.NodeArray<ts.ParameterDeclaration>): void {
+        for (const param of parameters) {
+            if (ts.isParameter(param) && ts.isIdentifier(param.name)) {
+                this.symbolTable.set(param.name.text, param);
+            }
+        }
     }
 
 

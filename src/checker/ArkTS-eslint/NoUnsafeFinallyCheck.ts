@@ -58,7 +58,7 @@ export class NoUnsafeFinallyCheck implements BaseChecker {
 
   public metaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-unsafe-finally-check.md',
+    ruleDocPath: 'docs/no-unsafe-finally.md',
     description: 'Unsafe usage of ReturnStatement',
   };
 
@@ -379,7 +379,7 @@ export class NoUnsafeFinallyCheck implements BaseChecker {
       pos.character,
       pos.character,
       this.metaData.description,
-      this.metaData.severity,
+      severity,
       this.rule.ruleId,
       pos.filePath,
       this.metaData.ruleDocPath,

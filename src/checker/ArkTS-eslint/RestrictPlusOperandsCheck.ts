@@ -66,7 +66,7 @@ interface TypeCheckParams {
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'RestrictPlusOperandsCheck');
 const gmetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/restrict-plus-operands-check.md',
+    ruleDocPath: 'docs/restrict-plus-operands.md',
     description: 'Require both operands of addition to be the same type and be bigint, number, or string.'
 };
 export class RestrictPlusOperandsCheck implements BaseChecker {
@@ -85,7 +85,7 @@ export class RestrictPlusOperandsCheck implements BaseChecker {
         return {
             // 当一个操作数是 bigint 类型，另一个是 number 类型时触发
             bigintAndNumber:
-                "Numeric '+' operations must either be both bigints or both numbers. Got `' + this.left + '` + `' + this.right + '`.",
+                "Numeric '+' operations must either be both bigints or both numbers. Got `" + this.left + "` + `" + this.right + "`.",
             // 以下情况会触发：
             // 1. 类型是 Symbol、Never 或 Unknown
             // 2. 不允许 any 类型时使用 any
@@ -94,10 +94,10 @@ export class RestrictPlusOperandsCheck implements BaseChecker {
             // 5. 不允许 RegExp 时使用正则表达式
             // 6. 使用深层对象类型
             invalid:
-                "Invalid operand for a '+' operation. Operands must each be a number or ' + this.stringLike + '. Got `' + this.type + '`.",
+                "Invalid operand for a '+' operation. Operands must each be a number or " + this.stringLike + "." + this.type,
             // 当不允许数字和字符串混合使用时（allowNumberAndString = false）
             mismatched:
-                'Operands of ' + ' operations must be a number or ' + this.stringLike + '. Got `' + this.left + '` + `' + this.right + '`.',
+                "Operands of '+' operations must be a number or " + this.stringLike + ". Got `" + this.left + "` + `" + this.right + "`.",
         };
     }
     private fileMatcher: FileMatcher = {
@@ -524,7 +524,7 @@ export class RestrictPlusOperandsCheck implements BaseChecker {
 
         [op1TypeString, op2TypeString].forEach((type, index) => {
             if (!validTypes.includes(type)) {
-                this.type = type;
+                this.type = type.indexOf('/') !== -1 && type.indexOf('%') !== -1 ? '' : ' Got `' + type + '`.';
                 this.stringLike = this.getStringLike(params.options);
                 this.messageId = 'invalid';
                 this.warnLeftOp = index === 0;
@@ -604,9 +604,8 @@ export class RestrictPlusOperandsCheck implements BaseChecker {
         const originPosition = stmt.getOriginPositionInfo();
         const line = originPosition.getLineNo();
         const text = stmt.getOriginalText() ?? '';
-        
-        let index = this.getTextIndex(op1String, op2String, op2TypeString, text);
 
+        let index = this.getTextIndex(op1String, op2String, op2TypeString, text);
         let startCol = stmt.getOriginPositionInfo().getColNo() + index;
         let endCol = -1;
         if (this.warnLeftOp) {

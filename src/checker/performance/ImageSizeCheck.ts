@@ -63,7 +63,7 @@ export class ImageSizeCheck implements BaseChecker {
     }
 
     public check = (scene: Scene): void => {
-        if (moduleMediaMap.size == 0 || moduleRawMap.size == 0) {
+        if (moduleMediaMap.size === 0 || moduleRawMap.size === 0) {
             this.cacheProjectImages(scene);
         }
         for (let arkFile of scene.getFiles()) {
@@ -340,13 +340,13 @@ export class ImageSizeCheck implements BaseChecker {
         startCol: number;
         endCol: number;
         filePath: string;
-    } | undefined {
+    } {
         const arkFile = stmt.getCfg()?.getDeclaringMethod().getDeclaringArkFile();
         const originPosition = stmt.getOriginPositionInfo();
         const line = originPosition?.getLineNo();
         const text = stmt.getOriginalText();
         if (!text || text?.length === 0) {
-            return;
+            return { lineNum: -1, startCol: -1, endCol: -1, filePath: '' };
         }
         if (!arkFile) {
             logger.debug('ArkFile is null.');

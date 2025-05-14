@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-import { ArkAssignStmt, ArkField, ArkFile, ArkInstanceFieldRef, ArkMethod, ArkReturnVoidStmt, ArkThisRef, BasicBlock, FunctionType, Local, Stmt } from "arkanalyzer/lib";
-import { ArkClass } from "arkanalyzer/lib/core/model/ArkClass";
+import { ArkAssignStmt, ArkField, ArkFile, ArkInstanceFieldRef, ArkMethod, ArkReturnVoidStmt, ArkThisRef, BasicBlock, FunctionType, Local, Stmt } from 'arkanalyzer/lib';
+import { ArkClass } from 'arkanalyzer/lib/core/model/ArkClass';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
-import { CheckerUtils, ClassMatcher, Defects, MatcherCallback, MatcherTypes, Rule } from "../../Index";
-import { ViewTreeTool } from "../../utils/checker/ViewTreeTool";
-import { IssueReport } from "../../model/Defects";
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
+import { CheckerUtils, ClassMatcher, Defects, MatcherCallback, MatcherTypes, Rule } from '../../Index';
+import { ViewTreeTool } from '../../utils/checker/ViewTreeTool';
+import { IssueReport } from '../../model/Defects';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoStateVarAccessInLoopCheck');
 const loopInvokeMethods: string[] = ['forEach', 'map', 'flatMap', 'filter', 'reduce', 'every', 'some', 'find'];
@@ -27,8 +27,8 @@ const viewTreeTool: ViewTreeTool = new ViewTreeTool();
 const visitedBlockSet: Set<BasicBlock> = new Set();
 const gMetaData: BaseMetaData = {
     severity: 3,
-    ruleDocPath: "docs/no-state-var-access-in-loop-check.md",
-    description: "Avoid frequently reading state variables in loop logic."
+    ruleDocPath: 'docs/no-state-var-access-in-loop-check.md',
+    description: 'Avoid frequently reading state variables in loop logic.'
 };
 
 export class NoStateVarAccessInLoopCheck implements BaseChecker {
@@ -46,11 +46,11 @@ export class NoStateVarAccessInLoopCheck implements BaseChecker {
         const matchClazzCb: MatcherCallback = {
             matcher: this.clsMatcher,
             callback: this.check
-        }
+        };
         return [matchClazzCb];
     }
 
-    public check = (target: ArkClass) => {
+    public check = (target: ArkClass): void => {
         if (viewTreeTool.hasTraverse(target)) {
             return;
         }
@@ -60,9 +60,9 @@ export class NoStateVarAccessInLoopCheck implements BaseChecker {
             }
             this.accessInLoopInCurrentClass(target, arkField);
         }
-    }
+    };
 
-    private accessInLoopInCurrentClass(clazz: ArkClass, arkField: ArkField) {
+    private accessInLoopInCurrentClass(clazz: ArkClass, arkField: ArkField): void {
         for (let method of clazz.getMethods()) {
             if (method.isGenerated()) {
                 continue;
@@ -108,7 +108,7 @@ export class NoStateVarAccessInLoopCheck implements BaseChecker {
         }
     }
 
-    private blockProcess(clazz: ArkClass, method: ArkMethod, block: BasicBlock, arkField: ArkField) {
+    private blockProcess(clazz: ArkClass, method: ArkMethod, block: BasicBlock, arkField: ArkField): void {
         const stmts = block.getStmts();
         if (stmts.length === 0) {
             return;
@@ -145,7 +145,7 @@ export class NoStateVarAccessInLoopCheck implements BaseChecker {
         this.blockProcess(clazz, method, nextBlock, arkField);
     }
 
-    private loopBlockStmtsProcess(clazz: ArkClass, method: ArkMethod, stmts: Stmt[], arkField: ArkField) {
+    private loopBlockStmtsProcess(clazz: ArkClass, method: ArkMethod, stmts: Stmt[], arkField: ArkField): void {
         for (let stmt of stmts) {
             if (stmt instanceof ArkAssignStmt) {
                 if (this.isStmtReadStateVar(stmt, arkField)) {
@@ -209,7 +209,7 @@ export class NoStateVarAccessInLoopCheck implements BaseChecker {
         return flag;
     }
 
-    private isFirstBlock(method: ArkMethod, block: BasicBlock) {
+    private isFirstBlock(method: ArkMethod, block: BasicBlock): boolean {
         if (block.getPredecessors().length !== 0) {
             return false;
         }
@@ -225,7 +225,7 @@ export class NoStateVarAccessInLoopCheck implements BaseChecker {
         return false;
     }
 
-    private isLastBlock(block: BasicBlock) {
+    private isLastBlock(block: BasicBlock): boolean {
         if (block.getPredecessors().length !== 0) {
             return false;
         }
@@ -240,7 +240,7 @@ export class NoStateVarAccessInLoopCheck implements BaseChecker {
         return false;
     }
 
-    private addIssueReport(arkFile: ArkFile, stmt: ArkAssignStmt, keyword: string) {
+    private addIssueReport(arkFile: ArkFile, stmt: ArkAssignStmt, keyword: string): void {
         const severity = this.rule.alert ?? this.metaData.severity;
         const warnInfo = this.getLineAndColumn(arkFile, stmt, keyword);
         if (warnInfo) {
@@ -250,17 +250,22 @@ export class NoStateVarAccessInLoopCheck implements BaseChecker {
         }
     }
 
-    private getLineAndColumn(arkFile: ArkFile, stmt: ArkAssignStmt, keyword: string) {
+    private getLineAndColumn(arkFile: ArkFile, stmt: ArkAssignStmt, keyword: string): {
+        lineNum: number;
+        startCol: number;
+        endCol: number;
+        filePath: string;
+    } | undefined {
         if (arkFile) {
             const originPosition = stmt.getOriginPositionInfo();
             const lineNum = originPosition.getLineNo();
             const text = stmt.getOriginalText();
             if (!text || text.length === 0) {
-                return;
+                return undefined;
             }
             const startCol = originPosition.getColNo() + text.indexOf(keyword);
             const endCol = startCol + keyword.length - 1;
-            const originPath = arkFile.getFilePath();;
+            const originPath = arkFile.getFilePath();
             return { lineNum, startCol, endCol, filePath: originPath };
         } else {
             logger.debug('ArkFile is null.');

@@ -22,7 +22,7 @@ import { Scene } from 'arkanalyzer';
 
 const G_META_DATA: BaseMetaData = {
   severity: 2,
-  ruleDocPath: 'docs/no-implied-eval-check.md',
+  ruleDocPath: 'docs/no-implied-eval.md',
   description: 'Implied eval. Consider passing a function.',
 };
 const FUNCTION_CONSTRUCTOR = 'Function';
@@ -385,7 +385,8 @@ export class NoImpliedEvalCheck implements BaseChecker {
   };
   private addIssueReport(statement: Stmt, name: string, errorMessage: string): void {
     const warnInfo = this.getLineAndColumn(statement, name);
-    const defect = (new Defects(warnInfo.line, warnInfo.startCol, warnInfo.endCol, errorMessage, this.metaData.severity, this.rule.ruleId,
+    const severity = this.rule.alert ?? this.metaData.severity;
+    const defect = (new Defects(warnInfo.line, warnInfo.startCol, warnInfo.endCol, errorMessage, severity, this.rule.ruleId,
       warnInfo.filePath, this.metaData.ruleDocPath, true, false, false));
     this.issues.push(new IssueReport(defect, undefined));
     RuleListUtil.push(defect);

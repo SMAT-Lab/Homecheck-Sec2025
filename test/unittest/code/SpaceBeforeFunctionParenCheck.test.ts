@@ -29,9 +29,9 @@ beforeAll(async () => {
     rule = new Rule('@ArkTS-eslint/no-inferrable-types-check', ALERT_LEVEL.WARN);
     rule.option = [
         {
-            "anonymous": "always",
-            "named": "always",
-            "asyncArrow": "always"
+            "anonymous": "never",
+            "named": "never",
+            "asyncArrow": "never"
         }
     ]
     checkEntry = await testCaseCheck('./test/unittest/sample/SpaceBeforeFunctionParen', rule, CHECK_MODE.FILE2CHECK, SpaceBeforeFunctionParenCheck);

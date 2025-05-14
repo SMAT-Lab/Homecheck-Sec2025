@@ -16,7 +16,7 @@
 import { ArkFile } from 'arkanalyzer';
 import { NamespaceMatcher, isMatchedFile, isMatchedNamespace } from '../Matchers';
 
-export function matchNameSpaces(arkFiles: ArkFile[], matcher: NamespaceMatcher, callback: Function) {
+export function matchNameSpaces(arkFiles: ArkFile[], matcher: NamespaceMatcher, callback: Function): void {
     for (let arkFile of arkFiles) {
         if (matcher.file && !isMatchedFile(arkFile, matcher.file)) {
             continue;

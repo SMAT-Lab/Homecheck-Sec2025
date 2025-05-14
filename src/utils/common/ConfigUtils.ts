@@ -12,21 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ALERT_LEVEL, ExtRuleSet, Rule } from "../../model/Rule";
-import { FileUtils } from "./FileUtils";
+import { ALERT_LEVEL, ExtRuleSet, Rule } from '../../model/Rule';
+import { FileUtils } from './FileUtils';
 import Logger, { LOG_LEVEL, LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { Utils } from "./Utils";
-import { execSync } from "child_process";
-import { Json5parser } from "./Json5parser";
-import { OptionValues } from "commander";
-import { CheckerStorage } from "./CheckerStorage";
-import path from "path";
-import { CheckEntry } from "./CheckEntry";
-import { RuleConfig } from "../../model/RuleConfig";
-import { ProjectConfig } from "../../model/ProjectConfig";
-import { file2CheckRuleMap, project2CheckRuleMap } from "./CheckerIndex";
-import fs from "fs";
-import { Message, MessageType } from "../../model/Message";
+import { Utils } from './Utils';
+import { execSync } from 'child_process';
+import { Json5parser } from './Json5parser';
+import { OptionValues } from 'commander';
+import { CheckerStorage } from './CheckerStorage';
+import path from 'path';
+import { CheckEntry } from './CheckEntry';
+import { RuleConfig } from '../../model/RuleConfig';
+import { ProjectConfig } from '../../model/ProjectConfig';
+import { file2CheckRuleMap, project2CheckRuleMap } from './CheckerIndex';
+import fs from 'fs';
+import { Message, MessageType } from '../../model/Message';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'ConfigUtils');
 
@@ -49,7 +49,7 @@ export class ConfigUtils {
     public static getConfig(configPath: string, rootDir?: string): any | null {
         if (!fs.existsSync(configPath) && rootDir) {
             // 规则配置文件不存在，使用默认配置文件
-            configPath = path.join(rootDir, 'config', 'ruleConfg.json');
+            configPath = path.join(rootDir, 'config', 'ruleConfig.json');
         }
 
         try {
@@ -67,8 +67,8 @@ export class ConfigUtils {
      * @returns 是否成功解析配置文件
      */
     public static parseConfig(argvObj: OptionValues, checkEntry: CheckEntry): boolean {
-        const ruleConfig = ConfigUtils.getConfig(argvObj.configPath, argvObj.arkCheckPath);
         const projectConfig = ConfigUtils.getConfig(argvObj.projectConfigPath);
+        const ruleConfig = ConfigUtils.getConfig(argvObj.configPath, projectConfig.arkCheckPath);
         if (!ruleConfig || !projectConfig) {
             return false;
         }
@@ -155,7 +155,7 @@ export class ConfigUtils {
 
         // 解析自定义规则集配置
         this.parseExtRuleConfig(ruleConfig, projectConfig, message, allRules, ruleMap);
-        return ruleMap;;
+        return ruleMap;
     }
 
     /**
@@ -272,7 +272,7 @@ export class ConfigUtils {
      */
     static isOnlineRule(ruleId: string, allRules: Map<string, object>): boolean {
         for (const [ruleSet, rules] of allRules) {
-            if (rules.hasOwnProperty(ruleId)) {
+            if (Object.keys(rules).includes(ruleId)) {
                 return true;
             }
         }

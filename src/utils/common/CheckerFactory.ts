@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { BaseChecker } from "../../checker/BaseChecker";
-import { Rule } from "../../model/Rule";
-import { ProxyChecker } from "./CheckerIndex";
+import { BaseChecker } from '../../checker/BaseChecker';
+import { Rule } from '../../model/Rule';
+import { ProxyChecker } from './CheckerIndex';
 
 export class CheckerFactory {
     static getChecker(rule: Rule): BaseChecker | null {

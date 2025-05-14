@@ -45,7 +45,7 @@ export class QuotesCheck implements BaseChecker {
     public issues: IssueReport[] = [];
     private traversedNodes = new Set<ts.Node>();
     private defaultOptions: Options = {
-        quoteType: 'double',
+        quoteType: 'single',
         avoidEscape: false,
         allowTemplateLiterals: false
     };
@@ -66,7 +66,7 @@ export class QuotesCheck implements BaseChecker {
         description: 'Enforce the consistent use of either backticks, double, or single quotes',
         fixable: true,
         severity: 1, // 使用数字类型
-        ruleDocPath: 'docs/quotes-check.md' // 添加必需的 ruleDocPath 属性
+        ruleDocPath: 'docs/quotes.md' // 添加必需的 ruleDocPath 属性
     };
 
     private fileMatcher: FileMatcher = {
@@ -104,7 +104,7 @@ export class QuotesCheck implements BaseChecker {
      */
     private initializeOptions(): void {
         if (!this.rule || !this.rule.option || this.rule.option.length === 0) {
-            this.options = { quoteType: 'double' };
+            this.options = { quoteType: 'single' };
             return;
         }
 
@@ -286,7 +286,6 @@ export class QuotesCheck implements BaseChecker {
             if (parent && ts.isTaggedTemplateExpression(parent)) {
                 return;
             }
-
             // avoidEscape 检查：如果目标引号在字符串内出现且需要转义，可以使用反引号
             if (this.options.avoidEscape) {
                 const targetQuoteChar = this.options.quoteType === 'single' ? "'" : '"';
@@ -298,8 +297,15 @@ export class QuotesCheck implements BaseChecker {
             }
 
             // 创建修复
-            const fix = this.createTemplateFix(node, sourceFile);
+            let fix = this.createTemplateFix(node, sourceFile);
             if (fix) {
+                //非赋值语句的模板字符串不需要修复
+                if (ts.isTemplateLiteral(node) && ts.isExpressionStatement(parent)) {
+                    fix = {
+                        range: [0, 0],
+                        text: ''
+                    };
+                }
                 // 获取节点位置信息
                 const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
 
@@ -427,7 +433,6 @@ export class QuotesCheck implements BaseChecker {
         if (!ts.isNoSubstitutionTemplateLiteral(node)) {
             return null;
         }
-
         const rawText = node.text;
         const targetQuoteChar = this.options.quoteType === 'single' ? "'" : '"';
 

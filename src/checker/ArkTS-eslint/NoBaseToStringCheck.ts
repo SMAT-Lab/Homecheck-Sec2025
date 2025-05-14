@@ -45,7 +45,7 @@ export class NoBaseToStringCheck implements BaseChecker {
     private readonly LITERAL_TO_STRING_REGEX = /(?:\(\s*\{\s*\}\s*\)|\{\s*\})\s*\.toString\(/;
     readonly metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-base-to-string-check.md',
+        ruleDocPath: 'docs/no-base-to-string.md',
         description: 'Require .toString() to only be called on objects which provide useful information when stringified.',
     };
     private dangerousVariables: Set<string> = new Set();
@@ -1456,8 +1456,8 @@ export class NoBaseToStringCheck implements BaseChecker {
         if (normalizedText === '{}' && certainty !== Usefulness.Never) {
             return;
         }
-
-        const defect = new Defects(originalLine, adjustedCol, endCol, description, this.metaData.severity, this.rule.ruleId,
+        const severity = this.rule.alert ?? this.metaData.severity;
+        const defect = new Defects(originalLine, adjustedCol, endCol, description, severity, this.rule.ruleId,
             filePath, this.metaData.ruleDocPath, true, false, false)
         this.issues.push(new IssueReport(defect, undefined));
         RuleListUtil.push(defect);

@@ -79,7 +79,7 @@ export class NoUselessEscapeCheck implements BaseChecker {
     private filePath: string = '';
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-useless-escape-check.md',
+        ruleDocPath: 'docs/no-useless-escape.md',
         description: `Unnecessary escape character: `,
     };
 

@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-  import { ArkMethod, Stmt, ArkClass, ArkNamespace, ImportInfo, ArkFile } from 'arkanalyzer/lib';
+  import { ArkMethod, Stmt, ArkClass, ArkNamespace, ImportInfo, ArkFile, ClassType, ClassSignature, ts, 
+    NamespaceSignature, ArkInvokeStmt, ArkAssignStmt } from 'arkanalyzer/lib';
   type astType = { name: string; kind: string; line: number; character: number };
   enum VarType { Var = 'var', Class = 'class', Import = 'import', Method = 'method', Type = 'type',
     Args = 'args', ArgsP = 'ArrayBindingPattern', Catch = 'catch', Static = 'static',
@@ -40,8 +41,15 @@
     filePath?: string; //参数stmt不包含
     isAll?: boolean; //注释标明global
   };
+  type Var_base = {
+    name?: string;
+    type?: { name?: string };
+    usedStmts?: Stmt[];
+    declaringStmt?: Stmt;
+  };
   const accuratePositionReg = /[.*+?^=!:${}()|\[\]\/\\]/g;
   const replaceStringReg = /[.*+?^=!:${}()|\[\]\/\\]/g;
+  const textUsedReg = /[.*+?^${}()|[\]\\]/g;
   export class NoUnusedVarsCheckUtils {
     public static collecUnusedImports(importInfos: ImportInfo[], targetFilePath: string, importNoused: string[]): noUseVars[] {
         let nousedSet: noUseVars[] = [];
@@ -340,5 +348,687 @@
             return '';
             ``;
           }
+   // 主函数，返回未使用类型的数组，并附带行列号信息
+  public static noUsedType(astRoot: ts.SourceFile): astType[] {
+    const typeMap = new Map<
+      string,
+      { used: boolean; kind: string; pos: number }
+    >();
+    const noUsedTypes: {
+      name: string;
+      kind: string;
+      line: number;
+      character: number;
+    }[] = [];
+    this.collectTypes(astRoot, astRoot, typeMap);
+    this.checkTypeUsage(astRoot, astRoot, typeMap);
+    for (const [name, info] of typeMap.entries()) {
+      if (!info.used) {
+        const { line, character } = astRoot.getLineAndCharacterOfPosition(
+          info.pos
+        );
+        // 注意：行列号从 0 开始，所以返回时加 1
+        noUsedTypes.push({
+          name,
+          kind: info.kind,
+          line: line + 1,
+          character: character + 1,
+        });
+      }
+    }
+    return noUsedTypes;
+  }
+
+public static collectTypes(
+    node: ts.Node,
+    astRoot: ts.SourceFile,
+    typeMap: Map<string, { used: boolean; kind: string; pos: number }>
+  ): void {
+    if (ts.isTypeAliasDeclaration(node)) {
+      const isExported =
+        node.modifiers &&
+        node.modifiers.some((mod) => mod.kind === ts.SyntaxKind.ExportKeyword);
+      typeMap.set(node.name.text, {
+        used: isExported ? true : false,
+        kind: 'type别名',
+        pos: node.name.getStart(astRoot),
+      });
+    } else if (ts.isInterfaceDeclaration(node)) {
+      const isExported =
+        node.modifiers &&
+        node.modifiers.some((mod) => mod.kind === ts.SyntaxKind.ExportKeyword);
+      typeMap.set(node.name.text, {
+        used: isExported ? true : false,
+        kind: '接口',
+        pos: node.name.getStart(astRoot),
+      });
+    }
+    ts.forEachChild(node, (child) =>
+      this.collectTypes(child, astRoot, typeMap)
+    );
+  }
+
+  public static checkTypeUsage(
+    node: ts.Node,
+    astRoot: ts.SourceFile,
+    typeMap: Map<string, { used: boolean; kind: string; pos: number }>
+  ): void {
+    if (ts.isIdentifier(node) && node.parent) {
+      if (!this.isTypeDeclaration(node) && !this.isDefaultExport(node)) {
+        this.markTypeAsUsed(node, typeMap);
+      }
+    }
+
+    ts.forEachChild(node, (child) =>
+      this.checkTypeUsage(child, astRoot, typeMap)
+    );
+  }
+
+  
+  public static isTypeDeclaration(node: ts.Identifier): boolean {
+      return ts.isTypeAliasDeclaration(node.parent) && node.parent.name === node;
+    }
+  
+    public static isDefaultExport(node: ts.Identifier): boolean {
+      return (
+        ts.isExportAssignment(node.parent) && node.parent.isExportEquals === false
+      );
+    }
+  
+    public static markTypeAsUsed(
+      node: ts.Identifier,
+      typeMap: Map<string, { used: boolean; kind: string; pos: number }>
+    ): void {
+      if (typeMap.has(node.text)) {
+        const info = typeMap.get(node.text)!;
+        info.used = true;
+        typeMap.set(node.text, info);
+      }
+    }
+
+  public static isTextUsed(code: string, name: string): boolean {
+    // 转义正则特殊字符
+    const escapedName = name.replace(textUsedReg, '\\$&');
+    // 正则匹配完整的标识符，并确保不在引号内
+    const regex = new RegExp(`\\b${escapedName}\\b(?![^"']*["'])`, 'g');
+    return regex.test(code);
+  }
+
+  public static collectGenerics(
+    node: ts.Node,
+    typeMap: Map<
+      string,
+      { used: boolean; kind: string; pos: number; node: ts.Node }
+    >
+  ): void {
+    // Handle the specific cases where generics are present
+    this.handleGenerics(node, typeMap);
+    // Recursively traverse child nodes
+    ts.forEachChild(node, (child) => this.collectGenerics(child, typeMap));
+  }
+
+  // Handle the specific cases for type aliases, function declarations, and constructor type nodes
+  public static handleGenerics(
+    node: ts.Node,
+    typeMap: Map<
+      string,
+      { used: boolean; kind: string; pos: number; node: ts.Node }
+    >
+  ): void {
+    if (
+      ts.isTypeAliasDeclaration(node) ||
+      ts.isFunctionDeclaration(node) ||
+      ts.isFunctionExpression(node) ||
+      ts.isInterfaceDeclaration(node) ||
+      ts.isClassDeclaration(node) ||
+      ts.isArrowFunction(node) ||
+      ts.isMethodDeclaration(node) ||
+      ts.isClassExpression(node) ||
+      ts.isFunctionTypeNode(node)
+    ) {
+      this.collectTypeAliasGenerics(node, typeMap);
+    }
+
+    if (
+      (ts.isTypeAliasDeclaration(node) &&
+        ts.isConstructorTypeNode(node.type)) ||
+      ts.isConstructSignatureDeclaration(node)
+    ) {
+      this.collectConstructorTypeGenerics(node, typeMap);
+    }
+  }
+
+  // Collect generics for type aliases and function declarations
+  public static collectTypeAliasGenerics(
+    node:
+      | ts.TypeAliasDeclaration
+      | ts.FunctionDeclaration
+      | ts.FunctionExpression
+      | ts.InterfaceDeclaration
+      | ts.ClassDeclaration
+      | ts.ArrowFunction
+      | ts.MethodDeclaration
+      | ts.FunctionTypeNode
+      | ts.ClassExpression,
+    typeMap: Map<
+      string,
+      { used: boolean; kind: string; pos: number; node: ts.Node }
+    >
+  ): void {
+    const decorators = ts.canHaveDecorators(node) ? ts.getDecorators(node) : undefined;
+    if (node.typeParameters && decorators === undefined) {
+      node.typeParameters.forEach((typeParam) => {
+        const genericKey = `${node.getText()}--->${typeParam.name.text}`;
+        if (!typeMap.has(genericKey)) {
+          typeMap.set(genericKey, {
+            used: false,
+            kind: typeParam.name.text,
+            pos: typeParam.getStart(),
+            node: node,
+          });
+        }
+      });
+    }
+  }
+
+  // Collect generics for constructor type aliases
+  public static collectConstructorTypeGenerics(
+    node: ts.TypeAliasDeclaration | ts.ConstructSignatureDeclaration,
+    typeMap: Map<
+      string,
+      { used: boolean; kind: string; pos: number; node: ts.Node }
+    >
+  ): void {
+    if (node.typeParameters) {
+      node.typeParameters.forEach((typeParam) => {
+        const genericKey = `${node.getText()}-${typeParam.name.text}`;
+        if (!typeMap.has(genericKey)) {
+          typeMap.set(genericKey, {
+            used: false,
+            kind: typeParam.name.text,
+            pos: typeParam.getStart(),
+            node: node,
+          });
+        }
+      });
+    }
+  }
+  public static checkGenericUsages(
+    typeMap: Map<
+      string,
+      { used: boolean; kind: string; pos: number; node: ts.Node }
+    >
+  ): void {
+    for (const [keyString, value] of typeMap) {
+      this.checkGenericUsage(value.node, value);
+    }
+  }
+  public static checkGenericUsage(
+    node: ts.Node,
+    typeMap: { used: boolean; kind: string; pos: number }
+  ): void {
+    this.checkPressTypeUsage(node, typeMap);
+    // 递归检查子节点
+    ts.forEachChild(node, (child) => this.checkGenericUsage(child, typeMap));
+  }
+
+  // 检查函数返回值中的泛型
+  public static checkPressTypeUsage(
+    node: ts.Node,
+    typeMap: { used: boolean; kind: string; pos: number }
+  ): void {
+    if (!node) {
+      return;
+    }
+
+    const genericText = this.isGenericUsedInType(node);
+    if (!genericText) {
+      return;
+    }
+    if (typeMap.kind === genericText) {
+      const infoPos = typeMap?.pos;
+      const nodePos = node.getStart();
+      infoPos !== nodePos ? (typeMap!.used = true) : (typeMap!.used = false);
+    }
+  }
+  public static isGenericUsedInType(node: ts.Node): string | null {
+    if (!node) {
+      return null;
+    }
+
+    if (ts.isTypeParameterDeclaration(node)) {
+      return node.name.getText();
+    }
+
+    if (ts.isTypeReferenceNode(node)) {
+      return this.handleTypeReferenceNode(node);
+    }
+
+    if (ts.isInferTypeNode(node)) {
+      return node.typeParameter.name.getText();
+    }
+
+    if (ts.isConditionalTypeNode(node)) {
+      return this.handleConditionalTypeNode(node);
+    }
+
+    if (ts.isIndexedAccessTypeNode(node)) {
+      return this.handleIndexedAccessTypeNode(node);
+    }
+
+    if (ts.isMappedTypeNode(node)) {
+      return this.isGenericUsedInType(node.type ?? node.typeParameter);
+    }
+
+    if (ts.isFunctionTypeNode(node) || ts.isConstructorTypeNode(node)) {
+      return this.handleFunctionTypeNode(node);
+    }
+
+    return this.checkChildrenForGeneric(node);
+  }
+
+  public static handleTypeReferenceNode(node: ts.TypeReferenceNode): string | null {
+    const typeName = node.typeName.getText();
+    if (node.typeArguments) {
+      for (const arg of node.typeArguments) {
+        const genericName = this.isGenericUsedInType(arg);
+        if (genericName) {
+          return genericName;
+        }
+      }
+    }
+    return typeName;
+  }
+
+  public static handleConditionalTypeNode(
+    node: ts.ConditionalTypeNode
+  ): string | null {
+    return (
+      this.isGenericUsedInType(node.checkType) ||
+      this.isGenericUsedInType(node.extendsType) ||
+      this.isGenericUsedInType(node.trueType) ||
+      this.isGenericUsedInType(node.falseType)
+    );
+  }
+
+  public static handleIndexedAccessTypeNode(
+    node: ts.IndexedAccessTypeNode
+  ): string | null {
+    return (
+      this.isGenericUsedInType(node.objectType) ||
+      this.isGenericUsedInType(node.indexType)
+    );
+  }
+
+  public static handleFunctionTypeNode(
+    node: ts.FunctionTypeNode | ts.ConstructorTypeNode
+  ): string | null {
+    for (const param of node.parameters) {
+      if (param.type) {
+        const paramType = this.isGenericUsedInType(param.type);
+        if (paramType) {
+          return paramType;
+        }
+      }
+    }
+    return this.isGenericUsedInType(node.type);
+  }
+
+  public static checkChildrenForGeneric(node: ts.Node): string | null {
+    let firstGeneric: string | null = null;
+    ts.forEachChild(node, (child) => {
+      firstGeneric = this.isGenericUsedInType(child);
+      if (firstGeneric) {
+        return;
+      }
+    });
+    return firstGeneric;
+  }
+
+  public static getUnusedGenerics(astRoot: ts.SourceFile): astType[] {
+    const typeMap = new Map<
+      string,
+      { used: boolean; kind: string; pos: number; node: ts.Node }
+    >();
+    const unusedGenerics: {
+      name: string;
+      kind: string;
+      line: number;
+      character: number;
+    }[] = [];
+
+    // 1. 收集所有的泛型声明（包括类型别名、函数签名中的泛型等）
+    this.collectGenerics(astRoot, typeMap);
+
+    // 2. 遍历 AST 检查这些泛型是否被使用
+    this.checkGenericUsages(typeMap);
+
+    // 3. 输出未使用的泛型
+    for (const [name, info] of typeMap.entries()) {
+      if (!info.used) {
+        const { line, character } = astRoot.getLineAndCharacterOfPosition(
+          info.pos
+        );
+        unusedGenerics.push({
+          name: info.kind,
+          kind: info.kind,
+          line: line + 1,
+          character: character + 1,
+        });
+      }
+    }
+    return unusedGenerics;
+  }
+
+  // 递归遍历 AST
+  public static traverseAST(node: ts.Node, namespaceName: string): boolean {
+    // 如果节点为空，或者已经找到了命名空间使用，直接返回 true
+    if (!node) {
+      return false;
+    }
+
+    // 处理 PropertyAccessExpression 这种访问（MyNamespace.greet()）
+    if (node.kind === ts.SyntaxKind.PropertyAccessExpression) {
+      const propertyAccess = node as ts.PropertyAccessExpression;
+      // 检查访问的对象是否是命名空间 MyNamespace
+      if (
+        propertyAccess.expression.kind === ts.SyntaxKind.Identifier &&
+        (propertyAccess.expression as ts.Identifier).text === namespaceName
+      ) {
+        // 如果访问的属性（函数或变量）也匹配
+        return true;
+      }
+    }
+
+    // 处理 QualifiedName 这种类型引用（MyNamespace.SomeType）
+    if (node.kind === ts.SyntaxKind.QualifiedName) {
+      const qualifiedName = node as ts.QualifiedName;
+      if (
+        qualifiedName.left.kind === ts.SyntaxKind.Identifier &&
+        (qualifiedName.left as ts.Identifier).text === namespaceName
+      ) {
+        return true; // 找到命名空间 MyNamespace 被引用
+      }
+    }
+
+    // 递归遍历子节点
+    return (
+      ts.forEachChild(node, (childNode) => {
+        return this.traverseAST(childNode, namespaceName); // 一旦找到目标，递归会返回 true
+      }) || false
+    ); // 如果没有找到任何子节点使用该命名空间，返回 false
+  }
+
+  // `isNamespaceUsed` 方法调用外部 `traverseAST`
+  public static isNamespaceUse(
+    arkfile: ArkFile,
+    namespaceSignature: NamespaceSignature
+  ): boolean {
+    for (const clasz of arkfile.getClasses()) {
+      for (const method of clasz.getMethods()) {
+        if (this.isMethodUsingNamespace(method, namespaceSignature)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  public static isMethodUsingNamespace(
+    method: ArkMethod,
+    namespaceSignature: NamespaceSignature
+  ): boolean {
+    const stmts = method.getBody()?.getCfg()?.getStmts() ?? [];
+    for (const stmt of stmts) {
+      if (
+        stmt instanceof ArkInvokeStmt &&
+        this.isInvokeUsingNamespace(stmt, namespaceSignature)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static isInvokeUsingNamespace(
+    stmt: ArkInvokeStmt,
+    namespaceSignature: NamespaceSignature
+  ): boolean {
+    const invokeExpr = stmt.getInvokeExpr();
+    const methodSignature = invokeExpr.getMethodSignature();
+    if (
+      methodSignature instanceof NamespaceSignature &&
+      methodSignature === namespaceSignature
+    ) {
+      return true;
+    }
+    const args = invokeExpr.getArgs();
+    for (const arg of args) {
+      if (this.isArgumentUsingNamespace(arg, namespaceSignature)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static isArgumentUsingNamespace(
+    arg: any,
+    namespaceSignature: NamespaceSignature
+  ): boolean {
+    const varBaseArg = arg as Var_base;
+    if (varBaseArg && varBaseArg.declaringStmt instanceof ArkAssignStmt) {
+      const origText = varBaseArg.declaringStmt.getOriginalText() ?? '';
+      if (this.isTextUsed(origText, namespaceSignature.getNamespaceName())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  
+  public static getClassOrMethod(arkFileAllClass: ArkClass[], arkfile: ArkFile): noUseVars[] {
+    let nousedSet: noUseVars[] = [];
+    for (const targetClass of arkFileAllClass) {
+      let methods = targetClass.getMethods();
+      const methodStatic = targetClass.getMethodWithName('%statBlock0'); //获取static块
+      if (methodStatic) {
+        methods.push(methodStatic);
+      }
+      const isDefault = targetClass.getName() === '%dflt';
+      const isExported = targetClass?.isExport();
+      //逻辑语句中定义class 命名规则 className$作用域className.作用域函数名 要进行解析不能直接使用
+      const className = targetClass.getName().split('$')[0];
+      const extendedClass = targetClass.getExtendedClasses();
+      const isInternal = targetClass.getName().startsWith('%');
+      if (
+        !(isExported) &&
+        !isInternal &&
+        extendedClass.size === 0
+      ) {
+        if (methodStatic) {
+          nousedSet.push({
+            varType: VarType.Class,
+            arkClass: targetClass,
+            name: className,
+            static: true,
+          });
+        } else {
+          nousedSet.push({
+            varType: VarType.Class,
+            arkClass: targetClass,
+            name: className,
+          });
+        }
+      }
+    }
+    return nousedSet;
+  }
+  public static filterClass(clas: ArkClass, signature: ClassSignature, exportNames: string[]): boolean {
+
+      const implents = clas.getImplementedInterfaceNames(); //string[]
+      const className = signature.getClassName();
+      if (
+        exportNames.includes(className) ||
+        implents.includes(className)
+      ) {
+        return true;
+      }
+      //处理 new Object()情况
+      const fields = clas.getFields();
+      for (const item of fields) {
+        let ui = item?.getType()?.getTypeString() ?? '-101p';
+        const typeSign = (item?.getType() instanceof ClassType) ? (item?.getType() as ClassType)?.getClassSignature() : null;
+        if (
+           typeSign === signature ||
+          (this.isTextUsed(ui, className) &&
+          !this.isTextUsed(ui, `$${className}`))
+        ) {
+          return true;
+        }
+      }
+    // }
+    return false;
+  }
+
+  public static collectImports(
+    node: ts.Node,
+    astRoot: ts.SourceFile,
+    importMap: Map<string, { used: boolean; source: string }>
+  ): void {
+    if (ts.isImportDeclaration(node) || ts.isImportEqualsDeclaration(node)) {
+      this.processImportDeclaration(node, astRoot, importMap);
+    }
+
+    ts.forEachChild(node, (child) =>
+      this.collectImports(child, astRoot, importMap)
+    );
+  }
+
+  public static processImportDeclaration(
+    node: ts.ImportDeclaration | ts.ImportEqualsDeclaration,
+    astRoot: ts.SourceFile,
+    importMap: Map<string, { used: boolean; source: string }>
+  ): void {
+    if (ts.isImportDeclaration(node)) {
+      const moduleText = node.moduleSpecifier.getText(astRoot);
+      const importClause = node.importClause;
+
+      if (importClause) {
+        if (importClause.name) {
+          this.processDefaultImport(
+            importClause.name.text,
+            moduleText,
+            importMap
+          );
+        }
+
+        if (importClause.namedBindings) {
+          this.processNamedBindings(
+            importClause.namedBindings,
+            moduleText,
+            importMap
+          );
+        }
+      }
+    } else if (ts.isImportEqualsDeclaration(node)) {
+      const moduleText = node.moduleReference.getText();
+      const importClauseName = node.name.escapedText.toString();
+      this.processDefaultImport(importClauseName, moduleText, importMap);
+    }
+  }
+
+  public static processDefaultImport(
+    defaultImportName: string,
+    source: string,
+    importMap: Map<string, { used: boolean; source: string }>
+  ): void {
+    importMap.set(defaultImportName, { used: false, source: source });
+  }
+
+  public static processNamedBindings(
+    namedBindings: ts.ImportClause['namedBindings'],
+    source: string,
+    importMap: Map<string, { used: boolean; source: string }>
+  ): void {
+    if (namedBindings && ts.isNamedImports(namedBindings)) {
+      this.processNamedImports(namedBindings, source, importMap);
+    } else if (namedBindings && ts.isNamespaceImport(namedBindings)) {
+      this.processNamespaceImport(namedBindings, source, importMap);
+    }
+  }
+
+  public static processNamedImports(
+    namedImports: ts.NamedImports,
+    source: string,
+    importMap: Map<string, { used: boolean; source: string }>
+  ): void {
+    for (const element of namedImports.elements) {
+      importMap.set(element.name.text, {
+        used: false,
+        source: source,
+      });
+    }
+  }
+
+  public static processNamespaceImport(
+    namespaceImport: ts.NamespaceImport,
+    source: string,
+    importMap: Map<string, { used: boolean; source: string }>
+  ): void {
+    importMap.set(namespaceImport.name.text, {
+      used: false,
+      source: source,
+    });
+  }
+
+  // 辅助函数：递归遍历 AST 检查标识符的使用情况
+  public static checkUsage(
+    node: ts.Node,
+    astRoot: ts.SourceFile,
+    importMap: Map<string, { used: boolean; source: string }>
+  ): void {
+    if (ts.isIdentifier(node)) {
+      // 排除在导入声明中的标识符
+      if (
+        node.parent &&
+        (ts.isImportSpecifier(node.parent) ||
+          ts.isImportClause(node.parent) ||
+          ts.isNamespaceImport(node.parent) ||
+          ts.isImportEqualsDeclaration(node.parent))
+      ) {
+        // 忽略
+      } else {
+        if (importMap.has(node.text)) {
+          const info = importMap.get(node.text)!;
+          info.used = true;
+          importMap.set(node.text, info);
+        }
+      }
+    }
+    ts.forEachChild(node, (child) =>
+      this.checkUsage(child, astRoot, importMap)
+    );
+  }
+
+  // 主函数：检测未使用的导入
+  public static noUsedImport(astRoot: ts.SourceFile): string[] {
+    const importMap = new Map<string, { used: boolean; source: string }>();
+    const noUsedImports: string[] = [];
+    // 1. 收集导入信息
+    this.collectImports(astRoot, astRoot, importMap);
+
+    // 2. 检查标识符使用情况
+    this.checkUsage(astRoot, astRoot, importMap);
+
+    // 3. 输出未使用的导入
+    for (const [name, info] of importMap.entries()) {
+      if (!info.used) {
+        noUsedImports.push(name);
+      }
+    }
+    return noUsedImports;
+  }
+ 
+
   }
  

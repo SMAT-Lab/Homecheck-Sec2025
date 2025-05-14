@@ -64,7 +64,7 @@ const logger = Logger.getLogger(
 );
 const gMetaData: BaseMetaData = {
   severity: 1,
-  ruleDocPath: 'docs/require-array-sort-compare-check.md',
+  ruleDocPath: 'docs/require-array-sort-compare.md',
   description: `Require 'compare' argument.`,
 };
 //此规则旨在确保本机排序方法的所有调用都提供 ，同时忽略对用户定义方法的调用

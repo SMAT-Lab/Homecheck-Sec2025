@@ -90,11 +90,11 @@ export class OneMultiBreakpointCheck implements BaseChecker {
         }
     }
 
-    private processArg(arg: Value): void {
-        if (!(arg instanceof Local)) {
+    private processArg(arg1: Value, arg2?: Value): void {
+        if (!(arg1 instanceof Local)) {
             return;
         }
-        let decStmt = arg.getDeclaringStmt();
+        let decStmt = arg1.getDeclaringStmt();
         if (decStmt instanceof ArkConditionExpr) {
             if (this.processConditionExpr(decStmt)) {
                 this.reportIssue(decStmt);
@@ -107,7 +107,14 @@ export class OneMultiBreakpointCheck implements BaseChecker {
                 }
             } else if (defRightOp instanceof ArkNormalBinopExpr) {
                 this.processArg(defRightOp.getOp1());
+            } else if (defRightOp instanceof ArkStaticInvokeExpr) {
+                if (displaySignature.includes(defRightOp.getMethodSignature().toString())) {
+                    this.reportIssue(decStmt);
+                }
             }
+        }
+        if (arg2) {
+            this.processArg(arg2);
         }
     }
 
@@ -144,7 +151,7 @@ export class OneMultiBreakpointCheck implements BaseChecker {
         } else if (rightOp instanceof ArkStaticInvokeExpr) {
             return rightOp.getMethodSignature().toString();
         } else if (rightOp instanceof ArkNormalBinopExpr) {
-            this.processArg(rightOp.getOp1());
+            this.processArg(rightOp.getOp1(), rightOp.getOp2());
         }
         return null;
     }

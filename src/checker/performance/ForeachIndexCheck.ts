@@ -212,7 +212,7 @@ export class ForeachIndexCheck implements BaseChecker {
                 startCol += pos;
                 const endCol = startCol + this.FOREACH_STR.length - 1;
                 const originPath = arkFile.getFilePath();
-                return { line, startCol, endCol, filePath: originPath }
+                return { line, startCol, endCol, filePath: originPath };
             }
         } else {
             logger.debug('Get arkFile failed.');

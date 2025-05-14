@@ -38,7 +38,7 @@ const MAX_DEPTH = 1;
 export class MaxClassesPerFileCheck implements BaseChecker {
     metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/max-classes-per-file-check.md',
+        ruleDocPath: 'docs/max-classes-per-file.md',
         description: 'Enforce a maximum number of classes per file'
     };
     public rule: Rule;

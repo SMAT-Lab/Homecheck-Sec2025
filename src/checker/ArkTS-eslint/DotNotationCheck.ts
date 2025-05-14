@@ -48,7 +48,7 @@ const stringStart = /^[\d+\-*]/;
 const codeStringReg = /^['"](.*)['"]$/;
 const gMetaData: BaseMetaData = {
   severity: 1,
-  ruleDocPath: 'docs/dot-notation-check.md',
+  ruleDocPath: 'docs/dot-notation.md',
   description: 'is better written in dot notation.',
 };
 //要求或不允许函数标识符和它们的调用之间有空格

@@ -25,7 +25,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoRedeclareCheck');
 
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-redeclare-check.md',
+    ruleDocPath: 'docs/no-redeclare.md',
     description: 'Disallow variable redeclaration.'
 };
 

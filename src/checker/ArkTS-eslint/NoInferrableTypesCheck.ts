@@ -56,7 +56,7 @@ export class NoInferrableTypesCheck implements BaseChecker {
     ];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-inferrable-types-check.md',
+        ruleDocPath: 'docs/no-inferrable-types.md',
         description: 'Disallow explicit type declarations for variables or parameters initialized to a number, string, or boolean',
     };
 

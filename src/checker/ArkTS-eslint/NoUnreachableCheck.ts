@@ -42,7 +42,7 @@ export class NoUnreachableCheck implements BaseChecker {
     public issues: IssueReport[] = [];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-unreachable-check.md',
+        ruleDocPath: 'docs/no-unreachable.md',
         description: 'Disallow unreachable code after `return`, `throw`, `continue`, and `break` statements',
     };
 

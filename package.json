@@ -25,7 +25,8 @@
     "docs",
     "lib",
     "resources",
-    "ruleSet.json"
+    "ruleSet.json",
+    "config"
   ],
   "author": "",
   "license": "ISC"

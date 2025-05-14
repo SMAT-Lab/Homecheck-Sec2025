@@ -26,7 +26,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'ConsistentTypeAssert
 
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/consistent-type-assertions-check.md',
+    ruleDocPath: 'docs/consistent-type-assertions.md',
     description: 'Enforce consistent usage of type assertions.'
 };
 

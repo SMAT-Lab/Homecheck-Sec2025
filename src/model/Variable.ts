@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Local, Stmt } from "arkanalyzer";
-import { VarInfo } from "./VarInfo";
+import { Local, Stmt } from 'arkanalyzer';
+import { VarInfo } from './VarInfo';
 
 export class Variable {
     defStmt: Stmt;
@@ -27,6 +27,6 @@ export class Variable {
     }
 
     public getName(): string {
-        return (this.defStmt.getDef() as Local).getName(); 
+        return (this.defStmt.getDef() as Local).getName();
     }
 }

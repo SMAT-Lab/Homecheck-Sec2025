@@ -13,26 +13,26 @@
  * limitations under the License.
  */
 
-import { ArkAssignStmt, ArkInstanceFieldRef, ArkInvokeStmt, ArkMethod, Constant, Local, MethodSignature, Stmt, ViewTreeNode } from "arkanalyzer/lib";
-import { ArkClass } from "arkanalyzer/lib/core/model/ArkClass";
+import { ArkAssignStmt, ArkInstanceFieldRef, ArkInvokeStmt, ArkMethod, Constant, Local, MethodSignature, Stmt, ViewTreeNode } from 'arkanalyzer/lib';
+import { ArkClass } from 'arkanalyzer/lib/core/model/ArkClass';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
-import { Rule, Defects, ClassMatcher, MatcherTypes, MethodMatcher, MatcherCallback } from "../../Index";
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
+import { Rule, Defects, ClassMatcher, MatcherTypes, MethodMatcher, MatcherCallback } from '../../Index';
 import { ViewTreeTool } from '../../utils/checker/ViewTreeTool';
-import { IssueReport } from "../../model/Defects";
+import { IssueReport } from '../../model/Defects';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'ImageSyncLoadCheck');
 let viewTreeTool: ViewTreeTool = new ViewTreeTool();
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/image-sync-load-check.md",
-    description: "Asynchronous loading is recommended when a Iarge image is input."
+    ruleDocPath: 'docs/image-sync-load-check.md',
+    description: 'Asynchronous loading is recommended when a Iarge image is input.'
 };
 
 export class ImageSyncLoadCheck implements BaseChecker {
     readonly metaData: BaseMetaData = gMetaData;
-    readonly IMAGE: string = "Image";
-    readonly SYNCLOAD: string = "syncLoad";
+    readonly IMAGE: string = 'Image';
+    readonly SYNCLOAD: string = 'syncLoad';
     public rule: Rule;
     public defects: Defects[] = [];
     public issues: IssueReport[] = [];
@@ -50,23 +50,23 @@ export class ImageSyncLoadCheck implements BaseChecker {
         const matchClazzCb: MatcherCallback = {
             matcher: this.clsMatcher,
             callback: this.check
-        }
+        };
         const matchMethodCb: MatcherCallback = {
             matcher: this.mtdMatcher,
             callback: this.check
-        }
+        };
         return [matchClazzCb, matchMethodCb];
     }
 
-    public check = (target: ArkClass | ArkMethod) => {
+    public check = (target: ArkClass | ArkMethod): void => {
         if (target instanceof ArkClass && !viewTreeTool.hasTraverse(target)) {
             this.obtainClassViewTree(target);
         } else if (target instanceof ArkMethod) {
             this.obtainMethodViewTree(target);
         }
-    }
+    };
 
-    private obtainClassViewTree(clazz: ArkClass) {
+    private obtainClassViewTree(clazz: ArkClass): void {
         let viewTreeRoot = clazz.getViewTree()?.getRoot();
         if (!viewTreeRoot) {
             return;
@@ -74,7 +74,7 @@ export class ImageSyncLoadCheck implements BaseChecker {
         this.traverseViewTree(viewTreeRoot);
     }
 
-    private obtainMethodViewTree(method: ArkMethod) {
+    private obtainMethodViewTree(method: ArkMethod): void {
         let viewTreeRoot = method.getViewTree()?.getRoot();
         if (!viewTreeRoot) {
             return;
@@ -82,7 +82,7 @@ export class ImageSyncLoadCheck implements BaseChecker {
         this.traverseViewTree(viewTreeRoot);
     }
 
-    private traverseViewTree(viewTreeRoot: ViewTreeNode) {
+    private traverseViewTree(viewTreeRoot: ViewTreeNode): void {
         if (viewTreeTool.hasTraverse(viewTreeRoot)) {
             return;
         }
@@ -124,7 +124,7 @@ export class ImageSyncLoadCheck implements BaseChecker {
         return null;
     }
 
-    private addIssueReport(stmt: Stmt) {
+    private addIssueReport(stmt: Stmt): void {
         const severity = this.rule.alert ?? this.metaData.severity;
         const warnInfo = this.getLineAndColumn(stmt);
         if (warnInfo) {
@@ -134,7 +134,12 @@ export class ImageSyncLoadCheck implements BaseChecker {
         }
     }
 
-    private getLineAndColumn(stmt: Stmt) {
+    private getLineAndColumn(stmt: Stmt): {
+        lineNum: number;
+        startCol: number;
+        endCol: number;
+        filePath: string;
+    } | undefined {
         const originPosition = stmt.getOriginPositionInfo();
         const line = originPosition.getLineNo();
         const arkFile = stmt.getCfg()?.getDeclaringMethod().getDeclaringArkFile();
@@ -142,7 +147,7 @@ export class ImageSyncLoadCheck implements BaseChecker {
             let text = stmt.getOriginalText();
             let startCol = 0;
             if (!text || text?.length === 0) {
-                return;
+                return undefined;
             }
             let checkText = '.syncLoad(true)';
             let originalTexts = text.split('\n');

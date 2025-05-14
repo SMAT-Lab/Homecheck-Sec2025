@@ -13,22 +13,22 @@
  * limitations under the License.
  */
 
-import { ArkAssignStmt, ArkFile, ArkInstanceFieldRef, ArkNewArrayExpr, ArkStaticInvokeExpr, Constant, FieldSignature, Local, Scene, Stmt, Value, ViewTreeNode } from "arkanalyzer/lib";
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
-import { ArkClass, ClassCategory } from "arkanalyzer/lib/core/model/ArkClass";
-import { ClassMatcher, MatcherCallback, MatcherTypes } from "../../matcher/Matchers";
-import { CheckerUtils } from "../../utils/checker/CheckerUtils";
-import { Defects } from "../../model/Defects";
+import { ArkAssignStmt, ArkFile, ArkInstanceFieldRef, ArkNewArrayExpr, ArkStaticInvokeExpr, Constant, FieldSignature, Local, Scene, Stmt, Value, ViewTreeNode } from 'arkanalyzer/lib';
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
+import { ArkClass, ClassCategory } from 'arkanalyzer/lib/core/model/ArkClass';
+import { ClassMatcher, MatcherCallback, MatcherTypes } from '../../matcher/Matchers';
+import { CheckerUtils } from '../../utils/checker/CheckerUtils';
+import { Defects } from '../../model/Defects';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { Rule } from "../../model/Rule";
-import { ViewTreeTool } from "../../utils/checker/ViewTreeTool";
-import { IssueReport } from "../../model/Defects";
+import { Rule } from '../../model/Rule';
+import { ViewTreeTool } from '../../utils/checker/ViewTreeTool';
+import { IssueReport } from '../../model/Defects';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'LoadOnDemandCheck');
 const gMetaData: BaseMetaData = {
     severity: 3,
-    ruleDocPath: "docs/load-on-demand-check.md",
-    description: "Load as needed LazyForEach."
+    ruleDocPath: 'docs/load-on-demand-check.md',
+    description: 'Load as needed LazyForEach.'
 };
 const viewTreeTool = new ViewTreeTool();
 const FOREACH_STR = 'ForEach';
@@ -49,11 +49,11 @@ export class LoadOnDemandCheck implements BaseChecker {
         const matchClassCb: MatcherCallback = {
             matcher: this.clsMatcher,
             callback: this.check
-        }
+        };
         return [matchClassCb];
     }
 
-    public check = (targetCla: ArkClass) => {
+    public check = (targetCla: ArkClass): void => {
         if (viewTreeTool.hasTraverse(targetCla)) {
             return;
         }
@@ -62,9 +62,9 @@ export class LoadOnDemandCheck implements BaseChecker {
             return;
         }
         this.lookingForEach(targetCla, viewTreeRoot, targetCla.getDeclaringArkFile().getScene());
-    }
+    };
 
-    private lookingForEach(targetCla: ArkClass, viewTreeRoot: ViewTreeNode, scene: Scene) {
+    private lookingForEach(targetCla: ArkClass, viewTreeRoot: ViewTreeNode, scene: Scene): void {
         if (viewTreeRoot === undefined || viewTreeRoot === null) {
             return;
         }
@@ -149,7 +149,7 @@ export class LoadOnDemandCheck implements BaseChecker {
         return 0;
     }
 
-    private reportIssue(arkFile: ArkFile, stmt: Stmt, targetName: string) {
+    private reportIssue(arkFile: ArkFile, stmt: Stmt, targetName: string): void {
         const severity = this.rule.alert ?? this.metaData.severity;
         const filePath = arkFile.getFilePath();
         const originPosition = stmt.getOriginPositionInfo();

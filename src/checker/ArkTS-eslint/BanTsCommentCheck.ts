@@ -24,7 +24,7 @@ import { IssueReport } from '../../model/Defects';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'BanTsCommentCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/ban-ts-comment-check.md",
+    ruleDocPath: "docs/ban-ts-comment.md",
     description: "Disallow `@ts-<directive>` comments or require descriptions after directives.",
 };
 

@@ -68,7 +68,7 @@ const targetClasses = ['Promise', 'PromiseLike', 'PromiseConstructor'];
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoMisusedPromisesCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-misused-promises-check.md',
+    ruleDocPath: 'docs/no-misused-promises.md',
     description: 'Disallow Promises in places not designed to handle them',
     messages: {
         conditional: 'Expected non-Promise value in a boolean conditional.',

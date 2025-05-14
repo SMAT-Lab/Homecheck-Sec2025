@@ -79,7 +79,7 @@ const strRegex = /^'[^']*'$|^"[^"]*"$/;
 // 规则元数据
 const gmetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/restrict-template-expressions-check.md',
+    ruleDocPath: 'docs/restrict-template-expressions.md',
     description: 'Enforce template literal expressions to be of string type',
     messages: {
         invalidType: 'Invalid type "{{type}}" of template literal expression.'

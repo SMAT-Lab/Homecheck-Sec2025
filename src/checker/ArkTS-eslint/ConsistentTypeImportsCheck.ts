@@ -26,7 +26,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'ConsistentTypeImport
 
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/consistent-type-imports-check.md',
+    ruleDocPath: 'docs/consistent-type-imports.md',
     description: 'Enforce consistent usage of type imports.'
 };
 

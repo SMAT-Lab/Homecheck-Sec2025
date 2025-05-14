@@ -40,7 +40,7 @@ const logger = Logger.getLogger(
 );
 const gMetaData: BaseMetaData = {
   severity: 1,
-  ruleDocPath: 'docs/prefer-readonly-parameter-types-check.md', // TODO: support url
+  ruleDocPath: 'docs/prefer-readonly-parameter-types.md', // TODO: support url
   description: 'Parameter should be a read only type.',
 };
 const readonlyReg = /^readonly \[/;

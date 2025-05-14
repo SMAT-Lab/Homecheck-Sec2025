@@ -1,11 +1,11 @@
 ## 规则名
 
-@performance/lower-power-consumption-check，在音乐播放场景或导航定位场景中，应设置正确的usage类型，不可设置为STREAM_USAGE_UNKNOWN。
+@performance/stream-usage-api-check，在音乐播放场景或导航定位场景中，应设置正确的usage类型，不可设置为STREAM_USAGE_UNKNOWN。
 
 ## 规则来源
 
-参考文档：[音乐场景最佳实践](https://developer.huawei.com/consumer/cn/doc/best-practices/bpta-music-playback-scenarios) 和
-[导航场景最佳实践](https://developer.huawei.com/consumer/cn/doc/best-practices/bpta-navigation-scenarios)
+参考文档：[音乐场景文档链接](https://developer.huawei.com/consumer/cn/doc/best-practices/bpta-music-playback-scenarios) 以及
+[导航场景文档链接](https://developer.huawei.com/consumer/cn/doc/best-practices/bpta-navigation-scenarios)
 
 ## 反例代码
 

@@ -31,7 +31,7 @@ export class NoUnnecessaryBooleanLiteralCompareCheck implements BaseChecker {
     public issues: IssueReport[] = [];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-unnecessary-boolean-literal-compare-check.md',
+        ruleDocPath: 'docs/no-unnecessary-boolean-literal-compare.md',
         description: 'Disallow unnecessary equality comparisons against boolean literals'
     };
 
@@ -480,12 +480,13 @@ export class NoUnnecessaryBooleanLiteralCompareCheck implements BaseChecker {
         const lineAndChar = sourceFile.getLineAndCharacterOfPosition(start);
         const lineNumber = lineAndChar.line + 1;
         const column = lineAndChar.character + 1;
+        const severity = this.rule.alert ?? this.metaData.severity;
         const defect = new Defects(
             lineNumber,
             column,
             end.character + 1,
             message,
-            this.metaData.severity,
+            severity,
             this.rule.ruleId,
             `${filePath}%${lineNumber}%${column}%${this.rule.ruleId}`,
             this.metaData.ruleDocPath,

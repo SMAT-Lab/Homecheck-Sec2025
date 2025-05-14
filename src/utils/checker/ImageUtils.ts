@@ -42,7 +42,7 @@ const keys = Object.keys(typeHandlers) as imageType[];
 
 export function readImageInfo(filePath: string): ImageInfo | undefined {
     const input = readFileSync(filePath);
-    if (!input) return undefined;
+    if (!input) { return undefined };
     const type = detector(input);
     if (typeof type === 'undefined') {
         return undefined;
@@ -91,7 +91,7 @@ function detector(input: Uint8Array): imageType | undefined {
                 return type;
             }
         }
-        const finder = (key: imageType) => typeHandlers[key].validate(input);
+        const finder = (key: imageType): boolean => typeHandlers[key].validate(input);
         return keys.find(finder);
     } catch (error) {
         return undefined;

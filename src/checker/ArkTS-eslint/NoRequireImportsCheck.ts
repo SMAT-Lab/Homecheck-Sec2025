@@ -25,7 +25,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoRequireImportsChec
 
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-require-imports-check.md',
+    ruleDocPath: 'docs/no-require-imports.md',
     description: 'A `require()` style import is forbidden.'
 };
 

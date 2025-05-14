@@ -24,7 +24,7 @@ import { RuleListUtil } from "../../utils/common/DefectsList";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoDupeClassMembersCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/no-dupe-class-members-check.md",
+    ruleDocPath: "docs/no-dupe-class-members.md",
     description: "Disallow duplicate class members.",
 };
 

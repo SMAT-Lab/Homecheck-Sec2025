@@ -57,6 +57,10 @@ class Scope {
         return this.variables.get(name) ?? this.parent?.getVariable(name);
     };
 
+    isVariableInCurrentScope(name: string): boolean {
+        return this.variables.has(name);
+    };
+
     isWithinFunctionOf(targetScope: Scope): boolean {
         let current: Scope | undefined = this;
         while (current) {
@@ -141,7 +145,7 @@ interface LoopContext {
 export class PreferConstCheck implements BaseChecker {
     metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/prefer-const-check.md',
+        ruleDocPath: 'docs/prefer-const.md',
         description: 'Require `const` declarations for variables that are never reassigned after declared.'
     };
     private defaultOptions: Options = [{
@@ -173,7 +177,14 @@ export class PreferConstCheck implements BaseChecker {
     };
 
     private exitScope(): void {
-        this.scopeStack.pop();
+        if (this.scopeStack.length > 1) {
+            const exitedScope = this.scopeStack.pop();
+            exitedScope?.variables.forEach(variable => {
+                if (!this.isReassigned(variable)) {
+                    this.reportConstSuggestion(variable);
+                };
+            });
+        };
     };
 
     private enterLoop(): void {
@@ -257,7 +268,8 @@ export class PreferConstCheck implements BaseChecker {
             }
         };
         this.walkNodes(this.ast, visitors);
-        this.currentScope().variables.forEach(variable => {
+        const globalScope = this.scopeStack[0];
+        globalScope?.variables.forEach(variable => {
             if (!this.isReassigned(variable)) {
                 this.reportConstSuggestion(variable);
             };
@@ -279,11 +291,20 @@ export class PreferConstCheck implements BaseChecker {
     }
 
     private leave(node: ts.Node): void {
+        if (ts.isForOfStatement(node) || ts.isForInStatement(node)) {
+            const exitedScope = this.currentScope();
+            this.exitScope();
+            exitedScope?.variables.forEach(variable => {
+                if (!this.isReassigned(variable)) {
+                    this.reportConstSuggestion(variable);
+                };
+            });
+        };
         if (ts.isSwitchStatement(node)) {
             // 退出 switch 的作用域并分析变量
             const exitedScope = this.currentScope();
             this.exitScope();
-            exitedScope.variables.forEach(variable => {
+            exitedScope?.variables.forEach(variable => {
                 if (!this.isReassigned(variable)) {
                     this.reportConstSuggestion(variable);
                 }
@@ -293,7 +314,7 @@ export class PreferConstCheck implements BaseChecker {
             const exitedScope = this.currentScope();
             this.exitScope();
             // 处理静态块作用域内的变量
-            exitedScope.variables.forEach(variable => {
+            exitedScope?.variables.forEach(variable => {
                 if (!this.isReassigned(variable)) {
                     this.reportConstSuggestion(variable);
                 };
@@ -302,7 +323,7 @@ export class PreferConstCheck implements BaseChecker {
         if (ts.isBlock(node) || ts.isFunctionLike(node)) {
             const exitedScope = this.currentScope();
             this.exitScope();
-            exitedScope.variables.forEach(variable => {
+            exitedScope?.variables.forEach(variable => {
                 if (!this.isReassigned(variable)) {
                     this.reportConstSuggestion(variable);
                 };
@@ -370,22 +391,26 @@ export class PreferConstCheck implements BaseChecker {
     private visitForOfStatement(node: ts.ForOfStatement, visitors: any): void {
         this.enterLoop();
         try {
+            // 关键修改：为整个循环创建独立作用域
+            this.enterScope('block');
+
             // 处理迭代表达式
             this.enterLoopPart('initializer');
             this.walkNodes(node.expression, visitors);
             this.exitLoopPart();
-            // 处理声明部分
+
+            // 处理 initializer（如 `let a`）
             this.enterLoopPart('initializer');
-            this.enterScope('block');
             this.walkNodes(node.initializer, visitors);
-            this.exitScope();
             this.exitLoopPart();
+
             // 处理循环体
             this.enterLoopPart('body');
-            this.enterScope('block');
             this.walkNodes(node.statement, visitors);
-            this.exitScope();
             this.exitLoopPart();
+
+            // 退出循环作用域
+            this.exitScope();
         } finally {
             this.exitLoop();
         }
@@ -711,7 +736,9 @@ export class PreferConstCheck implements BaseChecker {
     //变量声明的方法
     private processLetDeclaration(node: VariableDeclarationType): void {
         if (ts.isIdentifier(node.name)) {
-            this.registerVariable(node.name);
+            if (!this.currentScope().isVariableInCurrentScope(node.name.text)) {
+                this.registerVariable(node.name);
+            };
             if (node.initializer) {
                 const variable = this.currentScope().getVariable(node.name.text);
                 variable?.references.push(new Reference(node.name, true, true, this.currentScope(), {}, node));
@@ -727,7 +754,7 @@ export class PreferConstCheck implements BaseChecker {
             this.walkNodes(elem.initializer, {
                 enter: (node: ts.Node) => {
                     if (ts.isBindingElement(node.parent)) {
-                        const variable = this.currentScope().getVariable(varName);
+                        const variable = this.currentScope()?.getVariable(varName);
                         variable?.references.push(new Reference(bindingName, true, true, this.currentScope(), {}, parentDeclaration));
                     };
                 },
@@ -795,6 +822,9 @@ export class PreferConstCheck implements BaseChecker {
     };
 
     private registerVariable(identifier: ts.Identifier): void {
+        if (this.scopeStack.length === 0) {
+            this.scopeStack = [new Scope(undefined, 'global')];
+        };
         const variable = new Variable(identifier.text, this.currentScope(), identifier);
         this.currentScope().variables.set(identifier.text, variable);
         variable.declarations.push(identifier);
@@ -815,7 +845,7 @@ export class PreferConstCheck implements BaseChecker {
         };
         const isConditionalWrite = this.isInConditionContext(left);
         const processIdentifier = (node: ts.Identifier, patternDepth: number): void => {
-            const variable = this.currentScope().getVariable(node.text);
+            const variable = this.currentScope()?.getVariable(node.text);
             if (variable) {
                 const isCrossScope = variable.scope !== this.currentScope();
                 variable.references.push(new Reference(node, true, false, this.currentScope(),

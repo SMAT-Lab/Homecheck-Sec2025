@@ -16,7 +16,7 @@
 import { ArkClass, ArkFile } from 'arkanalyzer';
 import { ClassMatcher, isMatchedFile, isMatchedNamespace, isMatchedClass } from '../Matchers';
 
-export function matchClass(arkFiles: ArkFile[], matcher: ClassMatcher, callback: Function) {
+export function matchClass(arkFiles: ArkFile[], matcher: ClassMatcher, callback: Function): void {
     for (let arkFile of arkFiles) {
         if (matcher.file && !isMatchedFile(arkFile, matcher.file)) {
             continue;
@@ -31,7 +31,7 @@ export function matchClass(arkFiles: ArkFile[], matcher: ClassMatcher, callback:
     }
 }
 
-function matchClassProcess(matcher: ClassMatcher, classes: ArkClass[], callback: Function) {
+function matchClassProcess(matcher: ClassMatcher, classes: ArkClass[], callback: Function): void {
     for (const arkClass of classes) {
         if (isMatchedClass(arkClass, [matcher])) {
             callback(arkClass);

@@ -34,7 +34,7 @@ interface RuleResult {
 export class NoConfusingNonNullAssertionCheck implements BaseChecker {
   public metaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-confusing-non-null-assertion-check.md',
+    ruleDocPath: 'docs/no-confusing-non-null-assertion.md',
     description: 'Confusing combinations of non-null assertion and equal test like "a! == b", which looks very similar to not equal "a !== b',
   };
   public rule: Rule;

@@ -22,7 +22,7 @@ import { RuleFix } from '../../model/Fix';
 import { AstTreeUtils } from 'arkanalyzer';
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: 'docs/prefer-reduce-type-parameter-check.md',
+  ruleDocPath: 'docs/prefer-reduce-type-parameter.md',
   description: 'Unnecessary cast: Array#reduce accepts a type parameter for the default value.',
   defaultOptions: [],
 };

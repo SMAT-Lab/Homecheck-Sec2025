@@ -37,10 +37,13 @@ import {
   ArkCastExpr,
   AbstractInvokeExpr,
   ArkInstanceOfExpr,
-  ArkNewExpr
+  ArkNewExpr,
+  Type,
+  ArkIfStmt
 } from 'arkanalyzer/lib';
 import { RuleListUtil } from '../../utils/common/DefectsList';
 import { ArkClass } from 'arkanalyzer/lib/core/model/ArkClass';
+import { ArkExport } from 'arkanalyzer/lib/core/model/ArkExport';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
 import { BaseChecker, BaseMetaData } from '../BaseChecker';
 import {
@@ -81,6 +84,7 @@ type UseDefined = {
   posion?: [lineNo: number, column: number];
   infunc?: boolean;
   name: string; //解构-特殊情况
+  isDef?: boolean;
 };
 type Options = {
   allowNamedExports?: boolean;
@@ -107,7 +111,7 @@ const logger = Logger.getLogger(
 );
 const gMetaData: BaseMetaData = {
   severity: 1,
-  ruleDocPath: 'docs/no-use-before-define-check.md',
+  ruleDocPath: 'docs/no-use-before-define.md',
   description: 'was used before it was defined.',
 };
 //编译过程中检测未使用的本地变量和参数
@@ -246,7 +250,6 @@ private handleLeftOp(
     const declareLineNo = stmt.getOriginPositionInfo().getLineNo() ?? -1;
     const originalText = stmt.getOriginalText() ?? '';
     const startVar = originalText.split('=')[0].trim();
-    const leftStmtString = leftStmt.toString() ?? '';
     if (leftStmt?.usedStmts && leftStmt?.usedStmts?.length > 0 && this.isVariableDeclaration(originalText) && startVar.endsWith(leftName)) {
       const usedStmts = leftStmt.usedStmts;
      this.forInHandleLeftOp(usedStmts, declareLineNo, stmt, usedBefores, leftName);
@@ -255,8 +258,36 @@ private handleLeftOp(
 //处理未知类型是否在变量里
     this.processVarOrImport(stmt, declareLineNo, leftName, usedBefores, allVar, importInfos);
 
+} else if (this.isSpecialABCase(leftName, originalText)) {
+  //处理a,b 情况
+ this.otherAddUsedBefores(originalText, stmt, allVar, usedBefores);
 }
   }
+
+  private isSpecialABCase(leftName: string, originalText: string): boolean {
+    return (
+      leftName.startsWith('%') &&
+      !originalText.includes('=') &&
+      originalText.includes(',')
+    );
+  }
+
+private otherAddUsedBefores(originalText: string, stmt: Stmt, allVar: UseDefined[], usedBefores: UseDefined[]): void {
+  const varArry = originalText.split(',');
+  for (const varName of varArry) {
+    const lineNo = stmt.getOriginPositionInfo().getLineNo();
+    const varAll = allVar.find((item) => item.name === varName.trim());
+    const defLineNo = varAll?.stmt?.getOriginPositionInfo().getLineNo() ?? -1;
+    if (varAll && lineNo < defLineNo) {
+      usedBefores.push({
+        varType: VarType.Var,
+        stmt: stmt,
+        name: varName.trim() ?? '',
+      });
+    }
+  }
+}
+  
 private forInHandleLeftOp(usedStmts: Stmt[], declareLineNo: number, stmt: Stmt,
   usedBefores: UseDefined[], leftName: string
 
@@ -282,7 +313,7 @@ private processVarOrImport(stmt: Stmt, declareLineNo: number, leftName: string,
       const varLineNo = varAll?.stmt?.getOriginPositionInfo().getLineNo() ?? -1;
       //for语句中不考虑
       const originalText = stmt.getOriginalText() ?? '';
-      if (declareLineNo < varLineNo && !originalText.replace(' ', '').startsWith('for')) {
+      if (declareLineNo < varLineNo && !originalText.replace(' ', '').startsWith('for') && !this.isVariableDeclaration(originalText)) {
         //添加到结果集
         usedBefores.push({
           varType: VarType.Var,
@@ -346,9 +377,8 @@ private processVarOrImport(stmt: Stmt, declareLineNo: number, leftName: string,
     lineNo: number,
     useDefinedBefore: UseDefined
   ): void {
-    
-    const classSignature = (fieldSignature.getType() as Scene_base)?.classSignature;
-    if (classSignature) {
+    const classSignature = fieldSignature.getDeclaringSignature();
+    if (classSignature instanceof ClassSignature) {
       const arkClass = scene.getClass(classSignature);
       const line = arkClass?.getLine() ?? -1;
       const thisClass = leftOp
@@ -358,7 +388,8 @@ private processVarOrImport(stmt: Stmt, declareLineNo: number, leftName: string,
         ?.getSignature();
       const classSign = arkClass?.getSignature();
       const BtoB = classSign === thisClass;
-      if (lineNo < line && BtoB) {
+      //&& BtoB
+      if (lineNo < line ) {
         //添加到结果集
         useDefinedBefore.varType = VarType.ENUM;
         useDefinedBefore.stmt = leftOp;
@@ -490,23 +521,41 @@ private processVarOrImport(stmt: Stmt, declareLineNo: number, leftName: string,
     usedBefores: UseDefined[]
   ): UseDefined[] {
     let filerUse: UseDefined[] = [];
-    if (mergedOptions.classes) {
+    if (!mergedOptions.classes) {
       usedBefores = usedBefores.filter(
         (item) => !(item.varType === VarType.Class && item.infunc)
       );
-    } else if (mergedOptions.functions) {
+    }  
+    if (!mergedOptions.functions) {
       usedBefores = usedBefores.filter(
         (item) => !(item.varType === VarType.Method)
       );
-    } else if (mergedOptions.variables) {
+    }  
+    if (!mergedOptions.variables) {
       usedBefores = usedBefores.filter(
         (item) => !(item.varType === VarType.Var)
       );
-    } else if (mergedOptions.allowNamedExports) {
+    }  
+    if (mergedOptions.allowNamedExports) {
       usedBefores = usedBefores.filter(
         (item) => !(item.varType === VarType.Export)
       );
+    }  
+    if (!mergedOptions.enums) {
+      usedBefores = usedBefores.filter(
+        (item) => !(item.varType === VarType.ENUM)
+      );
     }
+    if (!mergedOptions.typedefs) {
+      usedBefores = usedBefores.filter(
+        (item) => !(item.varType === VarType.TypeDef)
+      );
+    }  
+    if (mergedOptions.ignoreTypeReferences) {
+      usedBefores = usedBefores.filter(
+        (item) => !item.isDef 
+      );
+    }  
     filerUse = usedBefores;
     return filerUse;
   }
@@ -530,7 +579,7 @@ private processVarOrImport(stmt: Stmt, declareLineNo: number, leftName: string,
       false,
       false
     );
-    if (warnInfo.line !== -1) {
+    if (warnInfo.line !== -1 && warnInfo.startCol !== -1) {
       this.defects.push(defect);
       this.issues.push(new IssueReport(defect, undefined));
       RuleListUtil.push(defect);
@@ -545,7 +594,8 @@ private processVarOrImport(stmt: Stmt, declareLineNo: number, leftName: string,
       const originText = stmt.getOriginalText() ?? '';
       let startCol = originPosition.getColNo();
       let pos = originText.indexOf(name);
-      const posion = this.getTextPosition(originText, name);
+      const nameInsdex = this.getArrayDefineVarIndex(stmt, name);
+      const posion = this.getTextPosition(originText, name, nameInsdex);
       startCol = posion.line === 0 ? startCol + posion.column - 1 : posion.column;
       line = posion.line > 0 ? line + posion.line : line;
       const endCol = startCol + name.length - 1;
@@ -556,23 +606,47 @@ private processVarOrImport(stmt: Stmt, declareLineNo: number, leftName: string,
     }
     return { line: -1, startCol: -1, endCol: -1, filePath: '' };
   }
-  private getTextPosition(text: string, target: string): { line: number, column: number } {
-    const escapedTarget = this.escapeRegExp(target);
-    const strictWordRegex = new RegExp(`(?<![a-zA-Z0-9])${escapedTarget}(?![a-zA-Z0-9])`, 's'); // 's' 模式支持跨行
+
+  private getArrayDefineVarIndex(stmt: Stmt, name: string): number {
+    if (!(stmt instanceof ArkAssignStmt)) {
+      return 1;
+    }
+    const startCode = stmt.getLeftOp().toString();
+    const stmtCode = stmt.getOriginalText() ?? '';
+    const index = stmtCode.lastIndexOf(name);
+    if (index > 1) {
+      const textArray = stmtCode.split(',');
+      for (let i = 0; i < textArray.length; i++) {
+        const textcode = textArray[i];
+        if (textcode.trim().startsWith(startCode)) {
+          return i + 1;
+        }
+      }
+    }
+    return 1; // 如果没找到，返回 -1 更合理
+  }
   
-    const match = strictWordRegex.exec(text);
-    if (!match) {
-      return { line: -1, column: -1 };
+  private getTextPosition(text: string, target: string, occurrence: number = 1): { line: number, column: number } {
+    const escapedTarget = this.escapeRegExp(target);
+    const strictWordRegex = new RegExp(`(?<![a-zA-Z0-9])${escapedTarget}(?![a-zA-Z0-9])`, 'gs'); // 'g' 全局匹配，'s' 跨行支持
+  
+    let match: RegExpExecArray | null;
+    let count = 0;
+  
+    while ((match = strictWordRegex.exec(text)) !== null) {
+      count++;
+      if (count === occurrence) {
+        const index = match.index;
+        const linesUpToMatch = text.slice(0, index).split('\n');
+        const line = linesUpToMatch.length - 1;
+        const column = linesUpToMatch[linesUpToMatch.length - 1].length + 1;
+        return { line, column };
+      }
     }
   
-    const index = match.index;
-  
-    const linesUpToMatch = text.slice(0, index).split('\n');
-    const line = linesUpToMatch.length - 1;
-    const column = linesUpToMatch[linesUpToMatch.length - 1].length + 1;
-  
-    return { line, column };
+    return { line: -1, column: -1 };
   }
+  
   private escapeRegExp(str: string): string {
     return str.replace(replaceStringReg, '\\$&'); // 转义所有正则特殊字符
   }
@@ -664,7 +738,7 @@ private processVarOrImport(stmt: Stmt, declareLineNo: number, leftName: string,
 
     // 再按 ' ' 分割，取最后一个非空单词
     const parts = firstPart.trim().split(' ');
-    return parts[parts.length - 1]; // 取最后一个单词
+    return parts[parts.length - 1].split('(')[0]; // 取最后一个单词处理(String('abcd') import String)
   }
 
   private getFileExtension(filePath: string, filetype: string): boolean {
@@ -804,11 +878,34 @@ private processVarOrImport(stmt: Stmt, declareLineNo: number, leftName: string,
           targetClass,
           declareStmt
         );
+        this.processLocalDefType(declareStmt, usedBefores, local.getType(), scene);
         //处理变量
         this.processArkAssignStmt(declareStmt, scene, usedBefores, allVar, targetFile.getFilePath(), importInfos);
       }
     }
   }
+
+ //处理 定义type类型
+
+ private processLocalDefType(declareStmt: Stmt, usedBefores: UseDefined[], baseType: Type, scene: Scene): void {
+  if (baseType instanceof ClassType) {
+    const typeClassSign = baseType.getClassSignature();
+    const decLareLine = declareStmt.getOriginPositionInfo().getLineNo();
+    const typeClass = scene.getClass(typeClassSign);
+    const typeName = typeClass?.getName();
+    const typeClassLine = typeClass?.getLine() ?? -1;
+    if (decLareLine < typeClassLine) {
+      usedBefores.push({
+        varType: VarType.TypeDef,
+        stmt: declareStmt,
+        name: typeName ?? '',
+        isDef: true
+      });
+    }
+  } 
+ 
+      
+ }
 
   private processGlobal(
     usedGlobal: Map<string, Value>,
@@ -863,8 +960,35 @@ private processVarOrImport(stmt: Stmt, declareLineNo: number, leftName: string,
         targetFilePath,
         importInfos
       );
+     this.processArkIfStmt(stmt, usedBefores, allVar);
       //1.判断执行函数是否在定义之前+参数
       this.processInvokeStmt(stmt, scene, usedBefores, allVar, importInfos);
+    }
+  }
+
+  private processArkIfStmt( 
+    stmt: Stmt,
+    usedBefores: UseDefined[],
+    allVar: UseDefined[]
+  ): void {
+    if (stmt instanceof ArkIfStmt) {
+      const expr = stmt.getConditionExpr();
+      const operatorString = expr.getOperator().toString();
+      const op1 = expr.getOp1();
+      const lineNo = stmt.getOriginPositionInfo().getLineNo();
+      const varAll = allVar.find((item) => item.name === op1.toString());
+      const defLineNo = varAll?.stmt?.getOriginPositionInfo().getLineNo() ?? -1;
+      if (varAll && operatorString.trim() === '!=' && lineNo < defLineNo) {
+
+        usedBefores.push({
+          varType: VarType.Var,
+          stmt: stmt,
+          name: op1.toString() ?? '',
+        });
+      }
+
+     
+      
     }
   }
 
@@ -1396,10 +1520,8 @@ private pushExcField(
       const result = importInfos.find((item) => {
         const name = item.getImportClauseName();
         return name === exp.getExportClauseName();});
-      const sourLine =
-        (exp.getArkExport() as Scene_base)?.declaringStmt
-          ?.getOriginPositionInfo()
-          .getLineNo() ?? -1;
+        const arkExport = exp.getArkExport();
+      const sourLine = this.getExportSourceLine(arkExport);      
       if (sourLine > line) {
         usedBefores.push({
           varType: VarType.Export,
@@ -1416,6 +1538,16 @@ private pushExcField(
       }
     }
   }
+private getExportSourceLine(arkExport: ArkExport | undefined | null): number {
+
+  const sceneBase = (arkExport as Scene_base);
+  if (arkExport instanceof ArkMethod || arkExport instanceof ArkClass) {
+    return arkExport.getLine() ?? -1;
+  } else if (sceneBase) {
+    return sceneBase?.declaringStmt?.getOriginPositionInfo()?.getLineNo() ?? -1;
+  }
+  return -1;
+}
 
   private processFileUsedIssues(filerUsed: UseDefined[]): void {
     for (const info of filerUsed) {
@@ -1491,7 +1623,8 @@ private pushExcField(
     return (
       varName.startsWith('var') ||
       varName.startsWith('let') ||
-      varName.startsWith('const')
+      varName.startsWith('const') ||
+      varName.startsWith('export')
     );
   }
   

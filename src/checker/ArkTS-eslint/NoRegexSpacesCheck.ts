@@ -34,7 +34,7 @@ export class NoRegexSpacesCheck implements BaseChecker {
     public rule: Rule;
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-regex-spaces-check.md',
+        ruleDocPath: 'docs/no-regex-spaces.md',
         description: 'Disallow multiple spaces in regular expressions.',
     };
 

@@ -78,7 +78,7 @@ export class PromiseFunctionAsyncCheck implements BaseChecker {
 
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/promise-function-async-check.md',
+        ruleDocPath: 'docs/promise-function-async.md',
         description: 'Require any function or method that returns a Promise to be marked async'
     };
 
@@ -720,13 +720,14 @@ export class PromiseFunctionAsyncCheck implements BaseChecker {
 
     private addIssueReport(issue: Issue): void {
         const key = `${issue.filePath}:${issue.line}:${issue.column}`;
+        const severity = this.rule.alert ?? this.metaData.severity;
         if (!this.issueMap.has(key)) {
             const defect = new Defects(
                 issue.line,
                 issue.column,
                 issue.column,
                 issue.message,
-                this.metaData.severity,
+                severity,
                 this.rule.ruleId,
                 issue.filePath,
                 this.metaData.ruleDocPath,

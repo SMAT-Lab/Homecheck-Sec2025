@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-import { ArkFile, ClassSignature, ViewTreeNode } from "arkanalyzer/lib";
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
-import { ArkClass } from "arkanalyzer/lib/core/model/ArkClass";
+import { ArkFile, ClassSignature, ViewTreeNode } from 'arkanalyzer/lib';
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
+import { ArkClass } from 'arkanalyzer/lib/core/model/ArkClass';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { Rule, Defects, ClassMatcher, MatcherTypes, MatcherCallback } from "../../Index";
-import { IssueReport } from "../../model/Defects";
+import { Rule, Defects, ClassMatcher, MatcherTypes, MatcherCallback } from '../../Index';
+import { IssueReport } from '../../model/Defects';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'UseReusableComponentCheck');
 const gMetaData: BaseMetaData = {
     severity: 3,
-    ruleDocPath: "docs/use-reusable-component-check.md",
-    description: "Use reusable components to define complex components whenever possible."
+    ruleDocPath: 'docs/use-reusable-component-check.md',
+    description: 'Use reusable components to define complex components whenever possible.'
 };
 const containerComponent: string[] = ['List', 'Grid', 'WaterFlow', 'Swiper'];
 const containerItem: string[] = ['ListItem', 'GridItem', 'FlowItem'];
@@ -43,11 +43,11 @@ export class UseReusableComponentCheck implements BaseChecker {
         const matchClassCb: MatcherCallback = {
             matcher: this.clsMatcher,
             callback: this.check
-        }
+        };
         return [matchClassCb];
     }
 
-    public check = (targetCla: ArkClass) => {
+    public check = (targetCla: ArkClass): void => {
         if (!targetCla.hasViewTree()) {
             return;
         }
@@ -57,9 +57,9 @@ export class UseReusableComponentCheck implements BaseChecker {
         }
         const parentNodes: ViewTreeNode[] = [];
         this.traverseViewTree(targetCla.getDeclaringArkFile(), rootTreeNode, parentNodes);
-    }
+    };
 
-    private traverseViewTree(arkFile: ArkFile, treeNode: ViewTreeNode, parentNodes: ViewTreeNode[]) {
+    private traverseViewTree(arkFile: ArkFile, treeNode: ViewTreeNode, parentNodes: ViewTreeNode[]): void {
         if (!treeNode) {
             return;
         }
@@ -128,13 +128,13 @@ export class UseReusableComponentCheck implements BaseChecker {
         return '';
     }
 
-    private reportReuseComponentAndContinueTraverse(arkFile: ArkFile, treeNode: ViewTreeNode, parentNodes: ViewTreeNode[]) {
+    private reportReuseComponentAndContinueTraverse(arkFile: ArkFile, treeNode: ViewTreeNode, parentNodes: ViewTreeNode[]): void {
         // 将treeNode节点下面的所有组件进行上报
         for (let children of treeNode.children) {
             if (children.isCustomComponent()) {
                 // 自定义组件，且实现复用功能则不上报
                 if (!this.isReuseableComponent(arkFile, children)) {
-                    this.reportIssue(arkFile, children)
+                    this.reportIssue(arkFile, children);
                 }
             } else {
                 this.reportIssue(arkFile, children);
@@ -163,7 +163,7 @@ export class UseReusableComponentCheck implements BaseChecker {
     }
 
 
-    public reportIssue(arkFile: ArkFile, reportNode: ViewTreeNode) {
+    public reportIssue(arkFile: ArkFile, reportNode: ViewTreeNode): void {
         const severity = this.rule.alert ?? this.metaData.severity;
         const filePath = arkFile.getFilePath();
         const createStmts = reportNode.attributes.get('create');

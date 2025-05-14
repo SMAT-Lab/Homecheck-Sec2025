@@ -25,7 +25,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoNonNullAssertionCh
 
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-non-null-assertion-check.md',
+    ruleDocPath: 'docs/no-non-null-assertion.md',
     description: 'Disallow non-null assertions using the ! postfix operator.'
 };
 

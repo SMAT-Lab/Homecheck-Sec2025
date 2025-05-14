@@ -77,7 +77,7 @@ import { BooleanConstant, NumberConstant, StringConstant, UndefinedConstant } fr
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoUnnecessaryConditionCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/no-unnecessary-condition-check.md",
+    ruleDocPath: "docs/no-unnecessary-condition.md",
     description: "Disallow conditionals where the type is always truthy or always falsy.",
     messages: {
         alwaysTruthy: 'Unnecessary conditional, value is always truthy.',
@@ -129,7 +129,6 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
     private locationInfos: LocationInfo[] = [];
     private globalStmt: Stmt;
     private rootNode: ts.Node;
-    private asRoot: ts.SourceFile;
     private globalMethod: ArkMethod;
     private option: Options;
     private useMethod: string[] = [];
@@ -159,13 +158,11 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
         }
         this.stmtCache.clear();
         this.option = this.rule && this.rule.option[0] ? this.rule.option[0] as Options : this.defaultOptions;
-        this.asRoot = AstTreeUtils.getSourceFileFromArkFile(arkFile);
-        
+
         arkFile.getClasses().forEach(cls => this.checkClass(cls));
-        this.sortAndReportErrors(arkFile);
         // 输出结果
         this.locationInfos.forEach(loc => {
-            this.addIssueReportNodeFix(loc, arkFile.getFilePath());
+            this.addIssueReportNodeFix(loc, arkFile);
         });
     }
 
@@ -186,6 +183,9 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
         return this.unionTypeParts(value).every(t => this.isNullishType(t));
     }
     private isTruthyLiteral(value: Type): boolean {
+        if (!value) {
+            return false;
+        }
         if (!(value instanceof LiteralType)) {
             return false;
         }
@@ -196,6 +196,9 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
     }
 
     private isFalsyLiteral(value: Type): boolean {
+        if (!value) {
+            return false;
+        }
         if (value instanceof LiteralType) {
             if (value.getLiteralName() === false) {
                 return true;
@@ -217,6 +220,9 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
      * @returns 
      */
     private isPossiblyTruthy(value: Type): boolean {
+        if (!value) {
+            return false;
+        }
         //处理联合类型中包含交集类型的情况
         let types = this.unionTypeParts(value).map(type => this.unionTypeParts(type));
         //检查是否存在至少一个类型不是false类型
@@ -231,6 +237,9 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
      * @returns 
      */
     private isPossiblyFalsy(value: Type): boolean {
+        if (!value) {
+            return false;
+        }
         //处理联合类型
         return this.unionTypeParts(value)
             //处理联合类型中包含交集类型的情况
@@ -269,7 +278,10 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
             return;
         }
         this.globalStmt = arkStmt;
-        let originCode = arkStmt.getOriginalText() ?? '';
+        let originCode = arkStmt.getOriginalText();
+        if (!originCode) {
+            return;
+        }
         const astNode = AstTreeUtils.getASTNode('temp', originCode);
         if (astNode) {
             this.locationInfos.push(...this.checkCondition(astNode));
@@ -281,11 +293,14 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
         if (!(stmt instanceof ArkNormalBinopExpr || stmt instanceof ArkConditionExpr)) {
             return;
         }
-        if (stmt.getOperator() === NormalBinaryOperator.NullishCoalescing) {
-            this.checkNodeForNullish(stmt.getOp1(), node.left, results);
+        if (!node) {
             return;
         }
-        this.checkNode(stmt.getOp1(), node.left, results);
+        if (stmt.getOperator() === NormalBinaryOperator.NullishCoalescing) {
+            this.checkNodeForNullish(stmt.getOp1(), node?.left, results);
+            return;
+        }
+        this.checkNode(stmt.getOp1(), node?.left, results);
     }
 
     private checkCallExpression(stmt: Stmt | Value, node: ts.CallExpression, results: LocationInfo[]): void {
@@ -298,14 +313,17 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
         if (!(stmt instanceof ArkInstanceInvokeExpr)) {
             return;
         }
-        if (node && this.isArrayPredicateFunction(stmt, node) && node.arguments.length) {
+        if (node && this.isArrayPredicateFunction(stmt, node) && node?.arguments.length) {
             this.checkArrayPredicateFunction(stmt, node, results);
         }
     }
 
     private checkArrayPredicateFunction(stmt: ArkInstanceInvokeExpr, node: ts.CallExpression, results: LocationInfo[]): void {
+        if (!node) {
+            return;
+        }
         const callback = stmt.getArg(0);
-        const argument = node.arguments[0];
+        const argument = node?.arguments[0];
         if (callback instanceof Local && callback.getType() instanceof FunctionType && argument &&
             (ts.isArrowFunction(argument) || ts.isFunctionExpression(argument))) {
             const methodName = callback.getName();
@@ -334,6 +352,9 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
 
 
     private isArrayPredicateFunction(stmt: ArkInstanceInvokeExpr, node: ts.CallExpression): boolean {
+        if (!node) {
+            return false;
+        }
         const methodName = stmt.getMethodSignature().getMethodSubSignature().getMethodName();
         if (node && this.ARRAY_PREDICATE_FUNCTIONS.has(methodName) &&
             this.isArrayType(stmt.getBase(), node)) {
@@ -343,6 +364,9 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
     }
 
     private isArrayType(value: Value, node: ts.Node): boolean {
+        if (!node) {
+            return false;
+        }
         const type = value.getType();
         return type instanceof ArrayType || type instanceof TupleType;
     }
@@ -365,17 +389,23 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
     }
 
     private checkAssignmentExpression(stmt: Stmt | Value, node: ts.BinaryExpression, results: LocationInfo[]): void {
+        if (!node) {
+            return;
+        }
         if (stmt instanceof ArkNormalBinopExpr) {
             if (node && [ts.SyntaxKind.AmpersandAmpersandEqualsToken, ts.SyntaxKind.BarBarEqualsToken].
-                includes(node.operatorToken.kind)) {
-                this.checkNode(stmt.getOp1(), node.left, results);
-            } else if (node && node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionEqualsToken) {
-                this.checkNodeForNullish(stmt.getOp1(), node.left, results);
+                includes(node?.operatorToken?.kind)) {
+                this.checkNode(stmt.getOp1(), node?.left, results);
+            } else if (node && node?.operatorToken?.kind === ts.SyntaxKind.QuestionQuestionEqualsToken) {
+                this.checkNodeForNullish(stmt.getOp1(), node?.left, results);
             }
         }
     }
 
     private checkNodeForNullish(stmt: Stmt | Value, node: ts.Node, results: LocationInfo[]): void {
+        if (!node) {
+            return;
+        }
         const type = this.getConstrainedType(stmt, node);
         if (type instanceof UndefinedType) {
             return;
@@ -389,7 +419,7 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
         } else if (type && !this.isPossiblyNullish(type)) {
             if (!(stmt instanceof ArkArrayRef ||
                 (node && ts.isElementAccessExpression(node) &&
-                    ts.isLiteralExpression(node.argumentExpression))) &&
+                    ts.isLiteralExpression(node?.argumentExpression))) &&
                 !ts.isNonNullChain(node)) {
                 if (type instanceof UnclearReferenceType) {
                     return;
@@ -405,8 +435,11 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
     }
 
     private checkNode(stmt: Stmt | Value, node: ts.Node, results: LocationInfo[], isUnaryNotArgument = false): void {
+        if (!node) {
+            return;
+        }
         if (ts.isParenthesizedExpression(node)) {
-            this.checkNode(stmt, node.expression, results, isUnaryNotArgument);
+            this.checkNode(stmt, node?.expression, results, isUnaryNotArgument);
             return;
         }
         if (stmt instanceof ArkAssignStmt) {
@@ -512,21 +545,21 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
 
     private getReportedNode(node: ts.Node): ts.Node {
         if (ts.isPrefixUnaryExpression(node)) {
-            return this.getReportedNode(node.operand);
+            return this.getReportedNode(node?.operand);
         }
         if (ts.isParenthesizedExpression(node) ||
             ts.isTypeOfExpression(node) ||
             ts.isCallExpression(node) ||
             ts.isAwaitExpression(node)) {
-            return this.getReportedNode(node.expression);
+            return this.getReportedNode(node?.expression);
         }
         return node;
     }
 
-    private getConstrainedTypeOfArkConditionExpr(stmt: ArkConditionExpr, node: ts.Node): Type | undefined {
+    private getConstrainedTypeOfArkConditionExpr(stmt: ArkConditionExpr, node: ts.Node, num: number = 0): Type | undefined {
         let op1 = stmt.getOp1();
         let op2 = stmt.getOp2();
-        let op1Type = this.getConstrainedType(op1, node);
+        let op1Type = this.getConstrainedType(op1, node, num);
 
         //如果条件表达式是a=1,则op1Type为1
         if (ts.isIdentifier(node) && ts.isBinaryExpression(node.parent)) {
@@ -574,12 +607,12 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
 
     private getConstrainedTypeOfArkNewExpr(stmt: ArkNewExpr, node: ts.Node): Type | undefined {
         let type: Type | undefined = undefined;
-        if (ts.isNewExpression(node) && node.arguments && node.arguments[0] && ts.isLiteralExpression(node.arguments[0])) {
-            let argument = node.arguments[0];
-            if (argument.kind === ts.SyntaxKind.TrueKeyword) {
+        if (ts.isNewExpression(node) && node?.arguments && node?.arguments[0] && ts.isLiteralExpression(node?.arguments[0])) {
+            let argument = node?.arguments[0];
+            if (argument?.kind === ts.SyntaxKind.TrueKeyword) {
                 type = new LiteralType(true);
             }
-            if (argument.kind === ts.SyntaxKind.FalseKeyword) {
+            if (argument?.kind === ts.SyntaxKind.FalseKeyword) {
                 type = new LiteralType(false);
             }
             if (ts.isStringLiteral(argument) || ts.isNumericLiteral(argument) || ts.isBigIntLiteral(argument)) {
@@ -590,43 +623,51 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
         return stmt.getClassType();
     }
 
-    private getConstrainedType(stmt: Value | Stmt, node: ts.Node): Type | undefined {
+    private getConstrainedType(stmt: Value | Stmt, node: ts.Node, num: number = 0): Type | undefined {
         let type: Type | undefined = undefined;
-        if (stmt instanceof ArkConditionExpr) {
-            return this.getConstrainedTypeOfArkConditionExpr(stmt, node);
-        }
-        if (stmt instanceof ArkTypeOfExpr && ts.isTypeOfExpression(node)) {
-            return StringType.getInstance();
-        }
-        if (stmt instanceof ArkNewExpr) {
-            return this.getConstrainedTypeOfArkNewExpr(stmt, node);
-        }
-        //字面量类型
-        if (stmt instanceof Constant) {
-            return this.getConstrainedTypeOfConstant(stmt, node);
-        }
-        if (stmt instanceof ArkAssignStmt) {
-            return this.getConstrainedTypeOfArkAssignStmt(stmt, node);
-        }
-        if (stmt instanceof ArkInstanceFieldRef) {
-            return stmt.getFieldSignature().getType();
-        }
-        if (stmt instanceof ArkAwaitExpr) {
-            return this.getConstrainedType(stmt.getPromise(), node);
-        }
-        if (stmt instanceof Local) {
-            if (!stmt.getName().includes('%')) {
-                type = this.getTypeByName(stmt.getName());
+        try {
+            if (num > 5) {
+                return type;
             }
-            let decalarationStmt = stmt.getDeclaringStmt();
-            if (!type && decalarationStmt) {
-                return this.getConstrainedType(decalarationStmt, node);
+            num++;
+            if (stmt instanceof ArkConditionExpr) {
+                return this.getConstrainedTypeOfArkConditionExpr(stmt, node, num);
             }
-            //如果变量声明没有类型，则通过声明语句获取类型
-            if (!type && stmt.getType()) {
-                type = stmt.getType();
+            if (stmt instanceof ArkTypeOfExpr && ts.isTypeOfExpression(node)) {
+                return StringType.getInstance();
             }
-            return type;
+            if (stmt instanceof ArkNewExpr) {
+                return this.getConstrainedTypeOfArkNewExpr(stmt, node);
+            }
+            //字面量类型
+            if (stmt instanceof Constant) {
+                return this.getConstrainedTypeOfConstant(stmt, node);
+            }
+            if (stmt instanceof ArkAssignStmt) {
+                return this.getConstrainedTypeOfArkAssignStmt(stmt, node);
+            }
+            if (stmt instanceof ArkInstanceFieldRef) {
+                return stmt.getFieldSignature().getType();
+            }
+            if (stmt instanceof ArkAwaitExpr) {
+                return this.getConstrainedType(stmt.getPromise(), node);
+            }
+            if (stmt instanceof Local) {
+                if (!stmt.getName().includes('%')) {
+                    type = this.getTypeByName(stmt.getName());
+                }
+                let decalarationStmt = stmt.getDeclaringStmt();
+                if (!type && decalarationStmt) {
+                    return this.getConstrainedType(decalarationStmt, node);
+                }
+                //如果变量声明没有类型，则通过声明语句获取类型
+                if (!type && stmt.getType()) {
+                    type = stmt.getType();
+                }
+                return type;
+            }
+        } catch (error) {
+            return undefined;
         }
         return this.getConstrainedTypeOther(stmt, node);
     }
@@ -698,24 +739,15 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
         return type;
     }
 
-    private sortAndReportErrors(target: ArkFile): void {
-        this.locationInfos.sort((a, b) => {
-            if (a.line !== b.line) {
-                return a.line - b.line;
-            }
-            return a.startCol - b.startCol;
-        });
-    }
-
     private checkStmtIf(arkStmt: Stmt): boolean {
         if (arkStmt.getOriginalText() === '') {
             return true;
         }
+        this.line = arkStmt.getOriginPositionInfo().getLineNo();
+        this.col = arkStmt.getOriginPositionInfo().getColNo();
         if (arkStmt instanceof ArkAssignStmt && arkStmt.getRightOp().getType() instanceof NumberType) {
             return true;
         }
-        this.line = arkStmt.getOriginPositionInfo().getLineNo();
-        this.col = arkStmt.getOriginPositionInfo().getColNo();
         return false;
     }
 
@@ -726,7 +758,7 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
             return results;
         }
         if (ts.isExpressionStatement(this.rootNode)) {
-            this.rootNode = this.rootNode.expression;
+            this.rootNode = this.rootNode?.expression;
         }
         if (this.rootNode.getText().includes('?.')) {
             this.checkOptionalChain(this.globalStmt, this.rootNode, results);
@@ -778,7 +810,7 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
 
     private checkChainStmtOfRightOp(node: ts.PropertyAccessExpression | ts.CallExpression | ts.ElementAccessExpression,
         stmt: ArkAssignStmt, results: LocationInfo[]): void {
-        let objName = node.expression.getText();
+        let objName = node?.expression.getText();
         let op2 = stmt.getRightOp() as Local;
         if (op2 instanceof ArkStaticInvokeExpr) {
             let methodName = op2.getMethodSignature().getMethodSubSignature().getMethodName();
@@ -810,7 +842,7 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
 
     private checkChainStmtOfLeftOp(node: ts.PropertyAccessExpression | ts.CallExpression | ts.ElementAccessExpression,
         stmt: ArkAssignStmt, results: LocationInfo[]): void {
-        let objName = node.expression.getText();
+        let objName = node?.expression.getText();
         let op1 = stmt.getLeftOp() as Local;
         let declaringStmt = op1.getDeclaringStmt();
         if (declaringStmt && declaringStmt instanceof ArkAssignStmt) {
@@ -854,14 +886,14 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
     }
 
     private getQuestionDotToken(node: ts.Node): ts.Node | undefined {
-        if (ts.isPropertyAccessExpression(node) && node.questionDotToken) {
-            return node.questionDotToken;
+        if (ts.isPropertyAccessExpression(node) && node?.questionDotToken) {
+            return node?.questionDotToken;
         }
-        if (ts.isCallExpression(node) && node.questionDotToken) {
-            return node.questionDotToken;
+        if (ts.isCallExpression(node) && node?.questionDotToken) {
+            return node?.questionDotToken;
         }
-        if (ts.isElementAccessChain(node) && node.questionDotToken) {
-            return node.questionDotToken;
+        if (ts.isElementAccessChain(node) && node?.questionDotToken) {
+            return node?.questionDotToken;
         }
         return undefined;
     }
@@ -885,8 +917,7 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
         const startLine = this.line + line;
         const endCol = this.col + character + characterLength;
         const startCol = this.col + character;
-        // 获取相对全文起始位置
-        const start = this.asRoot.getPositionOfLineAndCharacter(startLine - 1, startCol - 1); // 转换为 0 基索引
+        let start = 0;
         const end = start + characterLength;
 
         results.push({
@@ -942,30 +973,39 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
     }
 
     private visitCheckOfArkIfStmt(stmt: Stmt | Value, node: ts.Node, results: LocationInfo[]): void {
+        if (!node) {
+            return;
+        }
         if (!(stmt instanceof ArkIfStmt)) {
             return;
         }
         stmt = stmt.getConditionExpr();
         if (stmt instanceof ArkConditionExpr && !this.isConditionNode(node)) {
             node = this.checkLocal(stmt, stmt.toString(), node) ?? node;
-            if (this.isConditionNode(node.parent)) {
-                node = node.parent;
+            if (this.isConditionNode(node?.parent)) {
+                node = node?.parent;
             }
         }
         let test = node;
+        if (!test) {
+            return;
+        }
         if (ts.isDoStatement(node) || ts.isIfStatement(node) || ts.isWhileStatement(node)) {
-            node = node.expression;
+            node = node?.expression;
         }
         if (ts.isConditionalExpression(node) || ts.isForStatement(node)) {
-            if (!node.condition) {
+            if (!node?.condition) {
                 return;
             }
-            node = node.condition;
+            node = node?.condition;
         }
         this.visitCheckOfArkIfStmtOther(stmt, node, test, results);
     }
 
     private visitCheckOfArkIfStmtOther(stmt: Stmt | Value, test: ts.Node, node: ts.Node, results: LocationInfo[]): void {
+        if (!test || !node) {
+            return;
+        }
         if (stmt instanceof ArkConditionExpr && stmt.getOp1() instanceof Local) {
             let op1 = stmt.getOp1() as Local;
             let decalarationStmt = op1.getDeclaringStmt();
@@ -990,7 +1030,7 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
         let stmtStrs = stmtStr.split(stmt.getOperator());
         if (op1.getType() instanceof FunctionType && stmtStrs[0].includes('%') && ts.isConditionalExpression(node)) {
             let op1ReplaceText = this.getNormalBinopExprText(op1, node);
-            nodeText = ts.isParenthesizedExpression(node.condition) ? `(${op1ReplaceText})` : op1ReplaceText;
+            nodeText = ts.isParenthesizedExpression(node?.condition) ? `(${op1ReplaceText})` : op1ReplaceText;
             stmtStrs[0] = this.replacePlaceholder(stmtStrs[0], op1ReplaceText);
         }
 
@@ -998,12 +1038,12 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
 
             if (op1 instanceof Local && op1.getName().includes('%')) {
                 let op1ReplaceText = this.getNormalBinopExprText(op1, node);
-                nodeText = ts.isParenthesizedExpression(node.left) ? `(${op1ReplaceText})` : op1ReplaceText;
+                nodeText = ts.isParenthesizedExpression(node?.left) ? `(${op1ReplaceText})` : op1ReplaceText;
                 stmtStrs[0] = this.replacePlaceholder(stmtStrs[0], nodeText);
             }
             if (op2 instanceof Local && op2.getName().includes('%')) {
                 let op2ReplaceText = this.getNormalBinopExprText(op2, node);
-                nodeText = ts.isParenthesizedExpression(node.right) ? `(${op2ReplaceText})` : op2ReplaceText;
+                nodeText = ts.isParenthesizedExpression(node?.right) ? `(${op2ReplaceText})` : op2ReplaceText;
                 stmtStrs[1] = this.replacePlaceholder(stmtStrs[1], nodeText);
             }
         }
@@ -1020,9 +1060,9 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
             let op1 = stmt.getOp1();
             let op2 = stmt.getOp2();
             if (ts.isBinaryExpression(node) &&
-                stmt.getOperator() === node.operatorToken.getText() &&
-                (op2 instanceof Local && op2.getName() === node.right.getText() ||
-                    op1 instanceof Local && op1.getName() === node.left.getText())) {
+                stmt.getOperator() === node?.operatorToken.getText() &&
+                (op2 instanceof Local && op2.getName() === node?.right.getText() ||
+                    op1 instanceof Local && op1.getName() === node?.left.getText())) {
                 return node;
             }
             stmtStr = this.matchNormalBinopExpr(stmt, stmtStr, node);
@@ -1031,13 +1071,13 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
         if (stmt instanceof ArkConditionExpr) {
             stmtStr = this.matchNormalBinopExpr(stmt, stmtStr, node);
         }
-        let childtext = node.getText().replace('?.', '.').replace('new', '');
+        let childtext = node?.getText().replace('?.', '.').replace('new', '');
         if (childtext.trim() === stmtStr.trim()) {
             isReplace = true;
             return node;
         }
         if (!isReplace) {
-            let childs = node.getChildren();
+            let childs = node?.getChildren();
             for (const child of childs) {
                 let result = this.checkLocal(stmt, stmtStr, child);
                 if (result) {
@@ -1049,6 +1089,9 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
     }
 
     private getNormalBinopExprText(stmt: Value | Stmt, node: ts.Node): string {
+        if (!node) {
+            return stmt.toString();
+        }
         if (stmt instanceof ArkNormalBinopExpr) {
             return this.matchNormalBinopExpr(stmt, stmt.toString(), node);
         }
@@ -1145,13 +1188,13 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
         }
         if (ts.isVariableDeclaration(ast)) {
             if (ast.type) {
-                if (ast.type.kind === ts.SyntaxKind.StringKeyword) {
+                if (ast.type?.kind === ts.SyntaxKind.StringKeyword) {
                     return StringType.getInstance();
                 }
-                if (ast.type.kind === ts.SyntaxKind.NumberKeyword) {
+                if (ast.type?.kind === ts.SyntaxKind.NumberKeyword) {
                     return NumberType.getInstance();
                 }
-                if (ast.type.kind === ts.SyntaxKind.BooleanKeyword) {
+                if (ast.type?.kind === ts.SyntaxKind.BooleanKeyword) {
                     return BooleanType.getInstance();
                 }
                 return undefined;
@@ -1160,13 +1203,13 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
                 if (leftOp.getConstFlag() && [
                     ts.SyntaxKind.NumericLiteral,
                     ts.SyntaxKind.StringLiteral,
-                ].includes(ast.initializer.kind)) {
+                ].includes(ast.initializer?.kind)) {
                     return new LiteralType(ast.initializer.getText());
                 }
-                if (ts.SyntaxKind.TrueKeyword === ast.initializer.kind) {
+                if (ts.SyntaxKind.TrueKeyword === ast.initializer?.kind) {
                     return new LiteralType(true);
                 }
-                if (ts.SyntaxKind.FalseKeyword === ast.initializer.kind) {
+                if (ts.SyntaxKind.FalseKeyword === ast.initializer?.kind) {
                     return new LiteralType(false);
                 }
             }
@@ -1291,10 +1334,13 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
         messageId: string,
         results: LocationInfo[]
     ): void {
-        const { line, character } = this.rootNode.getSourceFile().getLineAndCharacterOfPosition(node.getStart());
-        const assertionName = node.getText();
-        const start = node.getStart();
-        const end = node.getEnd();
+        if (!node) {
+            return;
+        }
+        const { line, character } = this.rootNode.getSourceFile().getLineAndCharacterOfPosition(node?.getStart());
+        const assertionName = node?.getText();
+        const start = node?.getStart();
+        const end = node?.getEnd();
         const endCharacter = character + assertionName.length;
 
         results.push({
@@ -1311,27 +1357,49 @@ export class NoUnnecessaryConditionCheck implements BaseChecker {
     }
 
     // 创建修复对象 
-    private ruleFix(loc: LocationInfo): RuleFix {
-        const [start, end] = this.getFixRange(loc);
+    private ruleFix(loc: LocationInfo, sourceFile: ts.SourceFile): RuleFix {
+        const [start, end] = this.getFixRange(loc, sourceFile);
         return { range: [start, end], text: '' };
     }
 
     // 获取起始位置和结束位置
-    private getFixRange(loc: LocationInfo): [number, number] {
-        const startPosition = loc.start;
-        const endPosition = loc.end;
+    private getFixRange(loc: LocationInfo, sourceFile: ts.SourceFile): [number, number] {
+        const startPosition = this.getLineStartPosition(sourceFile, loc.line) + loc.startCol - 1;
+        const endPosition = startPosition + loc.end;
         return [startPosition, endPosition];
     }
 
-    private addIssueReportNodeFix(loc: LocationInfo, filePath: string): void {
+
+    // 获取相对全文起始位置
+    private getLineStartPosition(sourceFile: ts.SourceFile, lineNumber: number): number {
+        // 将字符串按行分割成数组
+        const lines = sourceFile.getFullText().split('\n');
+
+        // 检查行号是否有效
+        if (lineNumber < 1 || lineNumber > lines.length) {
+            return 0; // 行号无效，返回 null
+        }
+
+        // 计算指定行的起始位置
+        let position = 0;
+        for (let i = 0; i < lineNumber - 1; i++) {
+            position += lines[i].length + 1; // 加 1 是为了包括换行符
+        }
+        return position;
+    }
+
+    private addIssueReportNodeFix(loc: LocationInfo, arkFile: ArkFile): void {
+
+        const filePath = arkFile.getFilePath();
         const severity = this.rule.alert ?? this.metaData.severity;
         if (loc.description) {
             this.metaData.description = loc.description;
         }
         if (loc.nameStr === '?.') {
+            const sourceFile = AstTreeUtils.getSourceFileFromArkFile(arkFile);
             let defectFix = new Defects(loc.line, loc.startCol, loc.endCol, this.metaData.description, severity,
                 this.rule.ruleId, filePath, this.metaData.ruleDocPath, true, false, true);
-            let fix: RuleFix = this.ruleFix(loc);
+            let fix: RuleFix = this.ruleFix(loc, sourceFile);
             this.issues.push(new IssueReport(defectFix, fix));
             RuleListUtil.push(defectFix);
         } else {

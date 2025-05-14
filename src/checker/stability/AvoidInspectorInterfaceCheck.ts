@@ -74,7 +74,6 @@ export class AvoidInspectorInterfaceCheck implements BaseChecker {
         }
         const index = text.indexOf(methodName);
         if (index === -1) {
-            logger.debug(`Can not find ${methodName} in ${text}.`);
             return;
         }
         const severity = this.rule.alert ?? this.metaData.severity;

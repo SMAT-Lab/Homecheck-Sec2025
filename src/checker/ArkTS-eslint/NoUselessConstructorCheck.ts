@@ -39,7 +39,7 @@ const logger = Logger.getLogger(
 );
 const gMetaData: BaseMetaData = {
   severity: 1,
-  ruleDocPath: 'docs/no-useless-constructor-check.md', // TODO: support url
+  ruleDocPath: 'docs/no-useless-constructor.md', // TODO: support url
   description: 'Useless constructor.',
 };
 const constructorIndexReg = /\bconstructor\s*\(/;

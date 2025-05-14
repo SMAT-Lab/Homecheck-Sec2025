@@ -16,7 +16,7 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 import { CHECK_MODE, testCaseCheck } from './common/testCommon';
 import path from 'path';
-import { LowerPowerConsumptionCheck } from '../../../src/checker/performance/LowerPowerConsumptionCheck';
+import { StreamUsageApiCheck } from '../../../src/checker/performance/StreamUsageApiCheck';
 import { Rule } from '../../../src/Index';
 import { ALERT_LEVEL } from '../../../src/model/Rule';
 import { CheckEntry } from '../../../src/utils/common/CheckEntry';
@@ -25,21 +25,21 @@ let realPath: string = '';
 let checkEntry: CheckEntry;
 
 beforeAll(async () => {
-    const testPath = './test/unittest/sample/LowerPowerConsumption';
-    const rule: Rule = new Rule('@performance/lower-power-consumption-check', ALERT_LEVEL.SUGGESTION);
-    checkEntry = await testCaseCheck(testPath, rule, CHECK_MODE.FILE2CHECK, LowerPowerConsumptionCheck);
+    const testPath = './test/unittest/sample/StreamUsageApi';
+    const rule: Rule = new Rule('@performance/stream-usage-api-check', ALERT_LEVEL.SUGGESTION);
+    checkEntry = await testCaseCheck(testPath, rule, CHECK_MODE.FILE2CHECK, StreamUsageApiCheck);
     realPath = checkEntry.scene.getRealProjectDir();
 })
 
-describe('LowerPowerConsumptionTest', () => {
+describe('StreamUsageApiTest', () => {
 
     /**
-     * @tc.number: LowerPowerConsumptionTest_001
+     * @tc.number: StreamUsageApiTest_001
      * @tc.name: usage所在变量为局部变量，usage类型为STREAM_USAGE_UNKNOWN，需要上报
      * @tc.desc: usage所在变量为局部变量，usage类型为STREAM_USAGE_UNKNOWN，需要上报
      */
-    test('LowerPowerConsumptionTest_001', () => {
-        const detectFile: string = path.join(realPath, 'ets', 'LowerPowerConsumptionReport.ets');
+    test('StreamUsageApiTest_001', () => {
+        const detectFile: string = path.join(realPath, 'ets', 'StreamUsageApiReport.ets');
         let file2Check = checkEntry.fileChecks.find((f2check) => f2check.arkFile.getFilePath() === detectFile);
         expect(file2Check).toBeDefined();
         let detectFileReports = file2Check?.issues.filter((issue) => (issue.defect.mergeKey.startsWith(detectFile))
@@ -48,12 +48,12 @@ describe('LowerPowerConsumptionTest', () => {
     });
 
     /**
-     * @tc.number: LowerPowerConsumptionTest_002
+     * @tc.number: StreamUsageApiTest_002
      * @tc.name: usage所在变量为成员变量，usage类型为STREAM_USAGE_UNKNOWN，需要上报
      * @tc.desc: usage所在变量为成员变量，usage类型为STREAM_USAGE_UNKNOWN，需要上报
      */
-    test('LowerPowerConsumptionTest_002', () => {
-        const detectFile: string = path.join(realPath, 'ets', 'LowerPowerConsumptionReport2.ets');
+    test('StreamUsageApiTest_002', () => {
+        const detectFile: string = path.join(realPath, 'ets', 'StreamUsageApiReport2.ets');
         let file2Check = checkEntry.fileChecks.find((f2check) => f2check.arkFile.getFilePath() === detectFile);
         expect(file2Check).toBeDefined();
         let detectFileReports = file2Check?.issues.filter((issue) => (issue.defect.mergeKey.startsWith(detectFile))
@@ -62,12 +62,12 @@ describe('LowerPowerConsumptionTest', () => {
     });
 
     /**
-     * @tc.number: LowerPowerConsumptionTest_003
+     * @tc.number: StreamUsageApiTest_003
      * @tc.name: usage所在变量为全局变量，usage类型为STREAM_USAGE_UNKNOWN，需要上报
      * @tc.desc: usage所在变量为全局变量，usage类型为STREAM_USAGE_UNKNOWN，需要上报
      */
-    test('LowerPowerConsumptionTest_003', () => {
-        const detectFile: string = path.join(realPath, 'ets', 'LowerPowerConsumptionReport3.ets');
+    test('StreamUsageApiTest_003', () => {
+        const detectFile: string = path.join(realPath, 'ets', 'StreamUsageApiReport3.ets');
         let file2Check = checkEntry.fileChecks.find((f2check) => f2check.arkFile.getFilePath() === detectFile);
         expect(file2Check).toBeDefined();
         let detectFileReports = file2Check?.issues.filter((issue) => (issue.defect.mergeKey.startsWith(detectFile))
@@ -76,36 +76,36 @@ describe('LowerPowerConsumptionTest', () => {
     });
 
     /**
-     * @tc.number: LowerPowerConsumptionTest_004
+     * @tc.number: StreamUsageApiTest_004
      * @tc.name: usage所在变量为局部变量，usage类型为STREAM_USAGE_MUSIC，不需要上报
      * @tc.desc: usage所在变量为局部变量，usage类型为STREAM_USAGE_MUSIC，不需要上报
      */
-    test('LowerPowerConsumptionTest_004', () => {
-        const detectFile: string = path.join(realPath, 'ets', 'LowerPowerConsumptionNoReport.ets');
+    test('StreamUsageApiTest_004', () => {
+        const detectFile: string = path.join(realPath, 'ets', 'StreamUsageApiNoReport.ets');
         let file2Check = checkEntry.fileChecks.find((f2check) => f2check.arkFile.getFilePath() === detectFile);
         expect(file2Check).toBeDefined();
         expect(file2Check?.issues.length).toBe(0);
     });
 
     /**
-     * @tc.number: LowerPowerConsumptionTest_005
+     * @tc.number: StreamUsageApiTest_005
      * @tc.name: usage所在变量为成员变量，usage类型为STREAM_USAGE_NAVIGATION，不需要上报
      * @tc.desc: usage所在变量为成员变量，usage类型为STREAM_USAGE_NAVIGATION，不需要上报
      */
-    test('LowerPowerConsumptionTest_005', () => {
-        const detectFile: string = path.join(realPath, 'ets', 'LowerPowerConsumptionNoReport2.ets');
+    test('StreamUsageApiTest_005', () => {
+        const detectFile: string = path.join(realPath, 'ets', 'StreamUsageApiNoReport2.ets');
         let file2Check = checkEntry.fileChecks.find((f2check) => f2check.arkFile.getFilePath() === detectFile);
         expect(file2Check).toBeDefined();
         expect(file2Check?.issues.length).toBe(0);
     });
 
     /**
-     * @tc.number: LowerPowerConsumptionTest_006
+     * @tc.number: StreamUsageApiTest_006
      * @tc.name: usage所在变量为全局变量，usage类型为STREAM_USAGE_NAVIGATION，不需要上报
      * @tc.desc: usage所在变量为全局变量，usage类型为STREAM_USAGE_NAVIGATION，不需要上报
      */
-    test('LowerPowerConsumptionTest_006', () => {
-        const detectFile: string = path.join(realPath, 'ets', 'LowerPowerConsumptionNoReport3.ets');
+    test('StreamUsageApiTest_006', () => {
+        const detectFile: string = path.join(realPath, 'ets', 'StreamUsageApiNoReport3.ets');
         let file2Check = checkEntry.fileChecks.find((f2check) => f2check.arkFile.getFilePath() === detectFile);
         expect(file2Check).toBeDefined();
         expect(file2Check?.issues.length).toBe(0);

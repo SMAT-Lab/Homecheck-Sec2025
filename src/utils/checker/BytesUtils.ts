@@ -1,46 +1,46 @@
 const decoder = new TextDecoder();
 export const toUTF8String = (
-    input: Uint8Array, 
-    start = 0, 
+    input: Uint8Array,
+    start = 0,
     end = input.length
-) => decoder.decode(input.slice(start, end));
+): string => decoder.decode(input.slice(start, end));
 
 export const toHexString = (
-    input: Uint8Array, 
-    start = 0, 
+    input: Uint8Array,
+    start = 0,
     end = input.length
-) => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), '');
+): string => input.slice(start, end).reduce((memo, i) => memo + `0${i.toString(16)}`.slice(-2), '');
 
 const getView = (
-    input: Uint8Array, 
+    input: Uint8Array,
     offset: number
 ) => new DataView(input.buffer, input.byteOffset + offset);
 
-export const readInt16LE = (input: Uint8Array, offset = 0) => 
+export const readInt16LE = (input: Uint8Array, offset = 0): number =>
     getView(input, offset).getInt16(0, true);
 
-export const readUInt16BE = (input: Uint8Array, offset = 0) => 
+export const readUInt16BE = (input: Uint8Array, offset = 0): number =>
     getView(input, offset).getUint16(0, false);
 
-export const readUInt16LE = (input: Uint8Array, offset = 0) => 
+export const readUInt16LE = (input: Uint8Array, offset = 0): number =>
     getView(input, offset).getUint16(0, true);
 
-export const readUInt24LE = (input: Uint8Array, offset = 0) => {
+export const readUInt24LE = (input: Uint8Array, offset = 0): number => {
     const view = getView(input, offset);
     return view.getUint16(0, true) + (view.getUint8(2) << 16);
 };
 
-export const readInt32LE = (input: Uint8Array, offset = 0) => 
+export const readInt32LE = (input: Uint8Array, offset = 0): number =>
     getView(input, offset).getInt32(0, true);
 
-export const readUInt32BE = (input: Uint8Array, offset = 0) => 
+export const readUInt32BE = (input: Uint8Array, offset = 0): number =>
     getView(input, offset).getUint32(0, false);
 
-export const readUInt32LE = (input: Uint8Array, offset = 0) => 
+export const readUInt32LE = (input: Uint8Array, offset = 0): number =>
     getView(input, offset).getUint32(0, true);
 
 export const readUInt64 = (
-    input: Uint8Array, 
+    input: Uint8Array,
     offset: number,
     isBigEndian: boolean
 ): bigint => getView(input, offset).getBigUint64(0, !isBigEndian);
@@ -50,7 +50,7 @@ const methods = {
     readUInt16LE,
     readUInt32BE,
     readUInt32LE
-} as const
+} as const;
 
 type MethodName = keyof typeof methods;
 
@@ -77,7 +77,7 @@ const units: Record<string, number> = {
     pc: 96 / 72 / 12,
     pt: 96 / 72,
     px: 1,
-}
+};
 const unitsReg = new RegExp(`^([0-9.]+(?:e\\d+)?)(${Object.keys(units).join('|')})?$`,);
 
 export function getLength(len: string): number | undefined {

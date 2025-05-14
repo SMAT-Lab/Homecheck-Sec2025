@@ -25,12 +25,12 @@ import {RuleFix} from "../../model/Fix";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'AwaitThenableCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/lines-between-class-members-check.md",
+    ruleDocPath: "docs/lines-between-class-members.md",
     description: "Expected blank line between class members.",
 };
 
 type Options = [{
-    exceptAfterOverload: boolean,
+    exceptAfterOverload: boolean | undefined,
 }]
 
 export class LinesBetweenClassMembersCheck implements BaseChecker {
@@ -39,7 +39,7 @@ export class LinesBetweenClassMembersCheck implements BaseChecker {
     public defects: Defects[] = [];
     public issues: IssueReport[] = [];
     private issueMap: Map<string, IssueReport> = new Map();
-    private exceptAfterOverload = true;
+    private exceptAfterOverload: boolean | undefined = undefined;
 
     private fileMatcher: FileMatcher = {
         matcherType: MatcherTypes.FILE,
@@ -86,22 +86,107 @@ export class LinesBetweenClassMembersCheck implements BaseChecker {
         if (this.hasAbstractModifier(child)) {
             return;
         }
-        if (child.members.length > 1) {
-            for (let i = 0; i < child.members.length - 1; i++) {
-                const currentMember = child.members[i];
-                const nextMember = child.members[i + 1];
-                const currentEndLine = this.getEndLine(currentMember, sourceFile);
-                const nextStartLine = this.getStartLine(nextMember, sourceFile);
-                if (this.exceptAfterOverload && this.isOverload(currentMember)) {
+        if (child.members.length <= 1) {
+            return;
+        }
+        for (let i = 0; i < child.members.length - 1; i++) {
+            const currentMember = child.members[i];
+            let nextMember = child.members[i + 1];
+            const currentEndLine = this.getEndLine(currentMember, sourceFile);
+            let nextStartLine = this.getStartLine(nextMember, sourceFile);
+            if (this.shouldSkipSemicolonToProperty(currentMember, nextMember, child, i)) {
+                continue;
+            }
+            let abstractModifier = currentMember.modifiers?.
+            find(modifier => modifier.kind === ts.SyntaxKind.AbstractKeyword);
+            if (ts.isPropertyDeclaration(currentMember) && !abstractModifier && this.exceptAfterOverload === undefined) {
+                let isPropertyDeclarationWithSpacing = this.checkPropertySpacing(
+                    currentMember, nextMember, child, i, currentEndLine, sourceFile, arkFile);
+                if (isPropertyDeclarationWithSpacing) {
                     continue;
                 }
-                if (this.exceptAfterOverload) {
-                    this.handleExceptAfterOverload(child, i, sourceFile, arkFile);
-                } else {
-                    this.handleNoExceptAfterOverload(currentMember, nextMember, currentEndLine, nextStartLine, sourceFile, arkFile);
-                }
+            }
+
+            if (this.exceptAfterOverload !== false && this.isOverload(currentMember)) {
+                continue;
+            }
+            if (this.exceptAfterOverload !== false) {
+                this.handleExceptAfterOverload(child, i, sourceFile, arkFile);
+            } else {
+                this.handleNoExceptAfterOverload(currentMember, nextMember, currentEndLine, nextStartLine, sourceFile, arkFile);
             }
         }
+    }
+
+    private shouldSkipSemicolonToProperty(
+        currentMember: ts.ClassElement, nextMember: ts.ClassElement,
+        child: ts.ClassDeclaration | ts.ClassExpression, i: number
+    ): boolean {
+        if (
+            ts.isSemicolonClassElement(currentMember) &&
+            currentMember.getText() === ';' &&
+            ts.isPropertyDeclaration(nextMember) &&
+            i > 0 &&
+            ts.isPropertyDeclaration(child.members[i - 1]) &&
+            this.exceptAfterOverload === undefined
+        ) {
+            const abstractNextModifier = nextMember.modifiers?.find(
+                modifier => modifier.kind === ts.SyntaxKind.AbstractKeyword
+            );
+            return !abstractNextModifier;
+        }
+        return false;
+    }
+
+    private checkPropertySpacing(
+        currentMember: ts.ClassElement, nextMember: ts.ClassElement, child: ts.ClassDeclaration | ts.ClassExpression,
+        i: number, currentEndLine: number, sourceFile: ts.SourceFile, arkFile: ArkFile
+    ): boolean {
+        let nextNewMember = child.members[i + 1];
+        let nextNewStartLine = this.getStartLine(nextNewMember, sourceFile);
+        // 处理分号占位符的情况
+        if (ts.isSemicolonClassElement(nextMember) && nextMember.getText() === ';') {
+            if (i + 2 <= child.members.length - 1) {
+                nextNewMember = child.members[i + 2];
+                nextNewStartLine = this.getStartLine(nextNewMember, sourceFile);
+            } else {
+                return true;
+            }
+        }
+        if (ts.isPropertyDeclaration(nextNewMember)) {
+            if (nextNewStartLine - currentEndLine > 1) {
+                const positionInfo = this.getPositionInfo(nextNewMember, sourceFile);
+                this.handlePropertyDeclarationWithSpacing(
+                    currentMember, nextNewMember, currentEndLine, sourceFile, arkFile, positionInfo);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private handlePropertyDeclarationWithSpacing(
+        currentMember: ts.ClassElement,
+        nextNewMember: ts.ClassElement,
+        currentEndLine: number,
+        sourceFile: ts.SourceFile,
+        arkFile: ArkFile,
+        positionInfo: { startPosition: ts.LineAndCharacter; endPosition: ts.LineAndCharacter }
+    ): void {
+        const fullText = nextNewMember.getFullText();
+        const modifiedText = fullText.replace(/\r\n/, '');
+        const fix: RuleFix | undefined = {
+            range: [nextNewMember.getFullStart(), nextNewMember.getEnd()],
+            text: modifiedText
+        };
+        const defect = this.addIssueReport(
+            arkFile,
+            positionInfo.startPosition.line + 1,
+            positionInfo.startPosition.character + 1,
+            positionInfo.endPosition.character + 1,
+            'Unexpected blank line between class members.',
+            fix
+        );
+        this.issueMap.set(defect.fixKey, { defect, fix });
     }
 
     private hasAbstractModifier(child: ts.ClassDeclaration | ts.ClassExpression): boolean {
@@ -206,7 +291,6 @@ export class LinesBetweenClassMembersCheck implements BaseChecker {
             (node.kind === ts.SyntaxKind.GetAccessor && (node as ts.MethodDeclaration).body === undefined);
     }
 
-
     private getPositionInfo(expression: ts.ClassElement, sourceFile: ts.SourceFileLike): {
         startPosition: ts.LineAndCharacter;
         endPosition: ts.LineAndCharacter
@@ -221,7 +305,8 @@ export class LinesBetweenClassMembersCheck implements BaseChecker {
         };
     }
 
-    private addIssueReport(arkFile: ArkFile, line: number, startCol: number, endCol: number, message: string, fix?: RuleFix): Defects {
+    private addIssueReport(arkFile: ArkFile, line: number, startCol: number,
+                           endCol: number, message: string, fix?: RuleFix): Defects {
         const severity = this.rule.alert ?? this.metaData.severity;
         const filePath = arkFile.getFilePath();
         const defect = new Defects(line, startCol, endCol, message, severity, this.rule.ruleId,

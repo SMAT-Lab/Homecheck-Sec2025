@@ -47,7 +47,7 @@ export class PreferIncludesCheck implements BaseChecker {
         description: 'Enforce includes method over indexOf method.',
         fixable: true,
         severity: 1,
-        ruleDocPath: 'docs/prefer-includes-check.md'
+        ruleDocPath: 'docs/prefer-includes.md'
     };
 
     private fileMatcher: FileMatcher = {

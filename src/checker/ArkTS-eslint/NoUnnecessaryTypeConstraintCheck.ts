@@ -29,7 +29,7 @@ import {RuleListUtil} from "../../utils/common/DefectsList";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'ForeachArgsCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/no-unnecessary-type-constraint-check.md",
+    ruleDocPath: "docs/no-unnecessary-type-constraint.md",
     description: "Disallow unnecessary constraints on generic types"
 };
 

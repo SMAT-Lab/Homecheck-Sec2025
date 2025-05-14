@@ -87,7 +87,7 @@ export class BraceStyleCheck implements BaseChecker {
 
     public metaData: BaseMetaData = {
         severity: 1,
-        ruleDocPath: 'docs/brace-style-check.md',
+        ruleDocPath: 'docs/brace-style.md',
         description: 'Enforce consistent brace style for blocks.',
     };
 

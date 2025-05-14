@@ -139,7 +139,8 @@ export class ColorOverlayEffectCheck implements BaseChecker {
         return undefined;
     }
 
-    private attributeCheck(name: string, childOrgStmtStr: string | undefined, childrenAttributes: Map<string, [Stmt, (Constant | ArkInstanceFieldRef | MethodSignature)[]]>): boolean {
+    private attributeCheck(name: string, childOrgStmtStr: string | undefined,
+        childrenAttributes: Map<string, [Stmt, (Constant | ArkInstanceFieldRef | MethodSignature)[]]>): boolean {
         for (let childrenAttribute of childrenAttributes) {
             if (name !== childrenAttribute[0]) {
                 continue;
@@ -172,7 +173,7 @@ export class ColorOverlayEffectCheck implements BaseChecker {
                 continue;
             }
             let stmt = vals[0];
-            this.addIssueReport(arkFile, stmt, viewTreeRoot.name)
+            this.addIssueReport(arkFile, stmt, viewTreeRoot.name);
         }
     }
 

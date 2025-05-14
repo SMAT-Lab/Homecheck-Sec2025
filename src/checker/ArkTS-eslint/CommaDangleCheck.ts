@@ -41,7 +41,7 @@ interface CommaDangleOptions {
 export class CommaDangleCheck implements BaseChecker {
   readonly metaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/comma-dangle-check.md",
+    ruleDocPath: "docs/comma-dangle.md",
     description: "Require or disallow trailing commas",
   };
 
@@ -252,13 +252,13 @@ export class CommaDangleCheck implements BaseChecker {
     const { line, character } = sourceFile.getLineAndCharacterOfPosition(pos);
     const commaInfo = this.findTrailingCommaPos(info.lastElement, node);
     const column = commaInfo.column === -1 ? character : commaInfo.column;
-
+    const severity = this.rule.alert ?? this.metaData.severity;
     const defect = new Defects(
       line + 1,
       column,
       column + 1,
       message,
-      this.metaData.severity,
+      severity,
       this.rule.ruleId,
       arkFile.getFilePath(),
       this.metaData.ruleDocPath,
@@ -402,6 +402,7 @@ export class CommaDangleCheck implements BaseChecker {
     const ePos = enumKeywordPos;
     const { line, character } = sourceFile.getLineAndCharacterOfPosition(ePos);
     const lineText = sourceFile.getFullText().split('\n')[line];
+    const severity = this.rule.alert ?? this.metaData.severity;
     let adjustedCharacter = character;
     if (node.modifiers && node.modifiers.length > 0) {
       const enumIndex = lineText.indexOf('enum');
@@ -412,7 +413,7 @@ export class CommaDangleCheck implements BaseChecker {
       adjustedCharacter + 1,
       adjustedCharacter + 2,
       message,
-      this.metaData.severity,
+      severity,
       this.rule.ruleId,
       arkFile.getFilePath(),
       this.metaData.ruleDocPath,
@@ -489,12 +490,13 @@ export class CommaDangleCheck implements BaseChecker {
     const openAnglePos = genericInfo.nodeFullStart + genericInfo.openAngleIndex;
     const sourceFile = AstTreeUtils.getSourceFileFromArkFile(arkFile);
     const { line, character } = sourceFile.getLineAndCharacterOfPosition(openAnglePos);
+    const severity = this.rule.alert ?? this.metaData.severity;
     const defect = new Defects(
       line + 1,
       character + 1,
       character + 2,
       message,
-      this.metaData.severity,
+      severity,
       this.rule.ruleId,
       arkFile.getFilePath(),
       this.metaData.ruleDocPath,
@@ -663,7 +665,7 @@ export class CommaDangleCheck implements BaseChecker {
       column,
       column + 1,
       message,
-      this.metaData.severity,
+      this.rule.alert ?? this.metaData.severity,
       this.rule.ruleId,
       arkFile.getFilePath(),
       this.metaData.ruleDocPath,
@@ -886,7 +888,8 @@ export class CommaDangleCheck implements BaseChecker {
           commaPos = lastParam.getEnd();
         }
         const { line, character } = sourceFile.getLineAndCharacterOfPosition(commaPos);
-        const defect = new Defects(line + 1, character + 1, character + 2, violation.message, this.metaData.severity, this.rule.ruleId,
+        const severity = this.rule.alert ?? this.metaData.severity;
+        const defect = new Defects(line + 1, character + 1, character + 2, violation.message, severity, this.rule.ruleId,
            arkFile.getFilePath(), this.metaData.ruleDocPath, true, false, true);
         const fix = hasTrailingComma ? { range: [commaPos, commaPos + 1], text: '' } as RuleFix : { range: [commaPos, commaPos], text: ',' } as RuleFix;
         this.issues.push(new IssueReport(defect, fix));
@@ -1050,7 +1053,7 @@ export class CommaDangleCheck implements BaseChecker {
       column,
       column + 1,
       message,
-      this.metaData.severity,
+      this.rule.alert ?? this.metaData.severity,
       this.rule.ruleId,
       arkFile.getFilePath(),
       this.metaData.ruleDocPath,
@@ -1136,12 +1139,13 @@ export class CommaDangleCheck implements BaseChecker {
     if (violation.hasViolation) {
       const pos = lastElement.getEnd();
       const { line, character } = sourceFile.getLineAndCharacterOfPosition(pos);
+      const severity = this.rule.alert ?? this.metaData.severity;
       const defect = new Defects(
         line + 1,
         character + 1,
         character + 2,
         violation.message,
-        this.metaData.severity,
+        severity,
         this.rule.ruleId,
         arkFile.getFilePath(),
         this.metaData.ruleDocPath,
@@ -1269,12 +1273,13 @@ export class CommaDangleCheck implements BaseChecker {
     if (info.hasTrailingComma && info.commaIndex !== undefined) {
       const commaPos = info.nodeFullStart + info.lastParamEnd + info.commaIndex;
       const { line, character } = sourceFile.getLineAndCharacterOfPosition(commaPos);
+      const severity = this.rule.alert ?? this.metaData.severity;
       const defect = new Defects(
         line + 1,
         character + 1,
         character + 2,
         message,
-        this.metaData.severity,
+        severity,
         this.rule.ruleId,
         arkFile.getFilePath(),
         this.metaData.ruleDocPath,
@@ -1291,12 +1296,13 @@ export class CommaDangleCheck implements BaseChecker {
     }
     const pos = info.lastParam.getEnd();
     const { line, character } = sourceFile.getLineAndCharacterOfPosition(pos);
+    const severity = this.rule.alert ?? this.metaData.severity;
     const defect = new Defects(
       line + 1,
       character + 1,
       character + 2,
       message,
-      this.metaData.severity,
+      severity,
       this.rule.ruleId,
       arkFile.getFilePath(),
       this.metaData.ruleDocPath,

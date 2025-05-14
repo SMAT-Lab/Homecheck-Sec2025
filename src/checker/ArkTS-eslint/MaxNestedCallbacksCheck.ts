@@ -39,7 +39,7 @@ interface CallbackInfo {
 export class MaxNestedCallbacksCheck implements BaseChecker {
     metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/max-nested-callbacks-check.md',
+        ruleDocPath: 'docs/max-nested-callbacks.md',
         description: 'Maximum allowed is 10'
     };
     public rule: Rule;

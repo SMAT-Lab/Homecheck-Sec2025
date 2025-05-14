@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { ArkFile } from "arkanalyzer";
-import { FileReports, IssueReport } from "./Defects";
+import { ArkFile } from 'arkanalyzer';
+import { FileReports, IssueReport } from './Defects';
 
 export interface Engine {
     /**

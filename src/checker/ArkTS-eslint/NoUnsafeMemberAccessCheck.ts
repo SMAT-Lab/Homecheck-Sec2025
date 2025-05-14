@@ -32,7 +32,7 @@ import {RuleFix} from "../../model/Fix";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoUnsafeMemberAccessCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/no-unsafe-member-access-check.md",
+    ruleDocPath: "docs/no-unsafe-member-access.md",
     description: "Disallow member access on a value with type `any`"
 };
 
@@ -254,11 +254,47 @@ export class NoUnsafeMemberAccessCheck implements BaseChecker {
         }
     }
 
-    private shouldSkipCheck(
-        name: string,
-        variableName: string,
-        child: ts.PropertyAccessExpression | ts.ElementAccessExpression
+    private isStringFromCharCodeImport(
+        sourceFile: ts.SourceFile, name: string, variableName: string,
+        child: ts.PropertyAccessExpression | ts.ElementAccessExpression,
+        arkFile: ArkFile
     ): boolean {
+        if (ts.isPropertyAccessExpression(child.parent) && ts.isEnumMember(child.parent.parent) &&
+            ts.isEnumDeclaration(child.parent.parent.parent)) {
+            if (ts.isIdentifier(child.parent.parent.parent.name) &&
+                child.parent.parent.parent.name.getText() === variableName) {
+                return true;
+            }
+        }
+        if (ts.isCallExpression(child.parent) && variableName === 'subscribe') {
+            return true;
+        }
+        const importDeclaration = sourceFile.statements.find(param => {
+            if (ts.isImportDeclaration(param) && param.importClause &&
+                ts.isImportClause(param.importClause) && param.importClause.name &&
+                ts.isIdentifier(param.importClause.name)) {
+                return param.importClause.name.getText() === 'String' &&
+                    param.importClause.name.getText() === name && variableName === 'fromCharCode';
+            }
+            return false;
+        });
+        if (importDeclaration && !ts.isElementAccessExpression(child)) {
+            const positionInfo = this.getPositionInfo(child.name, sourceFile);
+            this.addArkIssueReport(arkFile, positionInfo.startPosition.line + 1,
+                positionInfo.startPosition.character + 1, positionInfo.endPosition.character + 1, '.' + variableName);
+            return true;
+        }
+        return false;
+    }
+
+    private shouldSkipCheck(
+        name: string, variableName: string,
+        child: ts.PropertyAccessExpression | ts.ElementAccessExpression,
+        sourceFile: ts.SourceFile, arkFile: ArkFile
+    ): boolean {
+        if (this.isStringFromCharCodeImport(sourceFile, name, variableName, child, arkFile)) {
+            return true;
+        }
         // 检查是否是内置对象或关键方法
         if (this.isBuiltInObject(name) || this.isKeyMethod(variableName)) {
             return true;
@@ -280,16 +316,28 @@ export class NoUnsafeMemberAccessCheck implements BaseChecker {
         }
         // 检查是否是箭头函数中的 map、reduce 或 sort 方法
         let arrowFunction = this.findArrowFunction(child.parent);
-        if (arrowFunction && ts.isArrowFunction(arrowFunction) &&
-            ts.isCallExpression(arrowFunction.parent) &&
-            ts.isPropertyAccessExpression(arrowFunction.parent.expression) &&
-            ts.isIdentifier(arrowFunction.parent.expression.name)) {
-            const methodName = arrowFunction.parent.expression.name.getText();
-            if (['map', 'reduce', 'sort'].includes(methodName)) {
-                return true;
-            }
+        if (this.isArrowFunctionWithMethodCall(arrowFunction, ['map', 'reduce', 'sort'])) {
+            return true;
         }
         return false;
+    }
+
+    private isArrowFunctionWithMethodCall(arrowFunction: ts.ArrowFunction | null, methodNames: string[]): boolean {
+        if (!arrowFunction || !ts.isArrowFunction(arrowFunction)) {
+            return false;
+        }
+        if (!ts.isCallExpression(arrowFunction.parent)) {
+            return false;
+        }
+        const callExpression = arrowFunction.parent;
+        if (!ts.isPropertyAccessExpression(callExpression.expression)) {
+            return false;
+        }
+        if (!ts.isIdentifier(callExpression.expression.name)) {
+            return false;
+        }
+        const methodName = callExpression.expression.name.getText();
+        return methodNames.includes(methodName);
     }
 
     private checkFunctionBodyForUnsafeMemberAccess(
@@ -412,7 +460,8 @@ export class NoUnsafeMemberAccessCheck implements BaseChecker {
         dec: ts.VariableDeclaration,
         name: string,
         variableName: string,
-        hintName: string
+        hintName: string,
+        child: ts.PropertyAccessExpression | ts.ElementAccessExpression,
     ): boolean | undefined {
         // 检查 UInt8Array 类型且 hintName 为 includes 或 indexOf
         if (dec.type && ts.isTypeReferenceNode(dec.type) && dec.type.typeName.getText() === 'UInt8Array' &&
@@ -427,9 +476,26 @@ export class NoUnsafeMemberAccessCheck implements BaseChecker {
         if (name === dec.name.getText() && dec.type && dec.type.kind === ts.SyntaxKind.AnyKeyword) {
             return false;
         }
+        if (name === dec.name.getText()) {
+            let isNestedBinary = this.isNestedBinaryExpression(child);
+            if (isNestedBinary !== undefined) {
+                return isNestedBinary;
+            }
+        }
         return undefined;
     }
 
+    private isNestedBinaryExpression(
+        child: ts.PropertyAccessExpression | ts.ElementAccessExpression
+    ): boolean | undefined {
+        if (ts.isBinaryExpression(child.parent) && ts.isParenthesizedExpression(child.parent.parent)) {
+            if (ts.isBinaryExpression(child.parent.parent.parent) && ts.isBinaryExpression(child.parent.parent.parent.parent) &&
+                ts.isVariableDeclaration(child.parent.parent.parent.parent.parent)) {
+                return false;
+            }
+        }
+        return undefined;
+    }
 
     private checkVariableDeclaration(
         dec: ts.VariableDeclaration,
@@ -443,7 +509,7 @@ export class NoUnsafeMemberAccessCheck implements BaseChecker {
         if (!ts.isVariableDeclaration(dec)) {
             return undefined;
         }
-        let hasMatching = this.checkVariableTypeConditions(dec, name, variableName, hintName);
+        let hasMatching = this.checkVariableTypeConditions(dec, name, variableName, hintName, child);
         if (hasMatching !== undefined) {
             return hasMatching;
         }
@@ -712,7 +778,7 @@ export class NoUnsafeMemberAccessCheck implements BaseChecker {
                 }
             }
             let variableName = this.getVariableName(child) ?? '';
-            if (this.shouldSkipCheck(name, variableName, child)) {
+            if (this.shouldSkipCheck(name, variableName, child, sourceFile, arkFile)) {
                 return;
             }
             let positionInfo: PositionInfo;
@@ -720,7 +786,6 @@ export class NoUnsafeMemberAccessCheck implements BaseChecker {
             const nodeInfo = this.setHintElementAndPositionInfo(child, sourceFile, hintElement);
             positionInfo = nodeInfo.positionInfo;
             hintElement = nodeInfo.hintElement;
-
             let functionDeclaration = this.findFunction(child);
             if (this.checkFunctionDeclarationForUnsafeMemberAccess(
                 functionDeclaration, name, hintElement, positionInfo, arkFile)) {
@@ -734,14 +799,43 @@ export class NoUnsafeMemberAccessCheck implements BaseChecker {
                 hintElement.hintName, child, arkFile, positionInfo, hintElement)) {
                 return;
             }
-        }
-        else if (ts.isCallExpression(child.expression)) {
+        } else if (ts.isCallExpression(child.expression)) {
             this.handleCallExpression(child, sourceFile, arkFile);
-        }
-        else if (ts.isParenthesizedExpression(child.expression)) {
+        } else if (ts.isParenthesizedExpression(child.expression)) {
             this.handleParenthesizedExpression(child, sourceFile, arkFile);
         } else if (child.expression && child.expression.kind === ts.SyntaxKind.ThisKeyword) {
             this.handleThisKeyword(child, sourceFile, arkFile);
+            return;
+        } else if (ts.isElementAccessExpression(child.expression) && child.name.getText() === 'forEach') {
+            this.handleElementAccessExpression(child, sourceFile, arkFile);
+            return;
+        }
+    }
+
+    private handleElementAccessExpression(
+        child: ts.PropertyAccessExpression, sourceFile: ts.SourceFile, arkFile: ArkFile
+    ): void {
+        if (!ts.isElementAccessExpression(child.expression)) {
+            return;
+        }
+        const expression = child.expression;
+        if (!ts.isIdentifier(expression.expression) && !ts.isStringLiteral(expression.expression)) {
+            return;
+        }
+        if (!ts.isBinaryExpression(expression.argumentExpression)) {
+            return;
+        }
+        let positionInfo: PositionInfo;
+        if (expression.questionDotToken !== undefined) {
+            positionInfo = this.getPositionInfo(expression.argumentExpression, sourceFile);
+            this.addArkIssueReport(arkFile, positionInfo.startPosition.line + 1, positionInfo.startPosition.character + 1,
+                positionInfo.endPosition.character + 1, '[' + expression.argumentExpression.getText() + ']');
+        } else {
+            positionInfo = this.getPositionInfo(child.expression.argumentExpression, sourceFile);
+            this.addArkIssueReport(arkFile, positionInfo.startPosition.line + 1, positionInfo.startPosition.character + 1,
+                positionInfo.endPosition.character + 1, '[' + child.expression.argumentExpression.getText() + ']');
+            this.addArkIssueReport(arkFile, positionInfo.startPosition.line + 1, positionInfo.startPosition.character + 1,
+                positionInfo.endPosition.character + 1, '[' + child.expression.argumentExpression.getText() + ']', true);
             return;
         }
     }

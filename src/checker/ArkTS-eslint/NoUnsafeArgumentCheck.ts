@@ -30,7 +30,7 @@ import {RuleFix} from "../../model/Fix";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoUnsafeArgumentCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/no-unsafe-argument-check.md",
+    ruleDocPath: "docs/no-unsafe-argument.md",
     description: "Unsafe argument of type `any` assigned to a parameter of type `string`."
 };
 

@@ -87,7 +87,7 @@ function buildScene(projectConfig: ProjectConfig): Scene | null {
         return scene;
     } catch (error) {
         logger.error(`Build scene or infer types error: ${(error as Error).message}`);
-        logger.error(`Error statck: ${(error as Error).stack}`);
+        logger.error(`Error stack: ${(error as Error).stack}`);
         return null;
     }
 }

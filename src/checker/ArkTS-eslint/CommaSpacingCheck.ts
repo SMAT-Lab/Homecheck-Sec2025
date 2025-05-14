@@ -26,7 +26,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, "CommaSpacingCheck");
 
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: "docs/comma-spacing-check.md",
+  ruleDocPath: "docs/comma-spacing.md",
   description: "Enforce consistent spacing before and after commas",
 };
 

@@ -45,11 +45,11 @@ export class TimezoneInterfaceCheck implements BaseChecker {
         const matchBuildCb: MatcherCallback = {
             matcher: this.buildMatcher,
             callback: this.check
-        }
+        };
         return [matchBuildCb];
     }
 
-    public check = (arkMethod: ArkMethod) => {
+    public check = (arkMethod: ArkMethod): void => {
         const stmts = arkMethod.getBody()?.getCfg()?.getStmts();
         if (!stmts) {
             return;
@@ -69,7 +69,7 @@ export class TimezoneInterfaceCheck implements BaseChecker {
                 this.reportIssue(clazz.getDeclaringArkFile(), stmt, invokeMethodName);
             }
         }
-    }
+    };
 
     public setTimeCheck(stmt: Stmt, clazz: ArkClass): void {
         if (this.isDefaultParameter(stmt)) {
@@ -152,7 +152,7 @@ export class TimezoneInterfaceCheck implements BaseChecker {
             }
             let arg = usedInvokeExpr.getArg(0);
             if (!(arg instanceof Constant)) {
-                continue
+                continue;
             }
             if (arg.getValue() === fieldName) {
                 return usedStmt;
@@ -176,7 +176,7 @@ export class TimezoneInterfaceCheck implements BaseChecker {
         if (startColumn === -1) {
             return;
         }
-        let defects = new Defects(lineNum, startColumn, endColumn, this.metaData.description, this.metaData.gSeverity,
+        let defects = new Defects(lineNum, startColumn, endColumn, this.metaData.description, this.metaData.severity,
             this.rule.ruleId, filePath, this.metaData.ruleDocPath, true, false, false);
         this.issues.push(new IssueReport(defects, undefined));
     }

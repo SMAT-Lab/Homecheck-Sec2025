@@ -33,7 +33,7 @@ interface Issue {
 export class NoExtraSemiCheck implements BaseChecker {
     metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-extra-semi-check.md',
+        ruleDocPath: 'docs/no-extra-semi.md',
         description: 'Disallow unnecessary semicolons.'
     };
     public rule: Rule;

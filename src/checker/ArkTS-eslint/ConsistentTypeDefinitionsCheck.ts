@@ -26,7 +26,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'ConsistentTypeDefini
 
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/consistent-type-definitions-check.md',
+    ruleDocPath: 'docs/consistent-type-definitions.md',
     description: 'TypeScript provides two common ways to define an object type: interface and type.'
 };
 

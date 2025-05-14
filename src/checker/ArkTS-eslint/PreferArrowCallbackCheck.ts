@@ -39,7 +39,7 @@ export class PreferArrowCallbackCheck implements BaseChecker {
     public issues: IssueReport[] = [];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/prefer-arrow-callback-check.md',
+        ruleDocPath: 'docs/prefer-arrow-callback.md',
         description: 'Prefer arrow functions for callbacks.',
     };
 

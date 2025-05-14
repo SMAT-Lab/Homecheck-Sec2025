@@ -24,7 +24,7 @@ import { BaseChecker, BaseMetaData } from "../BaseChecker";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoCaseDeclarationsCheck');
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: "docs/no-case-declarations-check.md",
+  ruleDocPath: "docs/no-case-declarations.md",
   description: "Disallow lexical declarations in case clauses.",
 };
 

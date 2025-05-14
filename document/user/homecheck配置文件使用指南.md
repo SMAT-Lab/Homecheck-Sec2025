@@ -18,6 +18,8 @@
   "reportDir": "./report",
   "arkCheckPath": "./",
   "product": "default",
+  "homecheck_log_level": "info",
+  "arkanalyzer_log_level": "error",
   "sdksThirdParty": []
 }
 ```
@@ -41,13 +43,17 @@ fix：是否修复
 
 npmPath：自定义规则npm路径
 
-npmInstallDir：自定义规则npm安装路径
+npmInstallDir：自定义规则安装路径
 
 reportDir：homecheck附带工具的报告目录
 
 arkCheckPath：homecheck工程的目录
 
 product：当前激活的产品名称
+
+homecheck_log_level：homecheck日志级别，支持debug、info、warn、error、trace，默认为info
+
+arkanalyzer_log_level：arkanalyzer日志级别,支持debug、info、warn、error、trace，默认为error
 
 sdksThirdParty：sdk三方库，name：库名称，path:库路径，moduleName：模块名称，示例如下：
 ```
@@ -59,7 +65,6 @@ sdksThirdParty：sdk三方库，name：库名称，path:库路径，moduleName�
     }
   ]
 ```
-
 
 ## config\ruleConfig.json配置文件
 

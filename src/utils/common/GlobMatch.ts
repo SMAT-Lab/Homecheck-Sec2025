@@ -34,14 +34,14 @@ export class GlobMatch {
             const char = glob[i];
             if (char === '*') {
                 if (!isStar) {
-                    regexp += '.*';  // 匹配任意字符序列，包括空字符串。
+                    regexp += '.*'; // 匹配任意字符序列，包括空字符串。
                 }
                 isStar = true;
                 continue;
             } else if (char === '?') {
-                regexp += '.';  // 匹配任意单个字符。
+                regexp += '.'; // 匹配任意单个字符。
             } else if (specialChars.has(char)) {
-                regexp += `\\${char}`;  // 转义特殊字符。
+                regexp += `\\${char}`; // 转义特殊字符。
             } else {
                 regexp += char;
             }

@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
-import { AbstractFieldRef, AbstractInvokeExpr, ArkAssignStmt, ArkAwaitExpr, ArkField, ArkFile, ArkInstanceFieldRef, ArkInstanceInvokeExpr, ArkInvokeStmt, ArkMethod, ArkReturnStmt, ArkStaticFieldRef, ClassSignature, Constant, DEFAULT_ARK_CLASS_NAME, FunctionType, Local, MethodSignature, Scene, Stmt, UnionType, UnknownType, Value } from "arkanalyzer";
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
+import { AbstractFieldRef, AbstractInvokeExpr, ArkAssignStmt, ArkAwaitExpr, ArkField, ArkFile, ArkInstanceFieldRef, ArkInstanceInvokeExpr, ArkInvokeStmt, ArkMethod, ArkReturnStmt, ArkStaticFieldRef, ClassSignature, Constant, DEFAULT_ARK_CLASS_NAME, FunctionType, Local, MethodSignature, Scene, Stmt, UnionType, UnknownType, Value } from 'arkanalyzer';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { CheckerStorage, CheckerUtils, Defects, MatcherCallback, Rule } from "../../Index";
-import { StringConstant } from "arkanalyzer/lib/core/base/Constant";
-import { StmtExt } from "../../model/StmtExt";
-import { VarInfo } from "../../model/VarInfo";
-import { StringUtils } from "../../utils/checker/StringUtils";
-import { IssueReport } from "../../model/Defects";
+import { CheckerStorage, CheckerUtils, Defects, MatcherCallback, Rule } from '../../Index';
+import { StringConstant } from 'arkanalyzer/lib/core/base/Constant';
+import { StmtExt } from '../../model/StmtExt';
+import { VarInfo } from '../../model/VarInfo';
+import { StringUtils } from '../../utils/checker/StringUtils';
+import { IssueReport } from '../../model/Defects';
 
 const multimediaAPICreateSignList: string[] = [
     `@ohosSdk/api/@ohos.multimedia.avsession.d.ts: avSession.${DEFAULT_ARK_CLASS_NAME}.createAVSession(@ohosSdk/api/application/BaseContext.d.ts: BaseContext, string, @ohosSdk/api/@ohos.multimedia.avsession.d.ts: avSession.${DEFAULT_ARK_CLASS_NAME}.[static]${DEFAULT_ARK_CLASS_NAME}()#AVSessionType)`,
@@ -42,7 +42,7 @@ const multimediaCreateList: CreateMultimediaInfo[] = [];
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'AvsessionButtonsCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/avsession-buttons-check.md",
+    ruleDocPath: 'docs/avsession-buttons-check.md',
     description: 'For apps accessing AVSession, set listeners for button events and make sure they respond correctly, such as play, pause, stop, playPrevious, and playNext.'
 };
 
@@ -71,30 +71,34 @@ export class AvsessionButtonsCheck implements BaseChecker {
         const matchBuildCb: MatcherCallback = {
             matcher: undefined,
             callback: this.check
-        }
+        };
         return [matchBuildCb];
     }
 
-    public check = (scene: Scene) => {
+    public check = (scene: Scene): void => {
         for (let arkFile of scene.getFiles()) {
-            for (let clazz of arkFile.getClasses()) {
+            this.processClass(arkFile);
+            this.commonInvokerMatch();
+        }
+        this.processReportIssue();
+    };
+
+    private processClass(arkFile: ArkFile): void {
+        for (let clazz of arkFile.getClasses()) {
+            for (let mtd of clazz.getMethods()) {
+                this.processArkMethod(arkFile, mtd);
+            }
+        }
+        for (let namespace of arkFile.getAllNamespacesUnderThisFile()) {
+            for (let clazz of namespace.getClasses()) {
                 for (let mtd of clazz.getMethods()) {
                     this.processArkMethod(arkFile, mtd);
                 }
             }
-            for (let namespace of arkFile.getAllNamespacesUnderThisFile()) {
-                for (let clazz of namespace.getClasses()) {
-                    for (let mtd of clazz.getMethods()) {
-                        this.processArkMethod(arkFile, mtd);
-                    }
-                }
-            }
-            this.commonInvokerMatch();
         }
-        this.processReportIssue();
     }
 
-    private processReportIssue() {
+    private processReportIssue(): void {
         let argSet = new Set<string>();
         for (let cmi of multimediaCreateList) {
             let buttonStmts = cmi.interruptInfo;
@@ -157,7 +161,7 @@ export class AvsessionButtonsCheck implements BaseChecker {
                 varInfo: null,
                 fieldInfo: null,
                 interruptInfo: new Set()
-            }
+            };
             multimediaCreateList.push(createInfo);
             if (stmt instanceof ArkInvokeStmt) {
                 let callbackMethod = this.getInvokeCallbackMethod(arkFile, stmt, methodName);
@@ -248,16 +252,7 @@ export class AvsessionButtonsCheck implements BaseChecker {
                 this.parseRealAttachInstance(callbackMethod, stmt, createInfo, useType);
             }
             if (stmt instanceof ArkInvokeStmt && this.isResolveAssignToVariable(arkFile, stmt, useType)) {
-                let invokeExpr = stmt.getInvokeExpr();
-                if (invokeExpr instanceof ArkInstanceInvokeExpr) {
-                    let base = this.getFieldByBase(invokeExpr.getBase());
-                    if (base && base instanceof Local) {
-                        createInfo.varInfo = base;
-                    } else if (base && base instanceof ArkField) {
-                        createInfo.varInfo = invokeExpr.getBase();
-                        createInfo.fieldInfo = base;
-                    }
-                }
+                this.handleInvokeStmt(stmt, createInfo);
             }
             let invoker = CheckerUtils.getInvokeExprFromStmt(stmt);
             if (!invoker) {
@@ -267,21 +262,39 @@ export class AvsessionButtonsCheck implements BaseChecker {
                 this.parseInvokerAudioInterruptStmt(callbackMethod, stmt, invoker, createInfo, useType);
                 continue;
             }
-            for (let arg of invoker.getArgs()) {
-                if (!this.isArgTypeMultimedia(callbackMethod, arg, useType)) {
-                    continue;
-                }
-                let methodSignature = invoker.getMethodSignature();
-                if (busyMethods.has(methodSignature)) {
-                    continue;
-                }
-                busyMethods.add(methodSignature);
-                let invokeChainMethod = arkFile.getScene().getMethod(methodSignature);
-                if (!invokeChainMethod) {
-                    continue;
-                }
-                this.processCallbackMethod(arkFile, invokeChainMethod, 0, createInfo, busyMethods, UseType.CALLBACK);
+            this.handleMultimediaArgs(arkFile, callbackMethod, invoker, createInfo, busyMethods, useType);
+        }
+    }
+
+    private handleInvokeStmt(stmt: ArkInvokeStmt, createInfo: CreateMultimediaInfo): void {
+        let invokeExpr = stmt.getInvokeExpr();
+        if (invokeExpr instanceof ArkInstanceInvokeExpr) {
+            let base = this.getFieldByBase(invokeExpr.getBase());
+            if (base && base instanceof Local) {
+                createInfo.varInfo = base;
+            } else if (base && base instanceof ArkField) {
+                createInfo.varInfo = invokeExpr.getBase();
+                createInfo.fieldInfo = base;
             }
+        }
+    }
+
+    private handleMultimediaArgs(arkFile: ArkFile, callbackMethod: ArkMethod, invoker: AbstractInvokeExpr,
+        createInfo: CreateMultimediaInfo, busyMethods: Set<MethodSignature>, useType: UseType): void {
+        for (let arg of invoker.getArgs()) {
+            if (!this.isArgTypeMultimedia(callbackMethod, arg, useType)) {
+                continue;
+            }
+            let methodSignature = invoker.getMethodSignature();
+            if (busyMethods.has(methodSignature)) {
+                continue;
+            }
+            busyMethods.add(methodSignature);
+            let invokeChainMethod = arkFile.getScene().getMethod(methodSignature);
+            if (!invokeChainMethod) {
+                continue;
+            }
+            this.processCallbackMethod(arkFile, invokeChainMethod, 0, createInfo, busyMethods, UseType.CALLBACK);
         }
     }
 
@@ -372,7 +385,8 @@ export class AvsessionButtonsCheck implements BaseChecker {
         return arkFile.getScene().getMethod(type.getMethodSignature());
     }
 
-    private parseInvokerAudioInterruptStmt(callbackMethod: ArkMethod, stmt: Stmt, invoker: AbstractInvokeExpr, createInfo: CreateMultimediaInfo, useType: UseType): void {
+    private parseInvokerAudioInterruptStmt(callbackMethod: ArkMethod, stmt: Stmt, invoker: AbstractInvokeExpr,
+        createInfo: CreateMultimediaInfo, useType: UseType): void {
         if (!(invoker instanceof ArkInstanceInvokeExpr)) {
             return;
         }
@@ -655,7 +669,6 @@ export class AvsessionButtonsCheck implements BaseChecker {
         }
         let methodNameIndex = text.indexOf(methodName);
         if (methodNameIndex === -1) {
-            logger.debug(`Can not find ${methodName} in ${text}.`);
             return;
         }
         const severity = this.rule.alert ?? this.metaData.severity;

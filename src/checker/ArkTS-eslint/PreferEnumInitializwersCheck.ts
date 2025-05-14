@@ -33,7 +33,7 @@ const logger = Logger.getLogger(
 );
 const gMetaData: BaseMetaData = {
   severity: 1,
-  ruleDocPath: 'docs/prefer-enum-initializers-check.md', // TODO: support url
+  ruleDocPath: 'docs/prefer-enum-initializers.md', // TODO: support url
   description: `The value of the member 'propertyName' should be explicitly defined.`,
 };
 //推荐显式初始化每个枚举成员值。

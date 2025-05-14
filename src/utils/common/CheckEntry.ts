@@ -13,24 +13,24 @@
  * limitations under the License.
  */
 
-import { Scene } from "arkanalyzer";
-import Logger, { LOG_MODULE_TYPE } from "arkanalyzer/lib/utils/logger";
-import { SceneConfig } from "arkanalyzer";
-import { fileRuleMapping } from "./FileRuleMapping";
-import { RuleConfig } from "../../model/RuleConfig";
-import { ProjectConfig, SelectedFileInfo } from "../../model/ProjectConfig";
-import { Project2Check } from "../../model/Project2Check";
-import { File2Check } from "../../model/File2Check";
-import { DisableText } from "./Disable";
-import { Message } from "../../model/Message";
-import { FileUtils } from "./FileUtils";
-import { ScopeHelper } from "./ScopeHelper";
-import { RuleListUtil } from "./DefectsList";
-import { FixMode } from "../../model/Fix";
-import { FileIssues, FileReports, IssueReport, engine } from "../../model/Defects";
-import { FixUtils } from "./FixUtils";
-import { FixEngine } from "../../codeFix/FixEngine";
-import { CheckerUtils } from "../checker/CheckerUtils";
+import { Scene } from 'arkanalyzer';
+import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
+import { SceneConfig } from 'arkanalyzer';
+import { fileRuleMapping } from './FileRuleMapping';
+import { RuleConfig } from '../../model/RuleConfig';
+import { ProjectConfig, SelectedFileInfo } from '../../model/ProjectConfig';
+import { Project2Check } from '../../model/Project2Check';
+import { File2Check } from '../../model/File2Check';
+import { DisableText } from './Disable';
+import { Message } from '../../model/Message';
+import { FileUtils } from './FileUtils';
+import { ScopeHelper } from './ScopeHelper';
+import { RuleListUtil } from './DefectsList';
+import { FixMode } from '../../model/Fix';
+import { FileIssues, FileReports, IssueReport, engine } from '../../model/Defects';
+import { FixUtils } from './FixUtils';
+import { FixEngine } from '../../codeFix/FixEngine';
+import { CheckerUtils } from '../checker/CheckerUtils';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'CheckEntry');
 
@@ -212,10 +212,10 @@ export async function checkEntryBuilder(checkEntry: CheckEntry): Promise<boolean
     if (checkFileList.length === 0) {
         checkFileList = FileUtils.getAllFiles(checkEntry.projectConfig.projectPath, ['.ts', '.ets', '.json5']);
     }
-    
+
     // 2、文件过滤和文件级屏蔽处理
     checkFileList = await FileUtils.getFiltedFiles(checkFileList, checkEntry.ruleConfig);
-    logger.info("File count: " + checkFileList.length);
+    logger.info('File count: ' + checkFileList.length);
     if (checkFileList.length === 0) {
         checkEntry.message?.progressNotify(1, 'No file to check.');
         return false;
@@ -262,19 +262,19 @@ function buildScene(fileList: string[], checkEntry: CheckEntry): boolean {
         const projectPath = checkEntry.projectConfig.projectPath;
         const sdkList = FileUtils.genSdks(checkEntry.projectConfig);
         sceneConfig.buildFromProjectFiles(projectName, projectPath, fileList, sdkList);
-        logger.info("Build sceneConfig completed.");
+        logger.info('Build sceneConfig completed.');
         // 构建Scene信息
         checkEntry.scene = new Scene();
         checkEntry.scene.buildSceneFromFiles(sceneConfig);
-        logger.info("Build scene completed.");
+        logger.info('Build scene completed.');
         checkEntry.scene.inferTypes();
-        logger.info("Infer types completed.");
+        logger.info('Infer types completed.');
     } catch (error) {
-        logger.error("Build scene or infer types error: ", error);
+        logger.error('Build scene or infer types error: ', error);
         return false;
     }
     // 构建Scope信息
     checkEntry.buildScope();
-    logger.info("Build scope completed.");
+    logger.info('Build scope completed.');
     return true;
 }

@@ -28,8 +28,8 @@ function parseViewbox(viewbox: string): IAttributes | undefined {
     const bounds = viewbox.split(' ');
     let tmpWeight = getLength(bounds[3]);
     let tmpWidth = getLength(bounds[2]);
-    if(tmpWidth && tmpWeight) {
-        return {height: tmpWeight, width: tmpWidth};
+    if (tmpWidth && tmpWeight) {
+        return { height: tmpWeight, width: tmpWidth };
     }
     return undefined;
 }
@@ -46,7 +46,7 @@ function getAttirbutes(root: string): IAttributes | undefined {
                 height: heights && tempHeight,
                 viewbox: viewbox && parseViewbox(viewbox[2]),
                 width: widths && tmpWidth,
-            }
+            };
         }
     }
     return undefined;
@@ -56,7 +56,7 @@ function calculateByDimensions(attrs: IAttributes): ImageInfo {
     return {
         height: attrs.height as number,
         width: attrs.width as number,
-    }
+    };
 }
 
 function calculateByViewbox(attrs: IAttributes, viewbox: IAttributes): ImageInfo {
@@ -65,17 +65,17 @@ function calculateByViewbox(attrs: IAttributes, viewbox: IAttributes): ImageInfo
         return {
             height: attrs.height,
             width: Math.floor(attrs.height * ratio)
-        }
+        };
     } else if (attrs.width) {
         return {
             height: Math.floor(attrs.width * ratio),
             width: attrs.width,
-        }
+        };
     } else {
         return {
             height: viewbox.height as number,
             width: viewbox.width as number,
-        }
+        };
     }
 }
 

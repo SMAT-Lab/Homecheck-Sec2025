@@ -16,7 +16,7 @@
 import { ArkFile } from 'arkanalyzer';
 import { FileMatcher, isMatchedFile } from '../Matchers';
 
-export function matchFiles(arkFiles: ArkFile[], matcher: FileMatcher, callback: Function) {
+export function matchFiles(arkFiles: ArkFile[], matcher: FileMatcher, callback: Function): void {
     for (let arkFile of arkFiles) {
         if (isMatchedFile(arkFile, [matcher])) {
             callback(arkFile);

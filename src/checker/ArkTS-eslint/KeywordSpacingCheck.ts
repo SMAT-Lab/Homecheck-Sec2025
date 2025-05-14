@@ -78,7 +78,7 @@ const logger = Logger.getLogger(
 );
 const gMetaData: BaseMetaData = {
   severity: 1,
-  ruleDocPath: 'docs/keyword-spacing-check.md',
+  ruleDocPath: 'docs/keyword-spacing.md',
   description: 'is better written in dot notation.',
 };
 //要求或不允许函数标识符和它们的调用之间有空格

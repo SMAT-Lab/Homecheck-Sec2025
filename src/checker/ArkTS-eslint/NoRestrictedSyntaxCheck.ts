@@ -63,7 +63,7 @@ export class NoRestrictedSyntaxCheck implements BaseChecker {
     private defaultOptions: Options = [];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-restricted-syntax-check.md',
+        ruleDocPath: 'docs/no-restricted-syntax.md',
         description: 'Disallow specified syntax',
     };
 

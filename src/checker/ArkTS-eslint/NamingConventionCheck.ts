@@ -140,7 +140,7 @@ const defaultOptions: Option[] = [
 export class NamingConventionCheck implements BaseChecker {
   readonly metaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/naming-convention-check.md",
+    ruleDocPath: "docs/naming-convention.md",
     description: "Enforce naming conventions for everything across a codebase.",
   };
 

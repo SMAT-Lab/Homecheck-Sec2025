@@ -16,25 +16,25 @@
 import type { ImageInfo, ImageData } from '../../../model/Interfaces';
 import { readInt16LE, readUInt24LE, toHexString, toUTF8String } from '../BytesUtils';
 
-function calculateExtended(input: Uint8Array) : ImageInfo {
+function calculateExtended(input: Uint8Array): ImageInfo {
     return {
         height: 1 + readUInt24LE(input, 7),
         width: 1 + readUInt24LE(input, 4),
-    }
+    };
 }
 
 function calculateLossLess(input: Uint8Array): ImageInfo {
     return {
         height: 1 + (((input[4] & 0xf) << 10) | (input[3] << 2) | ((input[2] & 0xc0) >> 6)),
         width: 1 + (((input[2] & 0x3f) << 8) | input[1]),
-    }
+    };
 }
 
 function calculateLossy(input: Uint8Array): ImageInfo {
     return {
         height: readInt16LE(input, 8) & 0x3fff,
         width: readInt16LE(input, 6) & 0x3fff,
-    }
+    };
 }
 
 export const WEBP: ImageData = {

@@ -24,7 +24,7 @@ import { RuleListUtil } from '../../utils/common/DefectsList';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'DefaultCaseLastCheck');
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: 'docs/default-case-last-check.md',
+  ruleDocPath: 'docs/default-case-last.md',
   description: 'Default clause should be the last clause',
 };
 

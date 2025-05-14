@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-import { ArkAssignStmt, ArkInstanceFieldRef, ClassSignature, Constant, FileSignature, MethodSignature, Stmt, ViewTreeNode } from "arkanalyzer/lib";
-import { ArkClass } from "arkanalyzer/lib/core/model/ArkClass";
+import { ArkAssignStmt, ArkInstanceFieldRef, ClassSignature, Constant, FileSignature, MethodSignature, Stmt, ViewTreeNode } from 'arkanalyzer/lib';
+import { ArkClass } from 'arkanalyzer/lib/core/model/ArkClass';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
-import { Rule, Defects, ClassMatcher, MatcherTypes, MatcherCallback } from "../../Index";
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
+import { Rule, Defects, ClassMatcher, MatcherTypes, MatcherCallback } from '../../Index';
 import { ViewTreeTool } from '../../utils/checker/ViewTreeTool';
-import { IssueReport } from "../../model/Defects";
+import { IssueReport } from '../../model/Defects';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'SetCachedCountForLazyforeachCheck');
 let warnInfo: WarnInfo = { lineNum: -1, startCol: -1, endCol: -1, filePath: '' };
@@ -27,8 +27,8 @@ const cacheCountControls: string[] = ['Grid', 'List', 'Swiper', 'WaterFlow'];
 let viewTreeTool: ViewTreeTool = new ViewTreeTool();
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/set-cached-count-for-lazyforeach-check.md",
-    description: "Set cachedCount to preloaded items to achieve better scrolling experience."
+    ruleDocPath: 'docs/set-cached-count-for-lazyforeach-check.md',
+    description: 'Set cachedCount to preloaded items to achieve better scrolling experience.'
 };
 interface WarnInfo {
     lineNum: number;
@@ -56,11 +56,11 @@ export class SetCachedCountForLazyforeachCheck implements BaseChecker {
         const matchClazzCb: MatcherCallback = {
             matcher: this.clsMatcher,
             callback: this.check
-        }
+        };
         return [matchClazzCb];
     }
 
-    public check = (target: ArkClass) => {
+    public check = (target: ArkClass): void => {
         let fileSignature = target.getDeclaringArkFile().getFileSignature();
         if (!viewTreeTool.hasTraverse(target)) {
             let viewTreeRoot = target.getViewTree()?.getRoot();
@@ -69,9 +69,9 @@ export class SetCachedCountForLazyforeachCheck implements BaseChecker {
             }
             this.traverseViewTree(viewTreeRoot, fileSignature);
         }
-    }
+    };
 
-    private traverseViewTree(viewTreeRoot: ViewTreeNode, fileSignature: FileSignature) {
+    private traverseViewTree(viewTreeRoot: ViewTreeNode, fileSignature: FileSignature): void {
         let hasCachedCount = false;
         let hasLazyForeach = false;
         if (viewTreeRoot === undefined) {
@@ -87,7 +87,7 @@ export class SetCachedCountForLazyforeachCheck implements BaseChecker {
                 if (key === this.CREATE) {
                     this.getWarnInfoByVals(name, vals);
                 } else if (key === this.CACHED_COUNT) {
-                    hasCachedCount = true
+                    hasCachedCount = true;
                 }
             }
             if (!hasCachedCount) {
@@ -99,7 +99,7 @@ export class SetCachedCountForLazyforeachCheck implements BaseChecker {
         }
     }
 
-    private traverseViewTreeByChild(viewTreeRoot: ViewTreeNode, fileSignature: FileSignature) {
+    private traverseViewTreeByChild(viewTreeRoot: ViewTreeNode, fileSignature: FileSignature): void {
         for (let child of viewTreeRoot.children) {
             let signature = child.signature;
             if (signature && signature instanceof ClassSignature) {
@@ -156,7 +156,7 @@ export class SetCachedCountForLazyforeachCheck implements BaseChecker {
         return false;
     }
 
-    private getWarnInfoByVals(name: string, vals: [Stmt, (Constant | ArkInstanceFieldRef | MethodSignature)[]]) {
+    private getWarnInfoByVals(name: string, vals: [Stmt, (Constant | ArkInstanceFieldRef | MethodSignature)[]]): void {
         for (let val of vals) {
             if (val instanceof ArkAssignStmt) {
                 this.getWarnInfo(name, val);
@@ -165,7 +165,7 @@ export class SetCachedCountForLazyforeachCheck implements BaseChecker {
         }
     }
 
-    private getWarnInfo(name: string, stmt: ArkAssignStmt) {
+    private getWarnInfo(name: string, stmt: ArkAssignStmt): void {
         const arkFile = stmt.getCfg().getDeclaringMethod().getDeclaringArkFile();
         if (arkFile) {
             const originPosition = stmt.getOriginPositionInfo();
@@ -176,7 +176,7 @@ export class SetCachedCountForLazyforeachCheck implements BaseChecker {
         }
     }
 
-    private addIssueReport(issues: IssueReport[]) {
+    private addIssueReport(issues: IssueReport[]): void {
         const severity = this.rule.alert ?? this.metaData.severity;
         if (warnInfo.lineNum !== -1 && !this.isExistIssueReport(issues)) {
             let defects = new Defects(warnInfo.lineNum, warnInfo.startCol, warnInfo.endCol, this.metaData.description, severity, this.rule.ruleId,

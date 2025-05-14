@@ -45,7 +45,7 @@ type Options = {
 };
 const defaultText = 'explicit';
 const defaultOptions: Options = { accessibility:  defaultText};
-const docsPath = 'docs/explicit-member-accessibility-check.md';
+const docsPath = 'docs/explicit-member-accessibility.md';
 const logger = Logger.getLogger(
   LOG_MODULE_TYPE.HOMECHECK,
   'KeywordSpacingCheck'

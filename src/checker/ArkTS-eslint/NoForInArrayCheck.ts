@@ -19,7 +19,7 @@ import { RuleListUtil } from "../../utils/common/DefectsList";
 import { IssueReport } from "../../model/Defects";
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-for-in-array-check.md',
+    ruleDocPath: 'docs/no-for-in-array.md',
     description: 'For-in loops over arrays skips holes, returns indices as strings, and may visit the prototype chain or other enumerable properties. Use a more robust iteration method such as for-of or array.forEach instead.'
 };
 let filePath = '';
@@ -61,7 +61,8 @@ export class NoForInArrayCheck implements BaseChecker {
         if (ts.isObjectLiteralExpression(iterationObject)) {
             return;
         };
-        this.addIssueReport(node, this.metaData.description, this.metaData.severity);
+        const severity = this.rule.alert ?? this.metaData.severity;
+        this.addIssueReport(node, this.metaData.description, severity);
     };
     private addIssueReport(node: ts.Node, description: string, severity: number): void {
         const warnInfo = this.getLineAndColumn(node);

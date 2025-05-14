@@ -39,7 +39,7 @@ export class NoFallthroughCheck implements BaseChecker {
     public rule: Rule;
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-fallthrough-check.md',
+        ruleDocPath: 'docs/no-fallthrough.md',
         description: 'Disallow unintended fallthrough cases in switch statements.',
     };
 

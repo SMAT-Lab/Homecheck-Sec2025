@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { BasicBlock } from "arkanalyzer";
+import { BasicBlock } from 'arkanalyzer';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { Variable } from "./Variable";
+import { Variable } from './Variable';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'Scope');
 

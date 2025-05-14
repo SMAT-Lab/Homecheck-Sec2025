@@ -24,7 +24,7 @@ import { RuleListUtil } from "../../utils/common/DefectsList";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'InitDeclarationsCheck');
 const gMetaData: BaseMetaData = {
   severity: 1,
-  ruleDocPath: "docs/init-declarations-check.md",
+  ruleDocPath: "docs/init-declarations.md",
   description: "equire or disallow initialization in variable declarations.",
 };
 

@@ -25,7 +25,7 @@ import { RuleFix } from "../../model/Fix";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'AwaitThenableCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/method-signature-style-check.md",
+    ruleDocPath: "docs/method-signature-style.md",
     description: "Shorthand method signature is forbidden. Use a function property instead.",
 };
 

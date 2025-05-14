@@ -37,7 +37,7 @@ describe('StrictBooleanExpressionsCheckTest', () => {
      */
     test('StrictBooleanExpressionsCheckTest_001', () => {
         const detectFile: string = path.join(realPath, 'ts', 'StrictBooleanExpressionsReport.ts');
-        const expectReportLineNum = 10;
+        const expectReportLineNum = 11;
         const detectFileReport = checkEntry.fileChecks.find((fileCheck) => fileCheck.arkFile.getFilePath() === detectFile);
         assert.isDefined(detectFileReport, 'The file path is error.');
         assert.equal(detectFileReport?.issues.length, expectReportLineNum, 'The number of reported line is different from the expected number of line.');

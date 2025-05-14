@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-import { AbstractFieldRef, AbstractInvokeExpr, ArkAssignStmt, ArkAwaitExpr, ArkClass, ArkField, ArkFile, ArkInstanceFieldRef, ArkInstanceInvokeExpr, ArkInvokeStmt, ArkMethod, ArkNewExpr, ArkReturnStmt, ArkStaticFieldRef, ClassSignature, ClassType, DEFAULT_ARK_CLASS_NAME, FunctionType, Local, MethodSignature, Scene, Stmt, UnionType, UnknownType, Value } from "arkanalyzer";
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
-import { CheckerStorage, CheckerUtils, Defects, MatcherCallback, Rule } from "../../Index";
+import { AbstractFieldRef, AbstractInvokeExpr, ArkAssignStmt, ArkAwaitExpr, ArkClass, ArkField, ArkFile, ArkInstanceFieldRef, ArkInstanceInvokeExpr, ArkInvokeStmt, ArkMethod, ArkNewExpr, ArkReturnStmt, ArkStaticFieldRef, ClassSignature, ClassType, DEFAULT_ARK_CLASS_NAME, FunctionType, Local, MethodSignature, Scene, Stmt, UnionType, UnknownType, Value } from 'arkanalyzer';
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
+import { CheckerStorage, CheckerUtils, Defects, MatcherCallback, Rule } from '../../Index';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { IssueReport } from "../../model/Defects";
+import { IssueReport } from '../../model/Defects';
 
 const multimediaAPI10CreateSignList: string[] = [
     `@ohosSdk/api/@ohos.multimedia.avsession.d.ts: avSession.${DEFAULT_ARK_CLASS_NAME}.createAVSession(@ohosSdk/api/application/BaseContext.d.ts: BaseContext, string, @ohosSdk/api/@ohos.multimedia.avsession.d.ts: avSession.${DEFAULT_ARK_CLASS_NAME}.[static]${DEFAULT_ARK_CLASS_NAME}()#AVSessionType)`,
@@ -37,7 +37,7 @@ const SETAVPLAYBACKSTATE: string = 'setAVPlaybackState';
 const fieldInfo: string[] = ['mediaImage', 'title', 'author', 'subtitle', 'duration', 'state', 'position'];
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/avsession-metadata-check.md",
+    ruleDocPath: 'docs/avsession-metadata-check.md',
     description: 'After creating an AV session, ' + 'an audio/video app should provide basic metadata and playback status information for the session.'
 };
 
@@ -68,46 +68,54 @@ export class AvsessionMetadataCheck implements BaseChecker {
         const matchBuildCb: MatcherCallback = {
             matcher: undefined,
             callback: this.check
-        }
+        };
         return [matchBuildCb];
     }
 
-    public check = (scene: Scene) => {
+    public check = (scene: Scene): void => {
         for (let arkFile of scene.getFiles()) {
-            for (let clazz of arkFile.getClasses()) {
+            this.processClass(arkFile);
+        }
+        this.commonInvokerMatch();
+        for (let cmi of multimediaCreateList) {
+            this.processReportIssue(cmi);
+        }
+    };
+
+    private processClass(arkFile: ArkFile): void {
+        for (let clazz of arkFile.getClasses()) {
+            for (let mtd of clazz.getMethods()) {
+                this.processArkMethod(arkFile, mtd);
+            }
+        }
+        for (let namespace of arkFile.getAllNamespacesUnderThisFile()) {
+            for (let clazz of namespace.getClasses()) {
                 for (let mtd of clazz.getMethods()) {
                     this.processArkMethod(arkFile, mtd);
                 }
             }
-            for (let namespace of arkFile.getAllNamespacesUnderThisFile()) {
-                for (let clazz of namespace.getClasses()) {
-                    for (let mtd of clazz.getMethods()) {
-                        this.processArkMethod(arkFile, mtd);
-                    }
-                }
-            }
-        }
-        this.commonInvokerMatch();
-        for (let cmi of multimediaCreateList) {
-            if (cmi.avMetadataStmt && cmi.avPlaybackStateStmt) {
-                if (!(this.getMultipleScenariosField(cmi.avMetadataStmt) && this.getMultipleScenariosField(cmi.avPlaybackStateStmt))) {
-                    let targetArkFile = cmi.createStmt.getCfg()?.getDeclaringMethod().getDeclaringArkFile();
-                    if (!targetArkFile) {
-                        continue;
-                    }
-                    this.reportIssue(targetArkFile, cmi.createStmt, cmi.methodName);
-                }
-            } else {
-                let targetArkFile = cmi.createStmt.getCfg()?.getDeclaringMethod().getDeclaringArkFile();
-                if (!targetArkFile) {
-                    continue;
-                }
-                this.reportIssue(targetArkFile, cmi.createStmt, cmi.methodName);
-            }
         }
     }
 
-    private getMultipleScenariosField(stmt: Stmt) {
+    private processReportIssue(cmi: CreateMultimediaInfo): void {
+        if (cmi.avMetadataStmt && cmi.avPlaybackStateStmt) {
+            if (!(this.getMultipleScenariosField(cmi.avMetadataStmt) && this.getMultipleScenariosField(cmi.avPlaybackStateStmt))) {
+                let targetArkFile = cmi.createStmt.getCfg()?.getDeclaringMethod().getDeclaringArkFile();
+                if (!targetArkFile) {
+                    return;
+                }
+                this.reportIssue(targetArkFile, cmi.createStmt, cmi.methodName);
+            }
+        } else {
+            let targetArkFile = cmi.createStmt.getCfg()?.getDeclaringMethod().getDeclaringArkFile();
+            if (!targetArkFile) {
+                return;
+            }
+            this.reportIssue(targetArkFile, cmi.createStmt, cmi.methodName);
+        }
+    }
+
+    private getMultipleScenariosField(stmt: Stmt): boolean {
         let invoker = CheckerUtils.getInvokeExprFromStmt(stmt);
         if (!invoker) {
             return false;
@@ -333,7 +341,7 @@ export class AvsessionMetadataCheck implements BaseChecker {
                 fieldInfo: null,
                 avMetadataStmt: null,
                 avPlaybackStateStmt: null,
-            }
+            };
             multimediaCreateList.push(createInfo);
             if (stmt instanceof ArkInvokeStmt) {
                 let callbackMethod = this.getInvokeCallbackMethod(arkFile, stmt, methodName, invoker);
@@ -424,40 +432,48 @@ export class AvsessionMetadataCheck implements BaseChecker {
                 this.parseRealAttachInstance(callbackMethod, stmt, createInfo, useType);
             }
             if (stmt instanceof ArkInvokeStmt && this.isResolveAssignToVariable(arkFile, stmt, useType)) {
-                let invokeExpr = stmt.getInvokeExpr();
-                if (invokeExpr instanceof ArkInstanceInvokeExpr) {
-                    let base = this.getFieldByBase(invokeExpr.getBase());
-                    if (base && base instanceof Local) {
-                        createInfo.varInfo = base;
-                    } else if (base && base instanceof ArkField) {
-                        createInfo.varInfo = invokeExpr.getBase();
-                        createInfo.fieldInfo = base;
-                    }
-                }
+                this.handleInvokeStmt(stmt, createInfo);
             }
-            let invoker = CheckerUtils.getInvokeExprFromStmt(stmt);
-            if (!invoker) {
+            this.handleInvoker(callbackMethod, stmt, createInfo, busyMethods, useType);
+        }
+    }
+
+    private handleInvokeStmt(stmt: ArkInvokeStmt, createInfo: CreateMultimediaInfo): void {
+        let invokeExpr = stmt.getInvokeExpr();
+        if (invokeExpr instanceof ArkInstanceInvokeExpr) {
+            let base = this.getFieldByBase(invokeExpr.getBase());
+            if (base && base instanceof Local) {
+                createInfo.varInfo = base;
+            } else if (base && base instanceof ArkField) {
+                createInfo.varInfo = invokeExpr.getBase();
+                createInfo.fieldInfo = base;
+            }
+        }
+    }
+
+    private handleInvoker(callbackMethod: ArkMethod, stmt: Stmt, createInfo: CreateMultimediaInfo, busyMethods: Set<MethodSignature>, useType: UseType): void {
+        let invoker = CheckerUtils.getInvokeExprFromStmt(stmt);
+        if (!invoker) {
+            return;
+        }
+        if (this.isAudioInterruptStmt(invoker)) {
+            this.parseInvokerAudioInterruptStmt(callbackMethod, stmt, invoker, createInfo, useType);
+            return;
+        }
+        for (let arg of invoker.getArgs()) {
+            if (!this.isArgTypeMultimedia(callbackMethod, arg, useType)) {
                 continue;
             }
-            if (this.isAudioInterruptStmt(invoker)) {
-                this.parseInvokerAudioInterruptStmt(callbackMethod, stmt, invoker, createInfo, useType);
+            let methodSignature = invoker.getMethodSignature();
+            if (busyMethods.has(methodSignature)) {
                 continue;
             }
-            for (let arg of invoker.getArgs()) {
-                if (!this.isArgTypeMultimedia(callbackMethod, arg, useType)) {
-                    continue;
-                }
-                let methodSignature = invoker.getMethodSignature();
-                if (busyMethods.has(methodSignature)) {
-                    continue;
-                }
-                busyMethods.add(methodSignature);
-                let invokeChainMethod = arkFile.getScene().getMethod(methodSignature);
-                if (!invokeChainMethod) {
-                    continue;
-                }
-                this.processCallbackMethod(arkFile, invokeChainMethod, 0, createInfo, busyMethods, UseType.CALLBACK);
+            busyMethods.add(methodSignature);
+            let invokeChainMethod = callbackMethod.getDeclaringArkFile().getScene().getMethod(methodSignature);
+            if (!invokeChainMethod) {
+                continue;
             }
+            this.processCallbackMethod(callbackMethod.getDeclaringArkFile(), invokeChainMethod, 0, createInfo, busyMethods, UseType.CALLBACK);
         }
     }
 
@@ -549,7 +565,8 @@ export class AvsessionMetadataCheck implements BaseChecker {
         return arkFile.getScene().getMethod(type.getMethodSignature());
     }
 
-    private parseInvokerAudioInterruptStmt(callbackMethod: ArkMethod, stmt: Stmt, invoker: AbstractInvokeExpr, createInfo: CreateMultimediaInfo, useType: UseType): void {
+    private parseInvokerAudioInterruptStmt(callbackMethod: ArkMethod, stmt: Stmt, invoker: AbstractInvokeExpr,
+        createInfo: CreateMultimediaInfo, useType: UseType): void {
         if (!(invoker instanceof ArkInstanceInvokeExpr)) {
             return;
         }
@@ -642,22 +659,26 @@ export class AvsessionMetadataCheck implements BaseChecker {
             if (cmi.avMetadataStmt && cmi.avPlaybackStateStmt) {
                 continue;
             }
-            for (let stmt of multimediaStmtList) {
-                let invoker = stmt.getInvokeExpr();
-                if (!invoker || !(invoker instanceof ArkInstanceInvokeExpr)) {
-                    continue;
+            this.findMatchingStmt(cmi);
+        }
+    }
+
+    private findMatchingStmt(cmi: CreateMultimediaInfo): void {
+        for (let stmt of multimediaStmtList) {
+            let invoker = stmt.getInvokeExpr();
+            if (!invoker || !(invoker instanceof ArkInstanceInvokeExpr)) {
+                continue;
+            }
+            let base = invoker.getBase();
+            let methodName = invoker.getMethodSignature().getMethodSubSignature().getMethodName();
+            if (this.isInvokerAndStmtMatch(cmi, base)) {
+                if (methodName === SETAVMETADATA) {
+                    cmi.avMetadataStmt = stmt;
+                } else {
+                    cmi.avPlaybackStateStmt = stmt;
                 }
-                let base = invoker.getBase();
-                let methodName = invoker.getMethodSignature().getMethodSubSignature().getMethodName();
-                if (this.isInvokerAndStmtMatch(cmi, base)) {
-                    if (methodName === SETAVMETADATA) {
-                        cmi.avMetadataStmt = stmt;
-                    } else {
-                        cmi.avPlaybackStateStmt = stmt;
-                    }
-                    if (cmi.avMetadataStmt && cmi.avPlaybackStateStmt) {
-                        break;
-                    }
+                if (cmi.avMetadataStmt && cmi.avPlaybackStateStmt) {
+                    break;
                 }
             }
         }
@@ -792,17 +813,22 @@ export class AvsessionMetadataCheck implements BaseChecker {
             let parameterType = parameters[parameters.length - 1].getType();
             if (parameterType instanceof UnknownType && rightOp instanceof UnknownType && (leftOp instanceof AbstractFieldRef)) {
                 if (leftType instanceof UnionType) {
-                    for (let type of leftType.getTypes()) {
-                        if (multimediaTypeList.includes(type.toString())) {
-                            return true;
-                        }
-                    }
+                    return this.isType(leftType);
                 } else {
                     return multimediaTypeList.includes(leftType.toString());
                 }
             }
         } else {
             logger.debug('Maybe include middle variables, not implement.');
+        }
+        return false;
+    }
+
+    private isType(leftType: UnionType): boolean {
+        for (let type of leftType.getTypes()) {
+            if (multimediaTypeList.includes(type.toString())) {
+                return true;
+            }
         }
         return false;
     }
@@ -842,7 +868,6 @@ export class AvsessionMetadataCheck implements BaseChecker {
         }
         let methodNameIndex = text.indexOf(methodName);
         if (methodNameIndex === -1) {
-            logger.debug(`Can not find ${methodName} in ${text}.`);
             return;
         }
         const severity = this.rule.alert ?? this.metaData.severity;

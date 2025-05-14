@@ -22,7 +22,7 @@ import { RuleListUtil } from "../../utils/common/DefectsList";
 
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: 'docs/prefer-namespace-keyword-check.md',
+  ruleDocPath: 'docs/prefer-namespace-keyword.md',
   description: "Use 'namespace' instead of 'module' to declare custom TypeScript modules.",
 };
 

@@ -1,5 +1,5 @@
-import { ArkClass, ArkFile, ArkMethod, ExportInfo, ImportInfo, Stmt } from "arkanalyzer";
-import { AIFix, FunctionFix, RuleFix } from "../../model/Fix";
+import { ArkClass, ArkFile, ArkMethod, ExportInfo, ImportInfo, Stmt } from 'arkanalyzer';
+import { AIFix, FunctionFix, RuleFix } from '../../model/Fix';
 
 export class FixUtils {
 
@@ -11,11 +11,11 @@ export class FixUtils {
             lineNum = originalPosition.getLineNo();
             startColumn = originalPosition.getColNo();
         } else if (codeNode instanceof ArkMethod) {
-            lineNum = codeNode.getLine()?? 0;
-            startColumn = codeNode.getColumn()?? 0;
+            lineNum = codeNode.getLine() ?? 0;
+            startColumn = codeNode.getColumn() ?? 0;
         } else if (codeNode instanceof ArkClass) {
-            lineNum = codeNode.getLine()?? 0;
-            startColumn = codeNode.getColumn()?? 0;
+            lineNum = codeNode.getLine() ?? 0;
+            startColumn = codeNode.getColumn() ?? 0;
         } else if (codeNode instanceof ExportInfo) {
             let originalPosition = codeNode.getOriginTsPosition();
             lineNum = originalPosition.getLineNo();
@@ -31,7 +31,7 @@ export class FixUtils {
         let lineBreak = this.getTextEof(code);
         let cnt = 0;
         if (lineBreak.length > 0) {
-            for(let index = 1; index !== lineNum; index++) {
+            for (let index = 1; index !== lineNum; index++) {
                 cnt = code.indexOf(lineBreak, cnt + 1);
             }
         }
@@ -52,18 +52,18 @@ export class FixUtils {
     }
 
     public static isRuleFix(object: any): object is RuleFix {
-        return typeof object === "object" && 'range' in object && 'text' in object;
+        return typeof object === 'object' && 'range' in object && 'text' in object;
     }
 
     public static isFunctionFix(object: any): object is FunctionFix {
-        return typeof object === "object" && 'fix' in object;
+        return typeof object === 'object' && 'fix' in object;
     }
 
     public static isAIFix(object: any): object is AIFix {
-        return typeof object === "object" && 'text' in object;
+        return typeof object === 'object' && 'text' in object;
     }
 
-    public static hasOwnProperty(object: any, key: string): boolean {
-        return typeof object === "object" && key in object;
+    public static hasOwnPropertyOwn(object: any, key: string): boolean {
+        return typeof object === 'object' && key in object;
     }
 }

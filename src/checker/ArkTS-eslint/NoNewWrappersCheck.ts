@@ -23,7 +23,7 @@ import { IssueReport } from '../../model/Defects';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoNewWrappersCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-new-wrappers-check.md',
+    ruleDocPath: 'docs/no-new-wrappers.md',
     description: 'Do not use String as a constructor.'
 };
 

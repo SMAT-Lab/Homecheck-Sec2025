@@ -54,16 +54,16 @@ export class SpaceBeforeFunctionParenCheck implements BaseChecker {
     public sourceFile: ts.SourceFile;
     private defaultOptions: Options = [
         {
-            anonymous: 'always',
-            named: 'always',
-            asyncArrow: 'always',
+            anonymous: 'never',
+            named: 'never',
+            asyncArrow: 'never',
         }
     ];
     private errors: MessageInfo[] = [];
 
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/space-before-function-paren-check.md',
+        ruleDocPath: 'docs/space-before-function-paren.md',
         description: 'Enforce consistent spacing before function parenthesis',
     };
 
@@ -201,18 +201,47 @@ export class SpaceBeforeFunctionParenCheck implements BaseChecker {
         if (options.named === 'ignore') {
             return;
         }
-
-        const checkStart = node.name.end;
+    
+        let checkStart = node.name.end;
+    
+        // 新增：处理泛型参数
+        if (node.typeParameters && node.typeParameters.length > 0) {
+            const lastTypeParam = node.typeParameters[node.typeParameters.length - 1];
+            checkStart = lastTypeParam.getEnd();
+            const closingAngle = this.findClosingAngleBracketForMethod(code, checkStart);
+            if (closingAngle !== -1) {
+                checkStart = closingAngle + 1; // 调整检查起点到泛型闭合后
+            }
+        }
+    
         const parenPos = this.getParenPosition(node);
         if (!parenPos) {
             return;
         }
-
+    
         const errorMessage = options.named === 'always'
             ? 'Missing space before function parentheses.'
             : 'Unexpected space before function parentheses.';
-
+    
         this.checkSpace(node, code, checkStart, parenPos, options.named, errorMessage);
+    }
+
+    private findClosingAngleBracketForMethod(code: string, startPos: number): number {
+        let pos = startPos;
+        let stack = 1; // 初始栈为1，匹配外层泛型
+        while (pos < code.length) {
+            const char = code[pos];
+            if (char === '<') {
+                stack++;
+            } else if (char === '>') {
+                stack--;
+                if (stack === 0) {
+                    return pos; // 返回最外层闭合的 '>'
+                }
+            }
+            pos++;
+        }
+        return -1;
     }
 
     private checkConstructor(node: ts.ConstructorDeclaration, code: string, options: Options[0]): void {
@@ -440,18 +469,18 @@ export class SpaceBeforeFunctionParenCheck implements BaseChecker {
             } else {
                 option = this.rule.option as Options;
                 if (!option[0].anonymous) {
-                    option[0].anonymous = 'always';
+                    option[0].anonymous = 'never';
                 }
                 if (!option[0].named) {
-                    option[0].named = 'always';
+                    option[0].named = 'never';
                 }
                 if (!option[0].asyncArrow) {
-                    option[0].asyncArrow = 'always';
+                    option[0].asyncArrow = 'never';
                 }
                 return option;
             }
         }
-        return [{ anonymous: 'always', named: 'always', asyncArrow: 'always' }];
+        return [{ anonymous: 'never', named: 'never', asyncArrow: 'never' }];
     }
 
     // 创建修复对象 

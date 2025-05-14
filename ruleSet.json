@@ -198,7 +198,12 @@
     "@performance/page-prefetch-check": 3,
     "@performance/resources-file-check": 3,
     "@performance/no-high-loaded-frame-rate-range": 1,
-    "@performance/module-top-level-code-check": 3
+    "@performance/module-top-level-code-check": 3,
+    "@performance/dark-color-mode-check": 1,
+    "@performance/lower-app-brightness-check": 1,
+    "@performance/stream-usage-api-check": 1,
+    "@performance/avoid-memory-leak-in-animator": 1,
+    "@performance/avoid-memory-leak-in-displaysync": 1
   },
   "plugin:@performance/recommended": {
     "@performance/foreach-args-check": 1,
@@ -207,7 +212,9 @@
     "@performance/high-frequency-log-check": 1,
     "@performance/gif-hardware-decoding-check": 1,
     "@performance/web-on-active-check": 1,
-    "@performance/no-high-loaded-frame-rate-range": 1
+    "@performance/no-high-loaded-frame-rate-range": 1,
+    "@performance/avoid-memory-leak-in-animator": 1,
+    "@performance/avoid-memory-leak-in-displaysync": 1
   },
   "plugin:@security/all": {
     "@security/specified-interface-call-chain-check": 3,

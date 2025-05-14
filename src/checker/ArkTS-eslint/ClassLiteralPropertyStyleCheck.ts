@@ -25,7 +25,7 @@ import { IssueReport } from "../../model/Defects";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'ClassLiteralPropertyStyleCheck');
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: "docs/class-literal-property-style-check.md",
+  ruleDocPath: "docs/class-literal-property-style.md",
   description: "Literals should be exposed using readonly fields..",
 };
 

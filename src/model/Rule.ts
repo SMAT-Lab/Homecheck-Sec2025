@@ -16,9 +16,9 @@
 export class Rule {
     ruleId: string;
     alert: ALERT_LEVEL;
-    allowExpressions: boolean
-    ignoreRestArgs: boolean
-    option: Object[] = []
+    allowExpressions: boolean;
+    ignoreRestArgs: boolean;
+    option: Object[] = [];
 
     constructor(ruleId: string, alert: ALERT_LEVEL = ALERT_LEVEL.SUGGESTION) {
         this.ruleId = ruleId;

@@ -26,7 +26,7 @@ import { NumberConstant } from "arkanalyzer/lib/core/base/Constant";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoOctalCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/no-octal-check.md",
+    ruleDocPath: "docs/no-octal.md",
     description: "Disallow octal literals."
 };
 

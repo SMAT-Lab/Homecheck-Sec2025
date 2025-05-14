@@ -25,8 +25,8 @@ import { IssueReport } from '../../model/Defects';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'UnionTypeArrayCheck');
 const gMetaData: BaseMetaData = {
     severity: 3,
-    ruleDocPath: "docs/union-type-array-check.md",
-    description: "Suggestion: Avoid using arrays of union types."
+    ruleDocPath: 'docs/union-type-array-check.md',
+    description: 'Suggestion: Avoid using arrays of union types.'
 };
 
 export class UnionTypeArrayCheck implements BaseChecker {
@@ -42,11 +42,11 @@ export class UnionTypeArrayCheck implements BaseChecker {
         const matchFileCb: MatcherCallback = {
             matcher: this.fileMatcher,
             callback: this.check
-        }
+        };
         return [matchFileCb];
     }
 
-    public check = (arkFile: ArkFile) => {
+    public check = (arkFile: ArkFile): void => {
         for (let clazz of arkFile.getClasses()) {
             this.unionClassProcess(clazz);
         }
@@ -55,7 +55,7 @@ export class UnionTypeArrayCheck implements BaseChecker {
                 this.unionClassProcess(clazz);
             }
         }
-    }
+    };
 
     public unionClassProcess(arkClass: ArkClass): void {
         let arkMethods = arkClass.getMethods();

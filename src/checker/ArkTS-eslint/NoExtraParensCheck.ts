@@ -60,7 +60,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoExtraParensCheck')
 
 const gmetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/no-extra-parens-check.md", // TODO: support url
+    ruleDocPath: "docs/no-extra-parens.md", // TODO: support url
     description: "Unnecessary parentheses around expression."
 };
 

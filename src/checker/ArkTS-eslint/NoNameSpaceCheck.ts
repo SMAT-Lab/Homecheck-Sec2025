@@ -56,7 +56,7 @@ export class NoNameSpaceCheck implements BaseChecker {
 
   public metaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-namespace-check.md',
+    ruleDocPath: 'docs/no-namespace.md',
     description: 'ES2015 module syntax is preferred over namespaces.',
   };
 

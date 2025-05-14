@@ -1,8 +1,8 @@
-import { IssueReport } from "../../model/Defects";
+import { IssueReport } from '../../model/Defects';
 
 export const DisableText = {
-    FILE_DISABLE_TEXT: "\/* homecheck-disable *\/",
-    NEXT_LINE_DISABLE_TEXT: "\/\/ homecheck-disable-next-line ",
+    FILE_DISABLE_TEXT: '\/* homecheck-disable *\/',
+    NEXT_LINE_DISABLE_TEXT: '\/\/ homecheck-disable-next-line ',
 };
 
 export function filterDisableIssue(lineList: string[], issues: IssueReport[]): IssueReport[] {

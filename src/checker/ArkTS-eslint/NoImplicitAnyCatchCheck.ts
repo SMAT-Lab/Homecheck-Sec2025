@@ -40,7 +40,7 @@ interface lineColumnInfo {
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoImplicitAnyCatchCheck');
 const gmetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/no-implicit-any-catch-check.md", // TODO: support url
+    ruleDocPath: "docs/no-implicit-any-catch.md", // TODO: support url
     description: "Implicit any in catch clause."
 };
 

@@ -80,7 +80,7 @@ export class TypeAnnotationSpacingCheck implements BaseChecker {
 
     public metaData: BaseMetaData = {
         severity: 1,
-        ruleDocPath: 'docs/type-annotation-spacing-check.md',
+        ruleDocPath: 'docs/type-annotation-spacing.md',
         description: 'Require consistent spacing around type annotations'
     };
 

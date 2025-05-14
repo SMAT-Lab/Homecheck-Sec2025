@@ -24,7 +24,7 @@ import { RuleListUtil } from '../../utils/common/DefectsList';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'MaxLinesCheck');
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: 'docs/max-lines-check.md',
+  ruleDocPath: 'docs/max-lines.md',
   description: 'File has too many lines (${actual}). Maximum allowed is ${max}',
 };
 

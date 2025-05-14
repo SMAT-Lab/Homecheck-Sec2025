@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Stmt } from "arkanalyzer";
-import { Scope } from "./Scope";
+import { Stmt } from 'arkanalyzer';
+import { Scope } from './Scope';
 
 export class StmtExt extends Stmt {
     scope: Scope;

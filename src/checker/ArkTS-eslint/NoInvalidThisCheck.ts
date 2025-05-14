@@ -24,7 +24,7 @@ import { BaseChecker, BaseMetaData } from "../BaseChecker";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoInvalidThisCheck');
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: "docs/no-invalid-this-check.md",
+  ruleDocPath: "docs/no-invalid-this.md",
   description: "Disallow `this` keywords outside of classes or class-like objects",
 };
 

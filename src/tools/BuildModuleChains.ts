@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
-import { AbstractFieldRef, ArkAssignStmt, ArkFile, ArkIfStmt, ArkInvokeStmt, ArkMethod, ArkNamespace, ArkNewExpr,
+import {
+  AbstractFieldRef, ArkAssignStmt, ArkFile, ArkIfStmt, ArkInvokeStmt, ArkMethod, ArkNamespace, ArkNewExpr,
   ArkNormalBinopExpr, ArkStaticInvokeExpr, ArkUnopExpr, ClassSignature, ClassType, DEFAULT_ARK_CLASS_NAME,
   FunctionType, LocalSignature, MethodSignature, NamespaceSignature, Scene, Signature, TEMP_LOCAL_PREFIX, Value,
-  transfer2UnixPath } from 'arkanalyzer';
+  transfer2UnixPath
+} from 'arkanalyzer';
 import { ArkClass, ClassCategory } from 'arkanalyzer/lib/core/model/ArkClass';
 import { ExportSignature } from 'arkanalyzer/lib/core/model/ArkExport';
 import { Local } from 'arkanalyzer/lib/core/base/Local';
@@ -63,7 +65,6 @@ export function buildModuleChains(scene: Scene, arkFiles: ArkFile[], outputDirPa
   for (const arkFile of arkFiles) {
     const busyArray = new Array<ModuleSignature>();
     fileProcess(arkFile, busyArray);
-    // isOutput = genResultForChains(arkFile);
   }
   logger.debug('Scan completed, start to write file...');
   isOutput = genResultForJson(scene, fileNameFlag);
@@ -71,7 +72,7 @@ export function buildModuleChains(scene: Scene, arkFiles: ArkFile[], outputDirPa
   return isOutput;
 }
 
-function clearGlobalMem() {
+function clearGlobalMem(): void {
   gFinishScanMap.clear();
   gNodeMap.clear();
   gModuleIdMap.clear();
@@ -94,7 +95,7 @@ function genUniqueId(): string {
   return Math.random().toString(36).substring(2);
 }
 
-function genJsonNode(scene: Scene, module: ModuleSignature, uniqueId: string) {
+function genJsonNode(scene: Scene, module: ModuleSignature, uniqueId: string): void {
   const nodeInfo = genNodeInfo(scene, module);
   if (nodeInfo) {
     gNodeMap.set(uniqueId, { nodeInfo: nodeInfo, nextNodes: [] });
@@ -167,7 +168,7 @@ function genNodeInfo(scene: Scene, module: ModuleSignature): NodeInfo | null {
   } else if (module instanceof MethodSignature) {
     let className = module.getDeclaringClassSignature()?.getClassName();
     if (className === DEFAULT_ARK_CLASS_NAME) {
-      className = module.getDeclaringClassSignature().getDeclaringNamespaceSignature()?.getNamespaceName() ?? ''
+      className = module.getDeclaringClassSignature().getDeclaringNamespaceSignature()?.getNamespaceName() ?? '';
     }
     let methodName = module.getMethodSubSignature().getMethodName();
     const methodLine = scene.getMethod(module)?.getLine();
@@ -226,7 +227,7 @@ function genResultForChains(arkFile: ArkFile): boolean {
   return false;
 }
 
-function genChain(module: ModuleSignature, headChain: string = '') {
+function genChain(module: ModuleSignature, headChain: string = ''): void {
   const nextNodes = gFinishScanMap.get(module);
   if (nextNodes) {
     for (const nextNode of nextNodes) {
@@ -242,7 +243,7 @@ function genChain(module: ModuleSignature, headChain: string = '') {
   }
 }
 
-function fileProcess(arkFile: ArkFile, busyArray: Array<ModuleSignature>) {
+function fileProcess(arkFile: ArkFile, busyArray: Array<ModuleSignature>): void {
   const filePath = path.join('@' + arkFile.getProjectName(), transfer2UnixPath(arkFile.getName()));
   if (!busyArray.includes(filePath) && !repeatFilePath.includes(filePath)) {
     repeatFilePath.push(filePath);
@@ -264,14 +265,12 @@ function fileProcess(arkFile: ArkFile, busyArray: Array<ModuleSignature>) {
       addLastNodeToMap(busyArray);
     }
     // 查找全局调用
-    // const currentFileName = busyArray[busyArray.length - 1].toString().replace('@' + arkFile.getProjectName(), '');
-    // const fileSignature = new FileSignature(arkFile.getProjectName(), currentFileName);
     findGlobalDef(arkFile.getDefaultClass().getDefaultArkMethod(), busyArray);
     busyArray.pop();
   }
 }
 
-function findGlobalDef(dfltMethod: ArkMethod | null, busyArray: Array<ModuleSignature>) {
+function findGlobalDef(dfltMethod: ArkMethod | null, busyArray: Array<ModuleSignature>): void {
   const stmts = dfltMethod?.getBody()?.getCfg().getStmts();
   for (const stmt of stmts ?? []) {
     if (stmt instanceof ArkInvokeStmt) {
@@ -282,7 +281,7 @@ function findGlobalDef(dfltMethod: ArkMethod | null, busyArray: Array<ModuleSign
   }
 }
 
-function moduleDeeplyProcess(moduleSign: Signature, busyArray: Array<ModuleSignature>, scene: Scene ) {
+function moduleDeeplyProcess(moduleSign: Signature, busyArray: Array<ModuleSignature>, scene: Scene): void {
   if (moduleSign instanceof ClassSignature) {
     classProcess(scene.getClass(moduleSign), busyArray);
   } else if (moduleSign instanceof MethodSignature) {
@@ -296,7 +295,7 @@ function moduleDeeplyProcess(moduleSign: Signature, busyArray: Array<ModuleSigna
   }
 }
 
-function namespaceProcess(ns: ArkNamespace | null, busyArray: Array<ModuleSignature>) {
+function namespaceProcess(ns: ArkNamespace | null, busyArray: Array<ModuleSignature>): void {
   if (!ns || busyArray.includes(ns.getSignature())) {
     return;
   }
@@ -324,7 +323,7 @@ function namespaceProcess(ns: ArkNamespace | null, busyArray: Array<ModuleSignat
   busyArray.pop();
 }
 
-function classProcess(arkClass: ArkClass | null, busyArray: Array<ModuleSignature>) {
+function classProcess(arkClass: ArkClass | null, busyArray: Array<ModuleSignature>): void {
   if (!arkClass || busyArray.includes(arkClass.getSignature())) {
     return;
   }
@@ -333,7 +332,6 @@ function classProcess(arkClass: ArkClass | null, busyArray: Array<ModuleSignatur
   if (!arkClass.isAnonymousClass()) {
     addLastNodeToMap(busyArray);
   }
-  
   // 遍历过的节点不再遍历
   if (gFinishScanMap.has(arkClassSign)) {
     busyArray.pop();
@@ -355,7 +353,7 @@ function classProcess(arkClass: ArkClass | null, busyArray: Array<ModuleSignatur
   busyArray.pop();
 }
 
-function methodProcess(arkMethod: ArkMethod | null | undefined, busyArray: Array<ModuleSignature>) {
+function methodProcess(arkMethod: ArkMethod | null | undefined, busyArray: Array<ModuleSignature>): void {
   if (!arkMethod || busyArray.includes(arkMethod.getSignature())) {
     return;
   }
@@ -391,7 +389,7 @@ function methodProcess(arkMethod: ArkMethod | null | undefined, busyArray: Array
   busyArray.pop();
 }
 
-function staticExprProcess(invokeExpr: ArkStaticInvokeExpr, arkFile: ArkFile, busyArray: Array<ModuleSignature>) {
+function staticExprProcess(invokeExpr: ArkStaticInvokeExpr, arkFile: ArkFile, busyArray: Array<ModuleSignature>): void {
   const methodSignature = invokeExpr.getMethodSignature();
   const classSignature = methodSignature.getDeclaringClassSignature();
   const methodName = methodSignature.getMethodSubSignature().getMethodName();
@@ -416,7 +414,7 @@ function staticExprProcess(invokeExpr: ArkStaticInvokeExpr, arkFile: ArkFile, bu
   }
 }
 
-function ifStmtProcess(stmt: ArkIfStmt, curFile: ArkFile, busyArray: Array<ModuleSignature>) {
+function ifStmtProcess(stmt: ArkIfStmt, curFile: ArkFile, busyArray: Array<ModuleSignature>): void {
   const op1 = stmt.getConditionExpr().getOp1();
   const op2 = stmt.getConditionExpr().getOp2();
   if (op1 instanceof Local) {
@@ -427,7 +425,7 @@ function ifStmtProcess(stmt: ArkIfStmt, curFile: ArkFile, busyArray: Array<Modul
   }
 }
 
-function superClassProcess(arkClass: ArkClass, busyArray: Array<ModuleSignature>) {
+function superClassProcess(arkClass: ArkClass, busyArray: Array<ModuleSignature>): void {
   const superName = arkClass.getSuperClass()?.getName();
   if (!superName || busyArray.includes(arkClass.getSuperClass()?.getSignature()!)) {
     return;
@@ -440,9 +438,9 @@ function superClassProcess(arkClass: ArkClass, busyArray: Array<ModuleSignature>
   }
 }
 
-function arkFieldProcess(arkClass: ArkClass, busyArray: Array<ModuleSignature>) {
+function arkFieldProcess(arkClass: ArkClass, busyArray: Array<ModuleSignature>): void {
   const arkFields = arkClass.getFields();
-  for ( const arkField of arkFields) {
+  for (const arkField of arkFields) {
     const fieldStmts = arkField.getInitializer();
     for (const stmt of fieldStmts) {
       if (stmt instanceof ArkAssignStmt) {
@@ -452,7 +450,7 @@ function arkFieldProcess(arkClass: ArkClass, busyArray: Array<ModuleSignature>) 
   }
 }
 
-function rightOpProcess(rightOp: Value, curFile: ArkFile, busyArray: Array<ModuleSignature>) {
+function rightOpProcess(rightOp: Value, curFile: ArkFile, busyArray: Array<ModuleSignature>): void {
   if (rightOp instanceof ArkNewExpr) {
     // 右值为new class场景
     const type = rightOp.getType();
@@ -487,7 +485,7 @@ function rightOpProcess(rightOp: Value, curFile: ArkFile, busyArray: Array<Modul
   }
 }
 
-function newExprProcess(type: ClassType, arkFile: ArkFile, busyArray: Array<ModuleSignature>) {
+function newExprProcess(type: ClassType, arkFile: ArkFile, busyArray: Array<ModuleSignature>): void {
   const classSign = type.getClassSignature();
   const className = classSign.getClassName();
   const curFilePath = arkFile.getFilePath();
@@ -510,7 +508,7 @@ function newExprProcess(type: ClassType, arkFile: ArkFile, busyArray: Array<Modu
   }
 }
 
-function localProcess(rightOp: Local, curFile: ArkFile, busyArray: Array<ModuleSignature>) {
+function localProcess(rightOp: Local, curFile: ArkFile, busyArray: Array<ModuleSignature>): void {
   const type = rightOp.getType();
   // todo: Local变量为方法或者类地址，let a = class1，目前右值type为unknown，走else分支
   if (type instanceof ClassType) {
@@ -553,15 +551,6 @@ function addLastNodeToMap(busyArray: Array<ModuleSignature>) {
 
 function outputNodeList(fileName: string): boolean {
   // 文件和节点编号映射落盘
-  // try {
-  //   const fileIdMap = new Map([...gModuleIdMap].filter(([key]) => typeof(key) === 'string')) as Map<string, string>;
-  //   FileUtils.writeToFile(path.join(gOutPutDirPath, FILE_NAME_FILE_ID_MAP), JSON.stringify(mapToJson(fileIdMap)));
-  // } catch (error) {
-  //   logger.error((error as Error).message);
-  //   return false;
-  // }
-
-  // import链落盘
   try {
     FileUtils.writeToFile(path.join(gOutPutDirPath, fileName + '_' + FILE_NAME_CHAINS_JSON), JSON.stringify(mapToJson(gNodeMap)), WriteFileMode.OVERWRITE);
     return true;
@@ -571,7 +560,7 @@ function outputNodeList(fileName: string): boolean {
   }
 }
 
-function outputStorage() {
+function outputStorage(): boolean {
   try {
     FileUtils.writeToFile(path.join(gOutPutDirPath, FILE_NAME_CHAINS_TXT), gOutStorage);
     return true;

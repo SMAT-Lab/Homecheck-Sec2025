@@ -1,19 +1,19 @@
-import { ArkFile, SourceFilePrinter } from "arkanalyzer";
-import { FileReports, IssueReport } from "../../model/Defects";
-import { Engine } from "../../model/Engine";
-import { FunctionFix } from "../../model/Fix";
-import path from "path";
-import { removeSync } from "fs-extra";
-import { FileUtils, WriteFileMode } from "../../utils/common/FileUtils";
-import Logger, { LOG_MODULE_TYPE } from "arkanalyzer/lib/utils/logger";
-import { FixUtils } from "../../utils/common/FixUtils";
+import { ArkFile, SourceFilePrinter } from 'arkanalyzer';
+import { FileReports, IssueReport } from '../../model/Defects';
+import { Engine } from '../../model/Engine';
+import { FunctionFix } from '../../model/Fix';
+import path from 'path';
+import { removeSync } from 'fs-extra';
+import { FileUtils, WriteFileMode } from '../../utils/common/FileUtils';
+import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
+import { FixUtils } from '../../utils/common/FixUtils';
 
 const FIX_OUTPUT_DIR = './fixedCode';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'HomeCheckFixEngine');
 
 export class HomeCheckFixEngine implements Engine {
-    
+
     constructor() {
         removeSync(FIX_OUTPUT_DIR);
     }
@@ -46,7 +46,7 @@ export class HomeCheckFixEngine implements Engine {
                 break;
             }
         }
-        return {defects: remainIssues.map((issue => issue.defect)), output: '', filePath: fixPath};
+        return { defects: remainIssues.map((issue => issue.defect)), output: '', filePath: fixPath };
     }
 
     private arkFileToFile(arkFile: ArkFile, outputPath: string): boolean {

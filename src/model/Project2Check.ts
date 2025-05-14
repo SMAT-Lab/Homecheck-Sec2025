@@ -12,25 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ArkFile } from "arkanalyzer";
-import { BaseChecker } from "../checker/BaseChecker";
-import Logger, { LOG_MODULE_TYPE } from "arkanalyzer/lib/utils/logger";
-import { MatcherTypes } from "../matcher/Matchers";
-import { matchFiles } from "../matcher/matcherAdapter/matchFiles";
-import { matchNameSpaces } from "../matcher/matcherAdapter/matchNameSpaces";
-import { matchClass } from "../matcher/matcherAdapter/matchClass";
-import { matchMethods } from "../matcher/matcherAdapter/matchMethods";
-import { matchFields } from "../matcher/matcherAdapter/matchFields";
-import { FileUtils } from "../utils/common/FileUtils";
-import { filterDisableIssue } from "../utils/common/Disable";
-import { IssueReport } from "./Defects";
-import { Rule } from "./Rule";
+import { ArkFile } from 'arkanalyzer';
+import { BaseChecker } from '../checker/BaseChecker';
+import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
+import { MatcherTypes } from '../matcher/Matchers';
+import { matchFiles } from '../matcher/matcherAdapter/matchFiles';
+import { matchNameSpaces } from '../matcher/matcherAdapter/matchNameSpaces';
+import { matchClass } from '../matcher/matcherAdapter/matchClass';
+import { matchMethods } from '../matcher/matcherAdapter/matchMethods';
+import { matchFields } from '../matcher/matcherAdapter/matchFields';
+import { FileUtils } from '../utils/common/FileUtils';
+import { filterDisableIssue } from '../utils/common/Disable';
+import { IssueReport } from './Defects';
+import { Rule } from './Rule';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'Project2Check');
 
 export class Project2Check {
     public arkFiles: ArkFile[];
-    public enabledRuleCheckerMap: Map<string, BaseChecker> = new Map();  // TODO: key改为枚举
+    public enabledRuleCheckerMap: Map<string, BaseChecker> = new Map(); 
     public issues: IssueReport[] = [];
     public ruleMap: Map<string, Rule[]> = new Map();
 
@@ -44,11 +44,11 @@ export class Project2Check {
     constructor() {
     }
 
-    public addChecker(ruleId: string, checker: BaseChecker) {
+    public addChecker(ruleId: string, checker: BaseChecker): void {
         this.enabledRuleCheckerMap.set(ruleId, checker);
     }
 
-    public collectMatcherCallbacks() {
+    public collectMatcherCallbacks(): void {
         this.enabledRuleCheckerMap.forEach(checker => {
             const matcherCallbacks = checker.registerMatchers();
             matcherCallbacks.forEach(obj => {
@@ -77,28 +77,28 @@ export class Project2Check {
                     default:
                         break;
                 }
-            })
+            });
         });
     }
 
-    public async emitCheck() {
+    public async emitCheck(): Promise<void> {
         await Promise.all(Array.from(this.enabledRuleCheckerMap.values()).map(checker => {
             try {
                 this.processSceneCallbacks();
                 this.flMatcherMap.forEach((callback, matcher) => {
-                    matchFiles(this.arkFiles, matcher, callback)
+                    matchFiles(this.arkFiles, matcher, callback);
                 });
                 this.nsMatcherMap.forEach((callback, matcher) => {
-                    matchNameSpaces(this.arkFiles, matcher, callback)
+                    matchNameSpaces(this.arkFiles, matcher, callback);
                 });
                 this.clsMatcherMap.forEach((callback, matcher) => {
-                    matchClass(this.arkFiles, matcher, callback)
+                    matchClass(this.arkFiles, matcher, callback);
                 });
                 this.mtdMatcherMap.forEach((callback, matcher) => {
-                    matchMethods(this.arkFiles, matcher, callback)
+                    matchMethods(this.arkFiles, matcher, callback);
                 });
                 this.fieldMatcherMap.forEach((callback, matcher) => {
-                    matchFields(this.arkFiles, matcher, callback)
+                    matchFields(this.arkFiles, matcher, callback);
                 });
             } catch (error) {
                 logger.error(`Checker ${checker.rule.ruleId} error: `, error);
@@ -118,7 +118,7 @@ export class Project2Check {
         }
     }
 
-    public collectIssues() {
+    public collectIssues(): void {
         this.enabledRuleCheckerMap.forEach((v, k) => {
             this.issues.push(...(v.issues?.reduce((acc, cur) => {
                 if (acc.some((item) => item.defect.mergeKey === cur.defect.mergeKey)) {
@@ -157,7 +157,7 @@ export class Project2Check {
         this.issues = Array.from(issueMap.values());
     }
 
-    public async checkDisable() {
+    public async checkDisable(): Promise<void> {
         let filtedIssues: IssueReport[] = [];
         for (const issue of this.issues) {
             const filePath = issue.defect.mergeKey.split('%')[0];
@@ -170,7 +170,7 @@ export class Project2Check {
         this.issues = filtedIssues;
     }
 
-    public async run() {
+    public async run(): Promise<void> {
         this.collectMatcherCallbacks();
         await this.emitCheck();
         this.collectIssues();

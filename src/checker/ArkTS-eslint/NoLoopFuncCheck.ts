@@ -19,7 +19,7 @@ import { IssueReport } from '../../model/Defects';
 import { RuleListUtil } from '../../utils/common/DefectsList';
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-loop-func-check.md',
+    ruleDocPath: 'docs/no-loop-func.md',
     description: 'Function declared in a loop contains unsafe references to variable(s)'
 };
 export class NoLoopFuncCheck implements BaseChecker {
@@ -328,7 +328,8 @@ export class NoLoopFuncCheck implements BaseChecker {
         const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
         const endCharacter = sourceFile.getLineAndCharacterOfPosition(node.getEnd()).character;
         const description = `${this.metaData.description} '${unsafeRefs.join("', '")}'.`;
-        const defect = new Defects(line + 1, character + 1, endCharacter + 1, description, this.metaData.severity, this.rule.ruleId,
+        const severity = this.rule.alert ?? this.metaData.severity;
+        const defect = new Defects(line + 1, character + 1, endCharacter + 1, description, severity, this.rule.ruleId,
             arkFile.getFilePath(), this.metaData.ruleDocPath, false, true, false, true);
         this.issues.push(new IssueReport(defect, undefined));
         RuleListUtil.push(defect);

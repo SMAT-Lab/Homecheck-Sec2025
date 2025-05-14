@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
-import { ArkArrayRef, ArkAssignStmt, ArkMethod, ArkNewArrayExpr, ArkNormalBinopExpr, ArkUnopExpr, ArrayType, Constant, NumberType, Stmt, Value } from "arkanalyzer/lib";
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
+import { ArkArrayRef, ArkAssignStmt, ArkMethod, ArkNewArrayExpr, ArkNormalBinopExpr, ArkUnopExpr, ArrayType, Constant, NumberType, Stmt, Value } from 'arkanalyzer/lib';
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { Local } from "arkanalyzer/lib/core/base/Local";
-import { Rule, Defects, MethodMatcher, MatcherTypes, MatcherCallback } from "../../Index";
-import { IssueReport } from "../../model/Defects";
+import { Local } from 'arkanalyzer/lib/core/base/Local';
+import { Rule, Defects, MethodMatcher, MatcherTypes, MatcherCallback } from '../../Index';
+import { IssueReport } from '../../model/Defects';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'TypedArrayCheck');
 const gMetaData: BaseMetaData = {
     severity: 3,
-    ruleDocPath: "docs/typed-array-check.md",
+    ruleDocPath: 'docs/typed-array-check.md',
     description: 'Array used only for numeric calculation detected. TypedArray is recommended.'
 };
 const binopOperator = ['+', '-', '*', '/', '%', '&', '|', '^', '>>', '<<', '>>>'];
@@ -60,11 +60,11 @@ export class TypedArrayCheck implements BaseChecker {
         const matchMethodCb: MatcherCallback = {
             matcher: this.methodMatcher,
             callback: this.check
-        }
+        };
         return [matchMethodCb];
     }
 
-    public check = (targetmethod: ArkMethod) => {
+    public check = (targetmethod: ArkMethod): void => {
         const stmts = targetmethod.getBody()?.getCfg().getStmts() ?? [];
         for (let stmt of stmts) {
             if (stmt instanceof ArkAssignStmt && this.isArray(stmt)) {
@@ -79,9 +79,9 @@ export class TypedArrayCheck implements BaseChecker {
                 }
             }
         }
-    }
+    };
 
-    private addIssueReport(stmt: Stmt, arrName: string) {
+    private addIssueReport(stmt: Stmt, arrName: string): void {
         const severity = this.rule.alert ?? this.metaData.severity;
         const warnInfo = this.getLineAndColumn(stmt, arrName);
         let defects = new Defects(warnInfo.line, warnInfo.startCol, warnInfo.endCol, this.metaData.description, severity, this.rule.ruleId,

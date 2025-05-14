@@ -163,8 +163,7 @@ export class LottieAnimationDestoryCheck implements BaseChecker {
             if (busyMethods.has(methodSignature)) {
                 continue;
             }
-            if (methodSignatureStr !== lottieDestorySignatureStr
-                && methodSignatureStr !== animationDestorySignatureStr) {
+            if (methodSignatureStr !== lottieDestorySignatureStr && methodSignatureStr !== animationDestorySignatureStr) {
                 let invokeMethods = this.findCallerMethodByInvoker(stmt, invokeExpr);
                 for (let subMethod of invokeMethods) {
                     destroyAnimCount += this.getCountFromDestroryMethod(loadAnims, subMethod, busyMethods);
@@ -236,7 +235,8 @@ export class LottieAnimationDestoryCheck implements BaseChecker {
         }
     }
 
-    private findReleaseMethod(arkFile: ArkFile, invokerExpr: AbstractInvokeExpr, methodName: string, methodSignatureStr: string, releaseMethods: ArkMethod[]): void {
+    private findReleaseMethod(arkFile: ArkFile, invokerExpr: AbstractInvokeExpr, methodName: string,
+        methodSignatureStr: string, releaseMethods: ArkMethod[]): void {
         if (methodSignatureStr === addEventListenerSignatureStr) {
             let eventName = invokerExpr.getArg(0);
             if (!(eventName instanceof Constant)) {

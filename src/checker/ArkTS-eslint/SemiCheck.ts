@@ -29,7 +29,7 @@ const logger = Logger.getLogger(
 
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: "docs/semi-check.md",
+  ruleDocPath: "docs/semi.md",
   description: "Require or disallow semicolons instead of ASI"
 };
 

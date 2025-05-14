@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-import { ArkAssignStmt, ArkInstanceFieldRef, Constant, MethodSignature, Stmt, ViewTreeNode } from "arkanalyzer/lib";
-import { ArkClass } from "arkanalyzer/lib/core/model/ArkClass";
+import { ArkAssignStmt, ArkInstanceFieldRef, Constant, MethodSignature, Stmt, ViewTreeNode } from 'arkanalyzer/lib';
+import { ArkClass } from 'arkanalyzer/lib/core/model/ArkClass';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
-import { Rule, Defects, ClassMatcher, MatcherTypes, MatcherCallback } from "../../Index";
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
+import { Rule, Defects, ClassMatcher, MatcherTypes, MatcherCallback } from '../../Index';
 import { ViewTreeTool } from '../../utils/checker/ViewTreeTool';
-import { IssueReport } from "../../model/Defects";
+import { IssueReport } from '../../model/Defects';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'LimitRefreshScopeCheck');
 const viewTreeTool: ViewTreeTool = new ViewTreeTool();
@@ -28,14 +28,14 @@ const cachedCountControls: string[] = ['Badge', 'Column', 'ColumnSplit', 'Counte
     'Scroll', 'SideBarContainer', 'Stack', 'Swiper', 'Tabs', 'TabContent', 'WaterFlow'];
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/limit-refresh-scope-check.md",
-    description: "Add a container to the if statement to reduce the refresh range."
+    ruleDocPath: 'docs/limit-refresh-scope-check.md',
+    description: 'Add a container to the if statement to reduce the refresh range.'
 };
 
 export class LimitRefreshScopeCheck implements BaseChecker {
     readonly metaData: BaseMetaData = gMetaData;
-    readonly IF: string = "If";
-    readonly CREATE: string = "create";
+    readonly IF: string = 'If';
+    readonly CREATE: string = 'create';
     public rule: Rule;
     public defects: Defects[] = [];
     public issues: IssueReport[] = [];
@@ -49,11 +49,11 @@ export class LimitRefreshScopeCheck implements BaseChecker {
         const matchClazzCb: MatcherCallback = {
             matcher: this.clsMatcher,
             callback: this.check
-        }
+        };
         return [matchClazzCb];
     }
 
-    public check = (target: ArkClass) => {
+    public check = (target: ArkClass): void => {
         if (!viewTreeTool.hasTraverse(target)) {
             let viewTreeRoot = target.getViewTree()?.getRoot();
             if (!viewTreeRoot) {
@@ -61,9 +61,9 @@ export class LimitRefreshScopeCheck implements BaseChecker {
             }
             this.traverseViewTree(viewTreeRoot);
         }
-    }
+    };
 
-    private traverseViewTree(viewTreeRoot: ViewTreeNode) {
+    private traverseViewTree(viewTreeRoot: ViewTreeNode): void {
         if (viewTreeTool.hasTraverse(viewTreeRoot)) {
             return;
         }
@@ -117,7 +117,7 @@ export class LimitRefreshScopeCheck implements BaseChecker {
         return stmt;
     }
 
-    private addIssueReport(name: string, stmt: Stmt) {
+    private addIssueReport(name: string, stmt: Stmt): void {
         const severity = this.rule.alert ?? this.metaData.severity;
         const warnInfo = this.getLineAndColumn(name, stmt);
         if (warnInfo) {
@@ -127,7 +127,12 @@ export class LimitRefreshScopeCheck implements BaseChecker {
         }
     }
 
-    private getLineAndColumn(name: string, stmt: Stmt) {
+    private getLineAndColumn(name: string, stmt: Stmt): {
+        lineNum: number;
+        startCol: number;
+        endCol: number;
+        filePath: string;
+    } {
         const arkFile = stmt.getCfg()?.getDeclaringMethod().getDeclaringArkFile();
         if (arkFile) {
             const originPosition = stmt.getOriginPositionInfo();

@@ -25,7 +25,7 @@ import { RuleListUtil } from "../../utils/common/DefectsList";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'PreferReadonly');
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: 'docs/prefer-readonly-check.md',
+  ruleDocPath: 'docs/prefer-readonly.md',
   description: 'Require private members to be marked as `readonly` if they are never modified outside of the constructor'
 };
 export type Option = {

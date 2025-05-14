@@ -40,7 +40,7 @@ interface lineColumnInfo {
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoEmptyInterfaceCheck');
 const gmetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/no-empty-interface-check.md", // TODO: support url
+    ruleDocPath: "docs/no-empty-interface.md", // TODO: support url
     description: "Disallow the declaration of empty interfaces."
 };
 

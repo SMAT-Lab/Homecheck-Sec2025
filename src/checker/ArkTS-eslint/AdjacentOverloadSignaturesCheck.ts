@@ -40,7 +40,7 @@ export class AdjacentOverloadSignaturesCheck implements BaseChecker {
   public issues: IssueReport[] = [];
   public metaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/adjacent-overload-signatures-check.md',
+    ruleDocPath: 'docs/adjacent-overload-signatures.md',
     description: 'All ${methodName} signatures should be adjacent.',
   };
 

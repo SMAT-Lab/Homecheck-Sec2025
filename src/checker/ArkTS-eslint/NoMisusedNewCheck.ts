@@ -25,7 +25,7 @@ import {RuleFix} from '../../model/Fix';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoMisusedNewCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-misused-new-check.md',
+    ruleDocPath: 'docs/no-misused-new.md',
     description: 'Enforce valid definition of new and constructor.'
 };
 

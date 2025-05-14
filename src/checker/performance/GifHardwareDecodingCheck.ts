@@ -316,7 +316,7 @@ export class GifHardwareDecodingCheck implements BaseChecker {
                 return [gifOptionInfo.openHardware, gifOptionInfo.setStmt];
             } else if (rightOp instanceof AbstractFieldRef && gifOptionInfo.optionInfo instanceof ArkField &&
                 rightOp.getFieldSignature().toString() === gifOptionInfo.optionInfo.getSignature().toString()) {
-                return [gifOptionInfo.openHardware, gifOptionInfo.setStmt]
+                return [gifOptionInfo.openHardware, gifOptionInfo.setStmt];
             }
         }
         return [false, null];

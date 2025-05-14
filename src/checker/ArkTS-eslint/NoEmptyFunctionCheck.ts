@@ -27,7 +27,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoEmptyFunctionCheck
 
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/no-empty-function-check.md",
+    ruleDocPath: "docs/no-empty-function.md",
     description: "Unexpected empty arrow function",
 };
 

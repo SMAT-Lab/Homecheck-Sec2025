@@ -13,19 +13,19 @@
  * limitations under the License.
  */
 
-import { ArkClass, ClassCategory } from "arkanalyzer/lib/core/model/ArkClass";
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
+import { ArkClass, ClassCategory } from 'arkanalyzer/lib/core/model/ArkClass';
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { ViewTreeNode, Stmt } from "arkanalyzer";
-import { Rule, Defects, ClassMatcher, MatcherTypes, MatcherCallback } from "../../Index";
+import { ViewTreeNode, Stmt } from 'arkanalyzer';
+import { Rule, Defects, ClassMatcher, MatcherTypes, MatcherCallback } from '../../Index';
 import { ViewTreeTool } from '../../utils/checker/ViewTreeTool';
-import { IssueReport } from "../../model/Defects";
+import { IssueReport } from '../../model/Defects';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'ListInScrollCheck');
 const gMetaData: BaseMetaData = {
     severity: 3,
-    ruleDocPath: "docs/list-in-scroll-check.md",
-    description: "List needs to set the width and height in Scroll."
+    ruleDocPath: 'docs/list-in-scroll-check.md',
+    description: 'List needs to set the width and height in Scroll.'
 };
 const viewTreeTool = new ViewTreeTool();
 
@@ -44,11 +44,11 @@ export class ListInScrollCheck implements BaseChecker {
         const matchClassCb: MatcherCallback = {
             matcher: this.clsMatcher,
             callback: this.check
-        }
+        };
         return [matchClassCb];
     }
 
-    public check = (targetCla: ArkClass) => {
+    public check = (targetCla: ArkClass): void => {
         if (!targetCla.hasViewTree() || viewTreeTool.hasTraverse(targetCla)) {
             return;
         }
@@ -57,9 +57,9 @@ export class ListInScrollCheck implements BaseChecker {
             return;
         }
         this.recursionCheck(rootTreeNode, 0);
-    }
+    };
 
-    private recursionCheck(viewTreeRoot: ViewTreeNode, count: number) {
+    private recursionCheck(viewTreeRoot: ViewTreeNode, count: number): void {
         if (viewTreeRoot === undefined || viewTreeTool.hasTraverse(viewTreeRoot)) {
             return;
         }
@@ -97,7 +97,7 @@ export class ListInScrollCheck implements BaseChecker {
         return hasWidth && hasHeight;
     }
 
-    private reportIssue(stmt: Stmt) {
+    private reportIssue(stmt: Stmt): void {
         const severity = this.rule.alert ?? this.metaData.severity;
         const arkFile = stmt.getCfg().getDeclaringMethod().getDeclaringArkFile();
         if (!arkFile) {

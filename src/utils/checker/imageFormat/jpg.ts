@@ -33,37 +33,37 @@ function extractSize(input: Uint8Array, index: number): ImageInfo {
     return {
         height: readUInt16BE(input, index),
         width: readUInt16BE(input, index + 2),
-    }
+    };
 }
 
 
-function extractOrientation(exifBlock: Uint8Array, isBigEndian: boolean) {
+function extractOrientation(exifBlock: Uint8Array, isBigEndian: boolean): number | undefined {
     const idfOffset = 8;
     const offset = EXIF_HEADER_BYTES + idfOffset;
     const idfDirectoryEntries = readUInt(exifBlock, 16, offset, isBigEndian);
-    for(let directoryEntryNumber = 0; directoryEntryNumber < idfDirectoryEntries; directoryEntryNumber++) {
+    for (let directoryEntryNumber = 0; directoryEntryNumber < idfDirectoryEntries; directoryEntryNumber++) {
         const start = offset + NUM_DIRECTORY_ENTRIES_BYTES + directoryEntryNumber * IDF_ENTRY_BYTES;
         const end = start + IDF_ENTRY_BYTES;
         if (start > exifBlock.length) {
-            return;
+            return undefined;
         }
         const block = exifBlock.slice(start, end);
         const tagNumber = readUInt(block, 16, 0, isBigEndian);
         if (tagNumber === 274) {
             const dataFormat = readUInt(block, 16, 2, isBigEndian);
             if (dataFormat !== 3) {
-                return;
+                return undefined;
             }
             const numberOfComponents = readUInt(block, 32, 4, isBigEndian);
             if (numberOfComponents !== 1) {
-                return;
+                return undefined;
             }
             return readUInt(block, 16, 8, isBigEndian);
         }
     }
 }
 
-function validateExifBlock(input: Uint8Array, index: number) {
+function validateExifBlock(input: Uint8Array, index: number): number | undefined {
     const exifBlock = input.slice(APP1_DATA_SIZE_BYTES, index);
     const byteAlign = toHexString(exifBlock, EXIF_HEADER_BYTES, EXIF_HEADER_BYTES + TIFF_BYTE_ALIGN_BYTES);
     const isBigEndian = byteAlign === BIG_ENDIAN_BYTE_ALIGN;
@@ -86,13 +86,13 @@ export const JPG: ImageData = {
         let input = _input.slice(4);
         let orientation: number | undefined;
         let next: number;
-        while(input.length) {
+        while (input.length) {
             const i = readUInt16BE(input, 0);
             if (input[i] !== 0xff) {
                 input = input.slice(1);
                 continue;
             }
-            if(isEXIF(input)) {
+            if (isEXIF(input)) {
                 orientation = validateExifBlock(input, i);
             }
             validateInput(input, i);
@@ -106,7 +106,7 @@ export const JPG: ImageData = {
                     height: size.height,
                     orientation,
                     width: size.width,
-                }
+                };
             }
             input = input.slice(i + 2);
         }

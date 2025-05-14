@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 
-import { ClassSignature, ViewTreeNode } from "arkanalyzer/lib";
-import { ArkClass } from "arkanalyzer/lib/core/model/ArkClass";
+import { ClassSignature, ViewTreeNode } from 'arkanalyzer/lib';
+import { ArkClass } from 'arkanalyzer/lib/core/model/ArkClass';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
-import { Rule, Defects, ClassMatcher, MatcherTypes, MatcherCallback } from "../../Index";
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
+import { Rule, Defects, ClassMatcher, MatcherTypes, MatcherCallback } from '../../Index';
 import { ViewTreeTool } from '../../utils/checker/ViewTreeTool';
-import { IssueReport } from "../../model/Defects";
+import { IssueReport } from '../../model/Defects';
 
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'UseGridLayoutOptionsCheck');
 const viewTreeTool: ViewTreeTool = new ViewTreeTool();
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/use-grid-layout-options-check.md",
-    description: "Use GridLayoutOptions when specifying the position in girds."
+    ruleDocPath: 'docs/use-grid-layout-options-check.md',
+    description: 'Use GridLayoutOptions when specifying the position in girds.'
 };
 
 export class UseGridLayoutOptionsCheck implements BaseChecker {
@@ -48,11 +48,11 @@ export class UseGridLayoutOptionsCheck implements BaseChecker {
         const matchClazzCb: MatcherCallback = {
             matcher: this.clsMatcher,
             callback: this.check
-        }
+        };
         return [matchClazzCb];
     }
 
-    public check = (target: ArkClass) => {
+    public check = (target: ArkClass): void => {
         if (viewTreeTool.hasTraverse(target)) {
             return;
         }
@@ -62,9 +62,9 @@ export class UseGridLayoutOptionsCheck implements BaseChecker {
         }
         const parentNodes: ViewTreeNode[] = [];
         this.traverseViewTree(target, viewTreeRoot, parentNodes);
-    }
+    };
 
-    private traverseViewTree(target: ArkClass, viewTreeRoot: ViewTreeNode, parentNodes: ViewTreeNode[]) {
+    private traverseViewTree(target: ArkClass, viewTreeRoot: ViewTreeNode, parentNodes: ViewTreeNode[]): void {
         if (viewTreeRoot.isCustomComponent() && this.isCustomNodeInParentNodes(viewTreeRoot, parentNodes)) {
             return;
         }
@@ -139,7 +139,7 @@ export class UseGridLayoutOptionsCheck implements BaseChecker {
         return true;
     }
 
-    private addIssueReport(target: ArkClass, nearParentNode: ViewTreeNode) {
+    private addIssueReport(target: ArkClass, nearParentNode: ViewTreeNode): void {
         const severity = this.rule.alert ?? this.metaData.severity;
         const warnInfo = this.getLineAndColumn(target, nearParentNode);
         if (warnInfo) {
@@ -149,12 +149,17 @@ export class UseGridLayoutOptionsCheck implements BaseChecker {
         }
     }
 
-    private getLineAndColumn(target: ArkClass, nearParentNode: ViewTreeNode) {
+    private getLineAndColumn(target: ArkClass, nearParentNode: ViewTreeNode): {
+        lineNum: number;
+        startCol: number;
+        endCol: number;
+        filePath: string;
+    } | undefined {
         const arkFile = target.getDeclaringArkFile();
         if (arkFile) {
             let stmts = nearParentNode.attributes.get('create');
             if (!stmts) {
-                return;
+                return undefined;
             }
             let name = nearParentNode.name;
             if (nearParentNode.isCustomComponent()) {
@@ -166,7 +171,7 @@ export class UseGridLayoutOptionsCheck implements BaseChecker {
             const text = stmts[0].getOriginalText() ?? '';
             const nodeIndex = text.indexOf(name);
             if (nodeIndex === -1) {
-                return;
+                return undefined;
             }
             const originalPosition = stmts[0].getOriginPositionInfo();
             const lineNum = originalPosition.getLineNo();

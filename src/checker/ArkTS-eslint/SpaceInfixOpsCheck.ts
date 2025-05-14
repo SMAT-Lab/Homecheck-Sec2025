@@ -59,7 +59,7 @@ export class SpaceInfixOpsCheck implements BaseChecker {
     ];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/space-infix-ops-check.md',
+        ruleDocPath: 'docs/space-infix-ops.md',
         description: 'Require spacing around infix operators',
     };
 

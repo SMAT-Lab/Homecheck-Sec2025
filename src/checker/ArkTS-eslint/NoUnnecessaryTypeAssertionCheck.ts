@@ -25,7 +25,7 @@ import { RuleFix } from '../../model/Fix';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoUnnecessaryTypeAssertionCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/no-unnecessary-type-assertion-check.md",
+    ruleDocPath: "docs/no-unnecessary-type-assertion.md",
     description: "Disallow type assertions that do not change the type of an expression.",
 };
 

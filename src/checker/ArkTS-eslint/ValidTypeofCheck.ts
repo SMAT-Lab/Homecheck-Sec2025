@@ -72,7 +72,7 @@ export class ValidTypeofCheck implements BaseChecker {
 
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/valid-typeof-check.md',
+        ruleDocPath: 'docs/valid-typeof.md',
         description: 'Invalid typeof comparison value.',
     };
 

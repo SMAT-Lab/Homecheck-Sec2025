@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-import { AbstractExpr, ArkAssignStmt, ArkFile, ArkNormalBinopExpr, ArkStaticFieldRef, ClassSignature, ClassType, Constant, EnumValueType, ImportInfo, Local, Stmt, StringType, Value } from "arkanalyzer";
-import { ClassCategory } from "arkanalyzer/lib/core/model/ArkClass";
-import { VarInfo } from "../../model/VarInfo";
-import { StmtExt } from "../../model/StmtExt";
-import { CheckerStorage } from "../common/CheckerStorage";
-import { Scope } from "../../model/Scope";
+import { AbstractExpr, ArkAssignStmt, ArkFile, ArkInstanceFieldRef, ArkNormalBinopExpr, ArkStaticFieldRef, ClassSignature, ClassType, Constant, EnumValueType, ImportInfo, Local, Stmt, StringType, Value } from 'arkanalyzer';
+import { ClassCategory } from 'arkanalyzer/lib/core/model/ArkClass';
+import { VarInfo } from '../../model/VarInfo';
+import { StmtExt } from '../../model/StmtExt';
+import { CheckerStorage } from '../common/CheckerStorage';
+import { Scope } from '../../model/Scope';
 
 export class StringUtils {
     public static getStringByScope(arkFile: ArkFile, valueStmtInfo: VarInfo, value: Value): string {
@@ -54,6 +54,27 @@ export class StringUtils {
             return this.getStaticStringValue(arkFile, value);
         } else if (value instanceof ArkStaticFieldRef && value.getType() instanceof EnumValueType) {
             return this.getStaticStringValue(arkFile, value);
+        } else if (value instanceof ArkInstanceFieldRef) {
+            return this.getInstanceFieldValue(arkFile, valueStmtInfo, value);
+        }
+        return '';
+    }
+
+    private static getInstanceFieldValue(arkFile: ArkFile, valueStmtInfo: VarInfo, value: ArkInstanceFieldRef): string {
+        let fieldSignature = value.getFieldSignature();
+        for (let clazz of arkFile.getClasses()) {
+            let field = clazz.getField(fieldSignature);
+            if (!field) {
+                continue;
+            }
+            let initializer = field.getInitializer()[0];
+            if (!initializer) {
+                continue;
+            }
+            if (!(initializer instanceof ArkAssignStmt)) {
+                continue;
+            }
+            return this.getStringByScope(arkFile, valueStmtInfo, initializer.getRightOp());
         }
         return '';
     }
@@ -79,12 +100,12 @@ export class StringUtils {
             return '';
         }
         for (let varDef of scope.defList) {
-            if (varDef.getName() === value.getName()) {
+            if (varDef.getName() !== value.getName()) {
                 continue;
             }
             let stmt = varDef.defStmt;
             const text = stmt.getOriginalText();
-            if (!text || text.length === 0 || !text.includes('const')) {
+            if (!text || text.length === 0) {
                 continue;
             }
             if (stmt instanceof ArkAssignStmt) {

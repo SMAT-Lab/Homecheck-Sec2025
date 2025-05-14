@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
-import { AbstractFieldRef, AbstractInvokeExpr, ArkAssignStmt, ArkAwaitExpr, ArkField, ArkFile, ArkInstanceFieldRef, ArkInstanceInvokeExpr, ArkInvokeStmt, ArkMethod, ArkPtrInvokeExpr, ArkReturnStmt, ArkStaticFieldRef, ClassSignature, DEFAULT_ARK_CLASS_NAME, FunctionType, Local, MethodSignature, Scene, Stmt, UnionType, UnknownType, Value } from "arkanalyzer";
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
+import { AbstractFieldRef, AbstractInvokeExpr, ArkAssignStmt, ArkAwaitExpr, ArkClass, ArkField, ArkFile, ArkInstanceFieldRef, ArkInstanceInvokeExpr, ArkInvokeStmt, ArkMethod, ArkPtrInvokeExpr, ArkReturnStmt, ArkStaticFieldRef, ClassSignature, DEFAULT_ARK_CLASS_NAME, FunctionType, Local, MethodSignature, Scene, Stmt, UnionType, UnknownType, Value } from 'arkanalyzer';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { CheckerStorage, CheckerUtils, Defects, MatcherCallback, Rule } from "../../Index";
-import { VarInfo } from "../../model/VarInfo";
-import { StringUtils } from "../../utils/checker/StringUtils";
-import { StmtExt } from "../../model/StmtExt";
-import { IssueReport } from "../../model/Defects";
+import { CheckerStorage, CheckerUtils, Defects, MatcherCallback, Rule } from '../../Index';
+import { VarInfo } from '../../model/VarInfo';
+import { StringUtils } from '../../utils/checker/StringUtils';
+import { StmtExt } from '../../model/StmtExt';
+import { IssueReport } from '../../model/Defects';
 
 const multimediaAPI8CreateSignList: string[] = [
     `@ohosSdk/api/@ohos.multimedia.audio.d.ts: audio.${DEFAULT_ARK_CLASS_NAME}.createAudioRenderer(@ohosSdk/api/@ohos.multimedia.audio.d.ts: audio.AudioRendererOptions, @ohosSdk/api/@ohos.base.d.ts: AsyncCallback<@ohosSdk/api/@ohos.multimedia.audio.d.ts: audio.AudioRenderer>)`,
@@ -48,9 +48,9 @@ const multimediaCreateList: CreateMultimediaInfo[] = [];
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'AudioPauseOrMuteCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/audio-pause-or-mute-check.md",
-    description: 'Set listeners for audio device changes to ensure that playback automatically pauses '
-        + 'when audio output switches to the speaker due to unavailability of the audio device.'
+    ruleDocPath: 'docs/audio-pause-or-mute-check.md',
+    description: 'Set listeners for audio device changes to ensure that playback automatically pauses ' +
+        'when audio output switches to the speaker due to unavailability of the audio device.'
 };
 
 interface CreateMultimediaInfo {
@@ -78,24 +78,13 @@ export class AudioPauseOrMuteCheck implements BaseChecker {
         const matchBuildCb: MatcherCallback = {
             matcher: undefined,
             callback: this.check
-        }
+        };
         return [matchBuildCb];
     }
 
-    public check = (scene: Scene) => {
+    public check = (scene: Scene): void => {
         for (let arkFile of scene.getFiles()) {
-            for (let clazz of arkFile.getClasses()) {
-                for (let mtd of clazz.getMethods()) {
-                    this.processArkMethod(arkFile, mtd);
-                }
-            }
-            for (let namespace of arkFile.getAllNamespacesUnderThisFile()) {
-                for (let clazz of namespace.getClasses()) {
-                    for (let mtd of clazz.getMethods()) {
-                        this.processArkMethod(arkFile, mtd);
-                    }
-                }
-            }
+            this.processClass(arkFile);
         }
         this.commonInvokerMatch();
         for (let cmi of multimediaCreateList) {
@@ -105,6 +94,21 @@ export class AudioPauseOrMuteCheck implements BaseChecker {
                     continue;
                 }
                 this.reportIssue(targetArkFile, cmi.createStmt, cmi.methodName);
+            }
+        }
+    };
+
+    private processClass(arkFile: ArkFile): void {
+        for (let clazz of arkFile.getClasses()) {
+            for (let mtd of clazz.getMethods()) {
+                this.processArkMethod(arkFile, mtd);
+            }
+        }
+        for (let namespace of arkFile.getAllNamespacesUnderThisFile()) {
+            for (let clazz of namespace.getClasses()) {
+                for (let mtd of clazz.getMethods()) {
+                    this.processArkMethod(arkFile, mtd);
+                }
             }
         }
     }
@@ -136,7 +140,7 @@ export class AudioPauseOrMuteCheck implements BaseChecker {
                 varInfo: null,
                 fieldInfo: null,
                 interruptInfo: null
-            }
+            };
             multimediaCreateList.push(createInfo);
             if (stmt instanceof ArkInvokeStmt) {
                 let callbackMethod = this.getInvokeCallbackMethod(arkFile, stmt, methodName);
@@ -359,7 +363,8 @@ export class AudioPauseOrMuteCheck implements BaseChecker {
         return arkFile.getScene().getMethod(type.getMethodSignature());
     }
 
-    private parseInvokerAudioInterruptStmt(callbackMethod: ArkMethod, stmt: Stmt, invoker: AbstractInvokeExpr, createInfo: CreateMultimediaInfo, useType: UseType): void {
+    private parseInvokerAudioInterruptStmt(callbackMethod: ArkMethod, stmt: Stmt, invoker: AbstractInvokeExpr,
+        createInfo: CreateMultimediaInfo, useType: UseType): void {
         if (!(invoker instanceof ArkInstanceInvokeExpr)) {
             return;
         }
@@ -667,7 +672,6 @@ export class AudioPauseOrMuteCheck implements BaseChecker {
         }
         let methodNameIndex = text.indexOf(methodName);
         if (methodNameIndex === -1) {
-            logger.debug(`Can not find ${methodName} in ${text}.`);
             return;
         }
         const severity = this.rule.alert ?? this.metaData.severity;

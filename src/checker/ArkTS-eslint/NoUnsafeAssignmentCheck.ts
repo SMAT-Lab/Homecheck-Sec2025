@@ -26,7 +26,7 @@ import { NumberConstant } from "arkanalyzer/lib/core/base/Constant";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoUnsafeAssignmentCheck');
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: "docs/no-unsafe-assignment-check.md",
+  ruleDocPath: "docs/no-unsafe-assignment.md",
   description: "Disallow assigning a value with type `any` to variables and properties.",
 };
 

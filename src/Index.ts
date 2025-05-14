@@ -39,5 +39,9 @@ export { FileUtils, WriteFileMode } from './utils/common/FileUtils';
 export { Json5parser } from './utils/common/Json5parser';
 export { Utils } from './utils/common/Utils';
 
+// arkanalyzer
+export { AstTreeUtils, ts } from 'arkanalyzer';
+export * as arkanalyzer from 'arkanalyzer';
+
 // tools
 export { runTool, Tools } from './tools/toolEntry';

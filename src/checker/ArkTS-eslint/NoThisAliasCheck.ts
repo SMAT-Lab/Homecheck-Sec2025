@@ -25,7 +25,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoThisAliasCheck');
 
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-this-alias-check.md',
+    ruleDocPath: 'docs/no-this-alias.md',
     description: 'Disallow aliasing this.'
 };
 

@@ -13,28 +13,28 @@
  * limitations under the License.
  */
 
-function fooFir () {
+function fooFir() {
     // ...
 }
 
-var barOne = function () {
+var barOne = function() {
     // ...
 };
 
-var barTwo = function fooTwo () {
+var barTwo = function fooTwo() {
     // ...
 };
 
 class Foo {
-    constructor () {
+    constructor() {
         // ...
     }
 }
 
 var bazFir = {
-    bar () {
+    bar() {
         // ...
     }
 };
 
-var bazTwo = async () => 1
+var bazTwo = async() => 1

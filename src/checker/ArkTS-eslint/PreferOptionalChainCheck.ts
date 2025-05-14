@@ -86,7 +86,7 @@ export class PreferOptionalChainCheck implements BaseChecker {
 
   public metaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/prefer-optional-chain-check.md',
+    ruleDocPath: 'docs/prefer-optional-chain.md',
     description: `Prefer using an optional chain expression instead, as it's more concise and easier to read.`,
   };
 

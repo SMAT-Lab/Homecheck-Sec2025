@@ -25,7 +25,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'DarkColorModeCheck')
 
 const gMetaData: BaseMetaData = {
     severity: 3,
-    ruleDocPath: 'docs/drak-color-mode-check.md',
+    ruleDocPath: 'docs/dark-color-mode-check.md',
     description: 'Properly adapt to the dark mode.'
 };
 
@@ -47,7 +47,7 @@ export class DarkColorModeCheck implements BaseChecker {
         for (let [key, value] of scene.getModuleSceneMap()) {
             let darkFilePath = path.join(value.getModulePath(), 'src', 'main', 'resources', 'dark');
             if (!existsSync(darkFilePath)) {
-                this.reportIssue(Array.from(value.getModuleFilesMap().values())[0].getFilePath());
+                this.reportIssue(path.join(value.getModulePath(), 'src', 'main', 'module.json5'));
             }
         }
     };

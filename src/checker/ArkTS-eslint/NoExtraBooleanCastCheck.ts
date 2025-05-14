@@ -41,7 +41,7 @@ type Options = [{
 export class NoExtraBooleanCastCheck implements BaseChecker {
     metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-extra-boolean-cast-check.md',
+        ruleDocPath: 'docs/no-extra-boolean-cast.md',
         description: 'Redundant Boolean call'
     };
     public rule: Rule;

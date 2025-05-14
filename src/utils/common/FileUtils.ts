@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as fs from "fs";
-import * as path from "path";
-import { createInterface } from "readline";
-import { DisableText } from "./Disable";
-import { Sdk } from "arkanalyzer/lib/Config";
+import * as fs from 'fs';
+import * as path from 'path';
+import { createInterface } from 'readline';
+import { DisableText } from './Disable';
+import { Sdk } from 'arkanalyzer/lib/Config';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { ProjectConfig, SelectedFileInfo } from "../../model/ProjectConfig";
-import { RuleConfig } from "../../model/RuleConfig";
-import { GlobMatch } from "./GlobMatch";
+import { ProjectConfig, SelectedFileInfo } from '../../model/ProjectConfig';
+import { RuleConfig } from '../../model/RuleConfig';
+import { GlobMatch } from './GlobMatch';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'FileUtils');
 export class FileUtils {
@@ -125,7 +125,7 @@ export class FileUtils {
                 rl.close();
                 reject(err);
             });
-        })
+        });
     }
 
     /**
@@ -196,7 +196,7 @@ export class FileUtils {
                     filenameArr.push(realFile);
                 }
             }
-        })
+        });
         return filenameArr;
     }
 
@@ -261,7 +261,7 @@ export class FileUtils {
      * @param content 写入的内容
      * @param mode 写入模式，不传默认为追加模式
      **/
-    public static writeToFile(filePath: string, content: string, mode: WriteFileMode = WriteFileMode.APPEND) {
+    public static writeToFile(filePath: string, content: string, mode: WriteFileMode = WriteFileMode.APPEND): void {
         const dirName = path.dirname(filePath);
         if (!fs.existsSync(dirName)) {
             fs.mkdirSync(dirName, { recursive: true });

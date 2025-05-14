@@ -52,8 +52,7 @@ export class ModuleTopLevelCodeCheck implements BaseChecker {
       return;
     }
     const filePath = target.getFilePath();
-    let code = target.getCode()?.toString() ?? '';
-    const sourceFile = AstTreeUtils.getASTNode(target.getName(), code);
+    const sourceFile = AstTreeUtils.getSourceFileFromArkFile(target);
     this.visitNode(sourceFile, sourceFile, filePath);
   };
 

@@ -26,7 +26,7 @@ import { BaseChecker, BaseMetaData } from "../BaseChecker";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoExplicitAnyCheck');
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: "docs/no-explicit-any-check.md",
+  ruleDocPath: "docs/no-explicit-any.md",
   description: "Require Promise-like statements to be handled appropriately"
 };
 

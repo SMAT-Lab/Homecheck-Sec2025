@@ -24,7 +24,7 @@ import { RuleListUtil } from "../../utils/common/DefectsList";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'ExplicitModuleBoundaryTypesCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/explicit-module-boundary-types-check.md",
+    ruleDocPath: "docs/explicit-module-boundary-types.md",
     description: "Require explicit return and argument types on exported functions' and classes' public class methods",
 };
 const defaultOptions: Options = {

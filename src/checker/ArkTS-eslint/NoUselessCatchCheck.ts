@@ -34,7 +34,7 @@ export class NoUselessCatchCheck implements BaseChecker {
     private filePath: string = '';
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-useless-catch-check.md',
+        ruleDocPath: 'docs/no-useless-catch.md',
         description: 'Disallow unnecessary catch clauses.',
     };
 

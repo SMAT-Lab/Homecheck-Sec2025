@@ -33,7 +33,7 @@ const logger = Logger.getLogger(
 );
 const gMetaData: BaseMetaData = {
   severity: 1,
-  ruleDocPath: 'docs/prefer-literal-enum-member-check.md', // TODO: support url
+  ruleDocPath: 'docs/prefer-literal-enum-member.md', // TODO: support url
   description:
     'Explicit enum value must only be a literal value (string, number, boolean, etc).',
 };

@@ -25,7 +25,7 @@ import { RuleFix } from '../../model/Fix';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'PreferTsExpectErrorCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/prefer-ts-expect-error-check.md",
+    ruleDocPath: "docs/prefer-ts-expect-error.md",
     description: 'Use "@ts-expect-error" to ensure an error is actually being suppressed.',
 };
 

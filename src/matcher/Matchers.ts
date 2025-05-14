@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { ArkField, ArkFile, ArkMethod, ArkNamespace, Scene } from "arkanalyzer";
-import { ArkClass, ClassCategory } from "arkanalyzer/lib/core/model/ArkClass";
+import { ArkField, ArkFile, ArkMethod, ArkNamespace } from 'arkanalyzer';
+import { ArkClass, ClassCategory } from 'arkanalyzer/lib/core/model/ArkClass';
 
 export enum MethodCategory {
     Accessor = 0,

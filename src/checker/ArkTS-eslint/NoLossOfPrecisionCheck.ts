@@ -20,7 +20,7 @@ import { IssueReport } from "../../model/Defects";
 
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-loss-of-precision-check.md',
+    ruleDocPath: 'docs/no-loss-of-precision.md',
     description: 'This number literal will lose precision at runtime.'
 };
 

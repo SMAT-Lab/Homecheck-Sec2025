@@ -239,6 +239,11 @@ import { BanCallbackOperationsCheck } from '../../checker/stability/BanCallbackO
 import { CallAddInputBeforeAddOutputCheck } from '../../checker/stability/CallAddInputBeforeAddOutputCheck';
 import { CameraInputOpenCheck } from '../../checker/stability/CameraInputOpenCheck';
 import { ImageSyncBlurCheck } from '../../checker/stability/ImageSyncBlurCheck';
+import { DarkColorModeCheck } from '../../checker/performance/DarkColorModeCheck';
+import { LowerAppBrightnessCheck } from '../../checker/performance/LowerAppBrightnessCheck';
+import { StreamUsageApiCheck } from '../../checker/performance/StreamUsageApiCheck';
+import { AvoidMemoryLeakInAnimator } from '../../checker/performance/AvoidMemoryLeakInAnimator';
+import { AvoidMemoryLeakInDisplaysync } from '../../checker/performance/AvoidMemoryLeakInDisplaysync';
 
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'CheckerIndex');
@@ -432,6 +437,10 @@ export const fileRules = {
     "@performance/web-resource-for-image-component-check": WebResourceForImageComponentCheck,
     "@performance/module-top-level-code-check": ModuleTopLevelCodeCheck,
     "@performance/no-high-loaded-frame-rate-range": NoHighLoadedFrameRateRangeCheck,
+    "@performance/lower-app-brightness-check": LowerAppBrightnessCheck,
+    "@performance/stream-usage-api-check": StreamUsageApiCheck,
+    "@performance/avoid-memory-leak-in-animator": AvoidMemoryLeakInAnimator,
+    "@performance/avoid-memory-leak-in-displaysync": AvoidMemoryLeakInDisplaysync,
     "@security/no-unsafe-aes-check": NoUnsafeAesCheck,
     "@security/no-unsafe-dh-check": NoUnsafeDhCheck,
     "@security/no-unsafe-dh-key-check": NoUnsafeDhKeyCheck,
@@ -470,6 +479,7 @@ export const projectRules = {
     "@performance/image-size-check": ImageSizeCheck,
     "@performance/page-prefetch-check": PagePrefetchCheck,
     "@performance/resources-file-check": ResourcesFileCheck,
+    "@performance/dark-color-mode-check": DarkColorModeCheck,
     "@security/no-cycle-check": NoCycleCheck,
     "@stability/image-sync-blur-check": ImageSyncBlurCheck
 };

@@ -56,7 +56,7 @@ export class NoUnexpectedMultilineCheck implements BaseChecker {
     public sourceFile: ts.SourceFile;
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-unexpected-multiline-check.md',
+        ruleDocPath: 'docs/no-unexpected-multiline.md',
         description: 'Disallow confusing multiline expressions.',
     };
 

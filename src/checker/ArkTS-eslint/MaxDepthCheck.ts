@@ -38,7 +38,7 @@ interface Issue {
 export class MaxDepthCheck implements BaseChecker {
     metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/max-depth-check.md',
+        ruleDocPath: 'docs/max-depth.md',
         description: `Maximum allowed nesting depth is ${DEFAULT_MAX_DEPTH}`
     };
     public rule: Rule;

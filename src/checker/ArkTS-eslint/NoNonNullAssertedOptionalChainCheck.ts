@@ -25,7 +25,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoNonNullAssertedOpt
 
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-non-null-asserted-optional-chain-check.md',
+    ruleDocPath: 'docs/no-non-null-asserted-optional-chain.md',
     description: 'Disallow non-null assertions after an optional chain expression.'
 };
 

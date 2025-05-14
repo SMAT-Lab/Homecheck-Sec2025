@@ -44,7 +44,7 @@ type importInfo = {
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'TripleSlashReferenceCheck');
 const gmetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/triple-slash-reference-check.md',
+    ruleDocPath: 'docs/triple-slash-reference.md',
     description: 'Do not use a triple slash reference for code, use `import` style instead.'
 };
 export class TripleSlashReferenceCheck implements BaseChecker {

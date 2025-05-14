@@ -40,40 +40,15 @@ namespace DefectsList {
 
 export class RuleListUtil {
     static push(defect: Defects) {
-        // const list = DefectsList.getDefects();
-        // if (!list.find(({ mergeKey }) => mergeKey === defect.mergeKey)) {
-        //     DefectsList.add(defect);
-        // }
+
     }
 
     static updateDefect(defect: Defects) {
-        // const list = DefectsList.getDefects();
-        // const index = list.findIndex(item => item.fixKey === defect.fixKey);
-        // if (index !== -1) {
-        //     DefectsList.updateDefectByIndex(index, defect);
-        // }
+
     }
 
     static printDefects() {
-        // const defects = DefectsList.getDefects();
-        // let defectsMap: Map<string, Defects[]> = new Map;
-        // for (const defect of defects) {
-        //     const filePath = defect.mergeKey.split('%')[0];
-        //     if (defectsMap.has(filePath)) {
-        //         defectsMap.get(filePath)?.push(defect);
-        //     } else {
-        //         defectsMap.set(filePath, [defect])
-        //     }
-        // }
-        // defectsMap.forEach((value, key) => {
-        //     // logger.info(`${key}(${value.length})`);
-        //     value.forEach(item => {
-        //         const level = item.severity === 2 ? 'error' : 'warn';
-        //         const text = `${item.reportLine}:${item.reportColumn}\t\t${level}\t\t${item.description.padEnd(100)}${item.ruleId}`;
-        //         // logger.info('Text: ' + text);
-        //     })
-        // })
-        // DefectsList.clear();
+
     }
 
     static isFilter(ruleId: string): boolean {

@@ -34,7 +34,7 @@ interface WarnInfo {
 export class NoAsyncPromiseExecutorCheck implements BaseChecker {
     metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-async-promise-executor-check.md',
+        ruleDocPath: 'docs/no-async-promise-executor.md',
         description: 'Promise executor functions should not be async'
     };
     readonly PROMISE_NAME: string = 'async';

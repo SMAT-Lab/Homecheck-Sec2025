@@ -7,19 +7,149 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the License is distributed on an 'AS IS' BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
-import { ArkFile, AstTreeUtils, ts } from 'arkanalyzer/lib';
+import {
+    ArkFile,
+    ArkClass,
+    ArkMethod,
+    ts,
+    StringType,
+    Local,
+    AnyType,
+    UnknownType,
+    FunctionType,
+    UnionType,
+    UnclearReferenceType,
+    Type,
+    Stmt,
+    AstTreeUtils,
+    ArkAssignStmt,
+    NumberType,
+    BooleanType,
+    UndefinedType,
+    Value,
+    IntersectionType,
+    LiteralType,
+    NullType,
+    VoidType,
+    ArkUnopExpr,
+    UnaryOperator,
+    ArkArrayRef,
+    ArkNormalBinopExpr,
+    NormalBinaryOperator,
+    AbstractInvokeExpr,
+    AbstractFieldRef,
+    ClassType,
+    NeverType,
+    ArkInstanceInvokeExpr,
+    ArrayType,
+    TupleType,
+    ArkIfStmt,
+    ArkConditionExpr,
+    Constant,
+    ArkPtrInvokeExpr,
+    ArkNewExpr,
+    ArkInvokeStmt,
+    ArkParameterRef,
+    ArkTypeOfExpr,
+    ArkStaticInvokeExpr,
+    ArkInstanceFieldRef,
+    GenericType,
+    ArkNewArrayExpr,
+    ArkAwaitExpr,
+    BigIntType,
+    EnumValueType,
+    ArkReturnStmt
+} from 'arkanalyzer';
+
+
+import { ModifierType } from 'arkanalyzer/lib/core/model/ArkBaseModel';
 import { BaseChecker, BaseMetaData } from '../BaseChecker';
+import { FileMatcher, MatcherCallback, MatcherTypes } from '../../Index';
 import { Defects, IssueReport } from '../../model/Defects';
-import { MatcherCallback, MatcherTypes, FileMatcher } from '../../matcher/Matchers';
 import { Rule } from '../../model/Rule';
 import { RuleListUtil } from '../../utils/common/DefectsList';
 import { RuleFix } from '../../model/Fix';
+import { BooleanConstant, NumberConstant, StringConstant, UndefinedConstant } from 'arkanalyzer/lib/core/base/Constant';
+import { MethodParameter } from 'arkanalyzer/lib/core/model/builder/ArkMethodBuilder';
+
+//strict-boolean-expressions-check
+const gMetaData: BaseMetaData = {
+    severity: 1,
+    ruleDocPath: 'docs/strict-boolean-expressions.md',
+    description: 'Disallow certain types in boolean expressions',
+    requiresTypeChecking: true,
+    //将这里面的改成 StrictBooleanExpressionsCheck中需要上报的消息类型
+
+    messages: {
+        conditionErrorOther:
+            'Unexpected value in conditional. ' +
+            'A boolean expression is required.',
+        conditionErrorAny:
+            'Unexpected any value in conditional. An explicit comparison or type cast is required.',
+        conditionErrorNullish:
+            'Unexpected nullish value in conditional. The condition is always false.',
+        conditionErrorNullableBoolean:
+            'Unexpected nullable boolean value in conditional. ' +
+            'Please handle the nullish case explicitly.',
+        conditionErrorString:
+            'Unexpected string value in conditional. ' +
+            'An explicit empty string check is required.',
+        conditionErrorNullableString:
+            'Unexpected nullable string value in conditional. ' +
+            'Please handle the nullish/empty cases explicitly.',
+        conditionErrorNumber:
+            'Unexpected number value in conditional. ' +
+            'An explicit zero/NaN check is required.',
+        conditionErrorNullableNumber:
+            'Unexpected nullable number value in conditional. ' +
+            'Please handle the nullish/zero/NaN cases explicitly.',
+        conditionErrorObject:
+            'Unexpected object value in conditional. ' +
+            'The condition is always true.',
+        conditionErrorNullableObject:
+            'Unexpected nullable object value in conditional. ' +
+            'An explicit null check is required.',
+        conditionErrorNullableEnum:
+            'Unexpected nullable enum value in conditional. ' +
+            'Please handle the nullish/zero/NaN cases explicitly.',
+        noStrictNullCheck:
+            'This rule requires the `strictNullChecks` compiler option to be turned on to function correctly.',
+
+        conditionFixDefaultFalse:
+            'Explicitly treat nullish value the same as false (`value ?? false`)',
+        conditionFixDefaultEmptyString:
+            'Explicitly treat nullish value the same as an empty string (`value ?? \'\'`)',
+        conditionFixDefaultZero:
+            'Explicitly treat nullish value the same as 0 (`value ?? 0`)',
+        conditionFixCompareNullish:
+            'Change condition to check for null/undefined (`value != null`)',
+        conditionFixCastBoolean:
+            'Explicitly cast value to a boolean (`Boolean(value)`)',
+        conditionFixCompareTrue:
+            'Change condition to check if true (`value === true`)',
+        conditionFixCompareFalse:
+            'Change condition to check if false (`value === false`)',
+        conditionFixCompareStringLength:
+            'Change condition to check string\'s length (`value.length !== 0`)',
+        conditionFixCompareEmptyString:
+            'Change condition to check for empty string (`value !== \'\'`)',
+        conditionFixCompareZero:
+            'Change condition to check for 0 (`value !== 0`)',
+        conditionFixCompareNaN:
+            'Change condition to check for NaN (`!Number.isNaN(value)`)',
+    }
+};
+const a_r = new RegExp(/\[|\]/g);
+const b_r = new RegExp(/\s*/g);
+const c_r = new RegExp(/[()]/g);
+const d_r = new RegExp(/\[([^\]]+)\]/g);
+const ConstantType = [StringConstant, NumberConstant, BooleanConstant];
 
 interface Options {
     allowAny?: boolean;
@@ -31,16 +161,20 @@ interface Options {
     allowNumber?: boolean;
     allowRuleToRunWithoutStrictNullChecksIKnowWhatIAmDoing?: boolean;
     allowString?: boolean;
-};
-
-interface Issue {
-    ruleFix: RuleFix;
-    line: number;
-    column: number;
-    message: string;
-    filePath: string;
+    ignoreInBinaryExpression?: boolean;
 }
 
+interface LocationInfo {
+    fileName: string;
+    line: number;
+    startCol: number;
+    endCol: number;
+    start: number;
+    end: number;
+    nameStr: string;
+    description: string;
+    messageId: string;
+}
 type VariantType =
     | 'any'
     | 'boolean'
@@ -50,28 +184,30 @@ type VariantType =
     | 'number'
     | 'object'
     | 'string'
-    | 'symbol'
-    | 'array'
     | 'truthy boolean'
     | 'truthy number'
-    | 'truthy string'
-    | 'nullable boolean'
-    | 'nullable string'
-    | 'nullable number'
-    | 'unknown';
-
-interface SimpleTypeInfo {
-    kind: string;
-    isNullable: boolean;
-}
-
+    | 'truthy string';
 
 export class StrictBooleanExpressionsCheck implements BaseChecker {
+    readonly metaData: BaseMetaData = gMetaData;
     public rule: Rule;
-    private options: Options;
     public defects: Defects[] = [];
     public issues: IssueReport[] = [];
-    private traversedNodes = new Set<ts.Node>();
+    private line: number = 0;
+    private col: number = 0;
+    private locationInfos: LocationInfo[] = [];
+    private globalStmt: Stmt;
+    private rootNode: ts.Node;
+    private globalMethod: ArkMethod;
+    private option: Options;
+    private traversedNodes: Map<string, Set<Stmt | Value>> = new Map();
+    private globalStmtCode: string;
+    private checkLocalIsReplace: boolean = false;
+    private useMethod: string[] = [];
+    private types: Set<VariantType>;
+    private typeCache: Map<string, Type> = new Map();
+
+
     private defaultOptions: Options = {
         allowString: true,
         allowNumber: true,
@@ -83,1991 +219,1474 @@ export class StrictBooleanExpressionsCheck implements BaseChecker {
         allowAny: false,
         allowRuleToRunWithoutStrictNullChecksIKnowWhatIAmDoing: false,
     };
-    private sourceFile: ts.SourceFile | undefined;
-
-    constructor() {
-        this.options = this.defaultOptions;
-    }
-
-    registerMatchers(): MatcherCallback[] {
-        return [{ matcher: this.fileMatcher, callback: this.check }];
-    }
-
-    public metaData: BaseMetaData = {
-        severity: 1,
-        ruleDocPath: 'docs/strict-boolean-expressions-check.md',
-        description: 'Disallow certain types in boolean expressions'
-    };
-
     private fileMatcher: FileMatcher = {
-        matcherType: MatcherTypes.FILE
+        matcherType: MatcherTypes.FILE,
     };
 
-    public check = (target: ArkFile): void => {
-        if (this.rule && this.rule.option && this.rule.option.length > 0) {
-            this.options = this.rule.option[0] as Options;
-        }
-        if (target instanceof ArkFile) {
-            this.sourceFile = AstTreeUtils.getASTNode(target.getName(), target.getCode());
-            this.checkBooleanExpressionsStrictly(this.sourceFile).forEach((issue) => {
-                issue.filePath = target.getFilePath();
-                this.addIssueReport(issue);
-            });
-        }
-    }
-
-    /**
-     * 判断节点是否为布尔字面量
-     */
-    private isBooleanLiteral(node: ts.Node): boolean {
-        return node.kind === ts.SyntaxKind.TrueKeyword ||
-            node.kind === ts.SyntaxKind.FalseKeyword;
-    }
-
-    /**
-     * 判断节点是否为对象类型
-     */
-    private isObjectLike(node: ts.Node): boolean {
-        return ts.isObjectLiteralExpression(node) ||
-            ts.isArrayLiteralExpression(node) ||
-            node.kind === ts.SyntaxKind.ObjectKeyword ||
-            node.kind === ts.SyntaxKind.ArrayType;
-    }
-
-    /**
-     * 判断类型声明是否为布尔类型
-     */
-    private isBooleanType(typeNode: ts.TypeNode | undefined): boolean {
-        if (!typeNode) {
-            return false;
-        }
-
-        if (ts.isTypeReferenceNode(typeNode)) {
-            const typeName = typeNode.typeName.getText();
-            return typeName === 'boolean' || typeName === 'Boolean';
-        }
-
-        return typeNode.kind === ts.SyntaxKind.BooleanKeyword;
-    }
-
-    /**
-     * 判断类型声明是否为字符串类型
-     */
-    private isStringType(typeNode: ts.TypeNode | undefined): boolean {
-        if (!typeNode) {
-            return false;
-        }
-
-        if (ts.isTypeReferenceNode(typeNode)) {
-            const typeName = typeNode.typeName.getText();
-            return typeName === 'string' || typeName === 'String';
-        }
-
-        return typeNode.kind === ts.SyntaxKind.StringKeyword;
-    }
-
-    /**
-     * 判断类型声明是否为数字类型
-     */
-    private isNumberType(typeNode: ts.TypeNode | undefined): boolean {
-        if (!typeNode) {
-            return false;
-        }
-
-        if (ts.isTypeReferenceNode(typeNode)) {
-            const typeName = typeNode.typeName.getText();
-            return typeName === 'number' || typeName === 'Number';
-        }
-
-        return typeNode.kind === ts.SyntaxKind.NumberKeyword;
-    }
-
-    /**
-     * 判断类型声明是否为对象类型
-     */
-    private isObjectType(typeNode: ts.TypeNode | undefined): boolean {
-        if (!typeNode) {
-            return false;
-        }
-
-        if (ts.isTypeReferenceNode(typeNode)) {
-            const typeName = typeNode.typeName.getText();
-            return typeName === 'object' || typeName === 'Object';
-        }
-
-        return typeNode.kind === ts.SyntaxKind.ObjectKeyword ||
-            ts.isTypeLiteralNode(typeNode) ||
-            ts.isArrayTypeNode(typeNode) ||
-            typeNode.kind === ts.SyntaxKind.ArrayType;
-    }
-
-    /**
-     * 判断类型声明是否为Symbol类型
-     */
-    private isSymbolType(typeNode: ts.TypeNode | undefined): boolean {
-        if (!typeNode) {
-            return false;
-        }
-
-        if (ts.isTypeReferenceNode(typeNode)) {
-            const typeName = typeNode.typeName.getText();
-            return typeName === 'symbol' || typeName === 'Symbol';
-        }
-
-        return typeNode.kind === ts.SyntaxKind.SymbolKeyword;
-    }
-
-    /**
-     * 判断类型声明是否为任意类型
-     */
-    private isAnyType(typeNode: ts.TypeNode | undefined): boolean {
-        if (!typeNode) {
-            return false;
-        }
-        return typeNode.kind === ts.SyntaxKind.AnyKeyword;
-    }
-
-    /**
-     * 判断类型声明是否为空值(null/undefined)
-     */
-    private isNullishType(typeNode: ts.TypeNode | undefined): boolean {
-        if (!typeNode) {
-            return false;
-        }
-        return typeNode.kind === ts.SyntaxKind.NullKeyword ||
-            typeNode.kind === ts.SyntaxKind.UndefinedKeyword ||
-            typeNode.kind === ts.SyntaxKind.VoidKeyword;
-    }
-
-    /**
-     * 判断类型声明是否为数组类型
-     */
-    private isArrayType(typeNode: ts.TypeNode | undefined): boolean {
-        if (!typeNode) {
-            return false;
-        }
-
-        if (ts.isTypeReferenceNode(typeNode)) {
-            const typeName = typeNode.typeName.getText();
-            return typeName === 'Array' || typeName.endsWith('[]');
-        }
-
-        return ts.isArrayTypeNode(typeNode) || typeNode.kind === ts.SyntaxKind.ArrayType;
-    }
-
-    /**
-     * 检查联合类型中是否包含空值
-     */
-    private hasNullishInUnionType(unionTypeNode: ts.UnionTypeNode): boolean {
-        return unionTypeNode.types.some(type => this.isNullishType(type));
-    }
-
-    /**
-     * 检查参数是否为可选参数(带问号)
-     */
-    private isOptionalParameter(node: ts.ParameterDeclaration): boolean {
-        return node.questionToken !== undefined;
-    }
-
-    /**
-     * 找到变量的类型声明节点
-     */
-    private findTypeNode(node: ts.Node): ts.TypeNode | SimpleTypeInfo | undefined {
-        if (!this.sourceFile) {
-            return undefined;
-        }
-
-        // 处理标识符
-        if (ts.isIdentifier(node)) {
-            return this.findTypeNodeForIdentifier(node.text);
-        }
-
-        // 处理声明语句
-        if (ts.isVariableDeclaration(node) && node.type) {
-            return node.type;
-        }
-
-        if (ts.isParameter(node) && node.type) {
-            return node.type;
-        }
-
-        return undefined;
-    }
-
-    /**
-     * 为标识符查找类型节点
-     */
-    private findTypeNodeForIdentifier(name: string): ts.TypeNode | SimpleTypeInfo | undefined {
-        if (!this.sourceFile) {
-            return undefined;
-        }
-
-        // 1. 查找变量声明
-        const declaration = this.findVariableDeclarationByName(name, this.sourceFile);
-        if (declaration?.type) {
-            return declaration.type;
-        }
-
-        // 2. 查找参数声明
-        const paramDeclaration = this.findParameterDeclarationByName(name, this.sourceFile);
-        if (paramDeclaration) {
-            // 检查是否为可选参数
-            if (this.isOptionalParameter(paramDeclaration)) {
-                return {
-                    kind: paramDeclaration.type ?
-                        this.getTypeKind(paramDeclaration.type) : 'any',
-                    isNullable: true
-                };
-            }
-            if (paramDeclaration.type) {
-                return paramDeclaration.type;
-            }
-        }
-
-        // 3. 查找const/let声明
-        const varStatement = this.findVariableStatementByName(name, this.sourceFile);
-        if (varStatement) {
-            return varStatement;
-        }
-
-        // 4. 对于不确定类型的变量，默认为nullable string
-        return { kind: 'string', isNullable: true };
-    }
-
-    /**
-     * 获取类型节点的基本类型字符串
-     */
-    private getTypeKind(typeNode: ts.TypeNode): string {
-        if (this.isBooleanType(typeNode)) {
-            return 'boolean';
-        } else if (this.isStringType(typeNode)) {
-            return 'string';
-        } else if (this.isNumberType(typeNode)) {
-            return 'number';
-        } else if (this.isObjectType(typeNode)) {
-            return 'object';
-        } else if (this.isSymbolType(typeNode)) {
-            return 'symbol';
-        } else if (this.isArrayType(typeNode)) {
-            return 'array';
-        } else if (this.isAnyType(typeNode)) {
-            return 'any';
-        } else if (this.isNullishType(typeNode)) {
-            return 'nullish';
-        }
-        return 'any';
-    }
-
-    /**
-     * 查找变量声明
-     */
-    private findVariableDeclarationByName(name: string, sourceFile: ts.SourceFile): ts.VariableDeclaration | undefined {
-        let result: ts.VariableDeclaration | undefined;
-
-        const findDeclaration = (node: ts.Node): void => {
-            if (result) {
-                return;
-            }
-
-            if (ts.isVariableDeclaration(node) &&
-                ts.isIdentifier(node.name) &&
-                node.name.text === name) {
-                result = node;
-                return;
-            }
-
-            ts.forEachChild(node, findDeclaration);
+    public registerMatchers(): MatcherCallback[] {
+        const fileMatcherCb: MatcherCallback = {
+            matcher: this.fileMatcher,
+            callback: this.check
         };
-
-        findDeclaration(sourceFile);
-        return result;
+        return [fileMatcherCb];
     }
-
-    /**
-     * 查找参数声明
-     */
-    private findParameterDeclarationByName(name: string, sourceFile: ts.SourceFile): ts.ParameterDeclaration | undefined {
-        let result: ts.ParameterDeclaration | undefined;
-
-        const findDeclaration = (node: ts.Node): void => {
-            if (result) {
-                return;
-            }
-
-            if (ts.isParameter(node) &&
-                ts.isIdentifier(node.name) &&
-                node.name.text === name) {
-                result = node;
-                return;
-            }
-
-            ts.forEachChild(node, findDeclaration);
-        };
-
-        findDeclaration(sourceFile);
-        return result;
-    }
-
-    /**
-     * 查找const/let声明语句，简化返回一个SimpleTypeInfo对象
-     */
-    private findVariableStatementByName(name: string, sourceFile: ts.SourceFile): SimpleTypeInfo | undefined {
-        // 查找形如 declare const x: string | null; 的语句
-        const text = sourceFile.getFullText();
-        const declareMatch = new RegExp(`declare\\s+(const|let|var)\\s+${name}\\s*:\\s*([^;]+)\\s*;`, 'g');
-        const matches = [...text.matchAll(declareMatch)];
-
-        if (matches.length === 0) {
-            return undefined;
-        }
-
-        const typeText = matches[0][2].trim();
-        return this.parseTypeTextToSimpleTypeInfo(typeText);
-    }
-
-    /**
-     * 将类型文本解析为SimpleTypeInfo对象
-     */
-    private parseTypeTextToSimpleTypeInfo(typeText: string): SimpleTypeInfo | undefined {
-        // 检查是否为可空类型
-        const isNullable = typeText.includes('|') &&
-            (typeText.includes('null') || typeText.includes('undefined'));
-
-        // 特殊处理: 带有symbol字样的视为symbol类型
-        if (typeText.includes('symbol')) {
-            return { kind: 'symbol', isNullable: isNullable };
-        }
-
-        // 处理可空类型
-        if (isNullable) {
-            return this.parseNullableType(typeText);
-        }
-
-        // 处理非可空的基本类型
-        return this.parseNonNullableType(typeText);
-    }
-
-    /**
-     * 解析可空类型
-     */
-    private parseNullableType(typeText: string): SimpleTypeInfo | undefined {
-        if (typeText.includes('string')) {
-            return { kind: 'string', isNullable: true };
-        }
-
-        if (typeText.includes('number')) {
-            return { kind: 'number', isNullable: true };
-        }
-
-        if (typeText.includes('boolean')) {
-            return { kind: 'boolean', isNullable: true };
-        }
-
-        if (typeText.includes('object')) {
-            return { kind: 'object', isNullable: true };
-        }
-
-        return undefined;
-    }
-
-    /**
-     * 解析非可空的基本类型
-     */
-    private parseNonNullableType(typeText: string): SimpleTypeInfo | undefined {
-        const typeMap: { [key: string]: string } = {
-            'any': 'any',
-            'string': 'string',
-            'number': 'number',
-            'boolean': 'boolean',
-            'symbol': 'symbol',
-            'object': 'object'
-        };
-
-        const kind = typeMap[typeText];
-        if (kind) {
-            return { kind, isNullable: false };
-        }
-
-        return undefined;
-    }
-
-    /**
-     * 根据AST节点分析类型信息
-     */
-    private analyzeNodeType(node: ts.Node): Set<VariantType> {
-        // 1. 检查特定标识符（如num, str）
-        const specificResult = this.analyzeSpecificIdentifier(node);
-        if (specificResult !== null) {
-            return specificResult;
-        }
-
-        // 2. 分析字面量
-        const literalResult = this.analyzeLiteral(node);
-        if (literalResult !== null) {
-            return literalResult;
-        }
-
-        // 3. 分析表达式
-        const expressionResult = this.analyzeExpression(node);
-        if (expressionResult !== null) {
-            return expressionResult;
-        }
-
-        // 4. 获取和分析类型信息
-        const typeInfo = this.findTypeNode(node);
-        if (typeInfo) {
-            return this.analyzeTypeInfo(typeInfo);
-        }
-
-        // 没有找到明确类型信息，保守处理为任意类型
-        const types = new Set<VariantType>();
-        types.add('any');
-        return types;
-    }
-
-    /**
-     * 处理特定变量的类型分析
-     */
-    private analyzeSpecificIdentifier(node: ts.Node): Set<VariantType> | null {
-        const types = new Set<VariantType>();
-
-        // 特殊处理变量名为num
-        if (ts.isIdentifier(node) && node.text === 'num' && this.sourceFile) {
-            // 查找num变量声明
-            const numDecl = this.findVariableDeclarationByName('num', this.sourceFile);
-            if (numDecl && numDecl.initializer) {
-                // 不添加任何类型，表示允许使用
-                return types;
-            }
-        }
-
-        // 处理标识符 - 特别处理str变量
-        if (ts.isIdentifier(node) && node.text === 'str') {
-            types.add('nullable string');
-            return types;
-        }
-
-        return null;
-    }
-
-    /**
-     * 处理字面量节点的类型分析
-     */
-    private analyzeLiteral(node: ts.Node): Set<VariantType> | null {
-        const types = new Set<VariantType>();
-
-        // 处理null和undefined字面量
-        if (node.kind === ts.SyntaxKind.NullKeyword ||
-            node.kind === ts.SyntaxKind.UndefinedKeyword ||
-            node.getText() === 'null' ||
-            node.getText() === 'undefined') {
-            // 这些应该被允许，不添加类型
-            return types;
-        }
-
-        // 处理布尔字面量
-        if (this.isBooleanLiteral(node)) {
-            types.add('boolean');
-            return types;
-        }
-
-        // 处理字符串字面量
-        if (ts.isStringLiteral(node)) {
-            // 检查是否为空字符串
-            if (node.text === '') {
-                // 空字符串在布尔上下文中为false
-                types.add('string');
-            } else {
-                // 非空字符串在布尔上下文中为true
-                types.add('truthy string');
-            }
-            return types;
-        }
-
-        // 判断并处理数字和BigInt字面量
-        const nodeText = node.getText();
-        const isBigIntLiteral = nodeText.endsWith('n') && !isNaN(Number(nodeText.slice(0, -1)));
-
-        if (ts.isNumericLiteral(node) || isBigIntLiteral) {
-            // 检查是否为0或0n
-            if (node.getText() === '0' || node.getText() === '0n') {
-                // 0在布尔上下文中为false
-                types.add('number');
-            } else {
-                // 非0数值在布尔上下文中为true
-                types.add('truthy number');
-            }
-            return types;
-        }
-
-        // 处理对象字面量和数组字面量
-        if (ts.isObjectLiteralExpression(node) || ts.isArrayLiteralExpression(node)) {
-            types.add('object');
-            return types;
-        }
-
-        return null;
-    }
-
-    /**
-     * 处理表达式节点的类型分析
-     */
-    private analyzeExpression(node: ts.Node): Set<VariantType> | null {
-        const types = new Set<VariantType>();
-
-        // 处理TypeOf表达式，直接返回空集合允许在条件中使用
-        if (ts.isTypeOfExpression(node)) {
-            return types;
-        }
-
-        // 处理属性访问表达式
-        if (ts.isPropertyAccessExpression(node)) {
-            return this.analyzePropertyAccess(node as ts.PropertyAccessExpression);
-        }
-
-        // 处理元素访问表达式
-        if (ts.isElementAccessExpression(node)) {
-            // 数组或对象的元素访问可能返回undefined
-            types.add('nullable string');
-            return types;
-        }
-
-        // 处理函数调用表达式
-        if (ts.isCallExpression(node)) {
-            return this.analyzeCallExpression(node as ts.CallExpression);
-        }
-
-        // 处理二元运算表达式
-        if (ts.isBinaryExpression(node)) {
-            return this.analyzeBinaryExpression(node as ts.BinaryExpression);
-        }
-
-        return null;
-    }
-
-    /**
-     * 分析属性访问表达式
-     */
-    private analyzePropertyAccess(node: ts.PropertyAccessExpression): Set<VariantType> {
-        const types = new Set<VariantType>();
-        const propName = node.name.getText();
-
-        // 如果是访问length属性，通常是检查非空数组或字符串
-        if (propName === 'length') {
-            return types; // 允许使用，不添加警告
-        }
-
-        // 如果是Boolean对象的valueOf方法，返回boolean类型
-        if (propName === 'valueOf' && node.expression.getText().includes('Boolean')) {
-            types.add('boolean');
-            return types;
-        }
-
-        // 保守处理为可能包含null的字符串
-        types.add('nullable string');
-        return types;
-    }
-
-    /**
-     * 分析函数调用表达式
-     */
-    private analyzeCallExpression(node: ts.CallExpression): Set<VariantType> {
-        const types = new Set<VariantType>();
-        const calleeText = node.expression.getText();
-
-        // 特殊处理一些常见的函数调用
-        if (calleeText === 'Boolean' ||
-            calleeText.endsWith('.hasOwnProperty') ||
-            calleeText.endsWith('.includes') ||
-            calleeText.endsWith('.startsWith') ||
-            calleeText.endsWith('.endsWith') ||
-            calleeText.endsWith('.test')) {
-            types.add('boolean');
-            return types;
-        }
-
-        if (calleeText === 'String' || calleeText === 'Number') {
-            return types;
-        }
-
-        // 处理泛型函数 - 移除对ArrowFunction的处理，因为CallExpression不能是ArrowFunction
-        if (ts.isTypeParameterDeclaration(node)) {
-            types.add('any');
-            return types;
-        }
-
-        // 对于一般函数调用，保守处理为any类型
-        types.add('any');
-        return types;
-    }
-
-    /**
-     * 分析二元表达式
-     */
-    private analyzeBinaryExpression(node: ts.BinaryExpression): Set<VariantType> {
-        const types = new Set<VariantType>();
-        const operator = node.operatorToken.kind;
-
-        // 字符串连接
-        if (operator === ts.SyntaxKind.PlusToken) {
-            if (ts.isStringLiteral(node.left) || ts.isStringLiteral(node.right)) {
-                types.add('string');
-                return types;
-            }
-            // 数值运算
-            types.add('number');
-            return types;
-        }
-
-        // 比较运算符通常返回布尔值
-        if (operator === ts.SyntaxKind.EqualsEqualsToken ||
-            operator === ts.SyntaxKind.EqualsEqualsEqualsToken ||
-            operator === ts.SyntaxKind.ExclamationEqualsToken ||
-            operator === ts.SyntaxKind.ExclamationEqualsEqualsToken ||
-            operator === ts.SyntaxKind.LessThanToken ||
-            operator === ts.SyntaxKind.LessThanEqualsToken ||
-            operator === ts.SyntaxKind.GreaterThanToken ||
-            operator === ts.SyntaxKind.GreaterThanEqualsToken) {
-            types.add('boolean');
-            return types;
-        }
-
-        // 默认处理为any类型
-        types.add('any');
-        return types;
-    }
-
-    /**
-     * 处理类型节点的分析
-     */
-    private analyzeTypeInfo(typeInfo: ts.TypeNode | SimpleTypeInfo): Set<VariantType> {
-        const types = new Set<VariantType>();
-
-        // 处理SimpleTypeInfo类型
-        if ('kind' in typeInfo && 'isNullable' in typeInfo) {
-            return this.analyzeSimpleTypeInfo(typeInfo);
-        }
-
-        // 处理联合类型
-        if (ts.isUnionTypeNode(typeInfo)) {
-            return this.analyzeUnionType(typeInfo);
-        }
-
-        // 处理简单类型
-        if (this.isBooleanType(typeInfo)) {
-            types.add('boolean');
-        } else if (this.isStringType(typeInfo)) {
-            types.add('string');
-        } else if (this.isNumberType(typeInfo)) {
-            types.add('number');
-        } else if (this.isObjectType(typeInfo)) {
-            types.add('object');
-        } else if (this.isSymbolType(typeInfo)) {
-            types.add('symbol');
-        } else if (this.isArrayType(typeInfo)) {
-            types.add('array');
-        } else if (this.isAnyType(typeInfo)) {
-            types.add('any');
-        } else if (this.isNullishType(typeInfo)) {
-            types.add('nullish');
-        } else {
-            // 其他类型默认视为对象
-            types.add('object');
-        }
-
-        return types;
-    }
-
-    /**
-     * 分析简单类型信息
-     */
-    private analyzeSimpleTypeInfo(typeInfo: SimpleTypeInfo): Set<VariantType> {
-        const types = new Set<VariantType>();
-
-        if (typeInfo.kind === 'boolean') {
-            types.add(typeInfo.isNullable ? 'nullable boolean' : 'boolean');
-        } else if (typeInfo.kind === 'string') {
-            types.add(typeInfo.isNullable ? 'nullable string' : 'string');
-        } else if (typeInfo.kind === 'number') {
-            types.add(typeInfo.isNullable ? 'nullable number' : 'number');
-        } else if (typeInfo.kind === 'object') {
-            types.add('object');
-            if (typeInfo.isNullable) {
-                types.add('nullish');
-            }
-        } else if (typeInfo.kind === 'symbol') {
-            types.add('symbol');
-        } else if (typeInfo.kind === 'any') {
-            types.add('any');
-        }
-
-        if (typeInfo.isNullable) {
-            types.add('nullish');
-        }
-
-        return types;
-    }
-
-    /**
-     * 分析联合类型
-     */
-    private analyzeUnionType(typeInfo: ts.UnionTypeNode): Set<VariantType> {
-        const types = new Set<VariantType>();
-        const hasNullish = this.hasNullishInUnionType(typeInfo);
-
-        for (const type of typeInfo.types) {
-            if (this.isBooleanType(type)) {
-                types.add(hasNullish ? 'nullable boolean' : 'boolean');
-            }
-
-            if (this.isStringType(type)) {
-                types.add(hasNullish ? 'nullable string' : 'string');
-            }
-
-            if (this.isNumberType(type)) {
-                types.add(hasNullish ? 'nullable number' : 'number');
-            }
-
-            if (this.isObjectType(type)) {
-                types.add('object');
-            }
-
-            if (this.isSymbolType(type)) {
-                types.add('symbol');
-            }
-
-            if (this.isArrayType(type)) {
-                types.add('array');
-            }
-
-            if (this.isNullishType(type)) {
-                types.add('nullish');
-            }
-
-            if (this.isAnyType(type)) {
-                types.add('any');
-            }
-        }
-
-        return types;
-    }
-
-    /**
-     * 检查是否为null或undefined比较
-     */
-    private isNullishComparison(condition: ts.BinaryExpression): boolean {
-        // 检查是否为相等或不等比较
-        if ([ts.SyntaxKind.EqualsEqualsToken,
-        ts.SyntaxKind.ExclamationEqualsToken,
-        ts.SyntaxKind.EqualsEqualsEqualsToken,
-        ts.SyntaxKind.ExclamationEqualsEqualsToken].includes(condition.operatorToken.kind)) {
-
-            // 检查是否与null或undefined比较
-            const rightKind = condition.right.kind;
-            const leftKind = condition.left.kind;
-
-            return rightKind === ts.SyntaxKind.NullKeyword ||
-                rightKind === ts.SyntaxKind.UndefinedKeyword ||
-                leftKind === ts.SyntaxKind.NullKeyword ||
-                leftKind === ts.SyntaxKind.UndefinedKeyword;
-        }
-        return false;
-    }
-
-    /**
-     * 检查是否为空值合并运算符
-     */
-    private isNullishCoalescingOperator(condition: ts.Node): boolean {
-        return ts.isBinaryExpression(condition) &&
-            condition.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken;
-    }
-
-    /**
-     * 检查是否为逻辑运算符
-     */
-    private isLogicalOperator(condition: ts.Node): boolean {
-        return ts.isBinaryExpression(condition) &&
-            (condition.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken ||
-                condition.operatorToken.kind === ts.SyntaxKind.BarBarToken);
-    }
-
-    /**
-     * 检查是否为比较运算符
-     */
-    private isComparisonOperator(condition: ts.Node): boolean {
-        return ts.isBinaryExpression(condition) &&
-            [ts.SyntaxKind.LessThanToken,
-            ts.SyntaxKind.LessThanEqualsToken,
-            ts.SyntaxKind.GreaterThanToken,
-            ts.SyntaxKind.GreaterThanEqualsToken].includes(
-                (condition as ts.BinaryExpression).operatorToken.kind
-            );
-    }
-
-    /**
-     * 检查是否为类型判断表达式
-     */
-    private isTypeCheckExpression(condition: ts.Node): boolean {
-        return ts.isTypeOfExpression(condition) ||
-            (ts.isBinaryExpression(condition) && ts.isTypeOfExpression(
-                (condition as ts.BinaryExpression).left
-            ));
-    }
-
-    /**
-     * 检查是否为instanceof表达式
-     */
-    private isInstanceOfExpression(condition: ts.Node): boolean {
-        return ts.isBinaryExpression(condition) &&
-            (condition as ts.BinaryExpression).operatorToken.kind === ts.SyntaxKind.InstanceOfKeyword;
-    }
-
-    /**
-     * 获取变量的类型
-     */
-    private getVariableTypes(varName: string, sourceFile: ts.SourceFile, condition: ts.Node): Set<VariantType> {
-        // 使用单独的方法检查变量声明
-        const varTypes = this.checkVarDeclaration(varName, sourceFile);
-        if (varTypes.size > 0) {
-            return varTypes;
-        }
-
-        // 使用单独的方法检查参数声明
-        const paramTypes = this.checkParamDeclaration(varName, sourceFile);
-        if (paramTypes.size > 0) {
-            return paramTypes;
-        }
-
-        // 使用单独的方法检查声明语句
-        const declaredTypes = this.checkVarStatement(varName, sourceFile);
-        if (declaredTypes.size > 0) {
-            return declaredTypes;
-        }
-
-        return new Set<VariantType>(); // 返回空集合
-    }
-
-    /**
-     * 检查变量声明并返回类型
-     */
-    private checkVarDeclaration(varName: string, sourceFile: ts.SourceFile): Set<VariantType> {
-        const varDeclaration = this.findVariableDeclarationByName(varName, sourceFile);
-        if (!varDeclaration) {
-            return new Set<VariantType>();
-        }
-
-        return this.checkVariableDeclaration(varDeclaration, sourceFile) || new Set<VariantType>();
-    }
-
-    /**
-     * 检查参数声明并返回类型
-     */
-    private checkParamDeclaration(varName: string, sourceFile: ts.SourceFile): Set<VariantType> {
-        const paramDeclaration = this.findParameterDeclarationByName(varName, sourceFile);
-        if (!paramDeclaration) {
-            return new Set<VariantType>();
-        }
-
-        return this.checkParameterDeclaration(paramDeclaration) || new Set<VariantType>();
-    }
-
-    /**
-     * 检查变量语句并返回类型
-     */
-    private checkVarStatement(varName: string, sourceFile: ts.SourceFile): Set<VariantType> {
-        const declaredType = this.findVariableStatementByName(varName, sourceFile);
-        if (!declaredType) {
-            return new Set<VariantType>();
-        }
-
-        return this.checkDeclaredType(declaredType) || new Set<VariantType>();
-    }
-
-    /**
-     * 检查布尔表达式规则
-     */
-    private checkBooleanExpressionsStrictly(sourceFile: ts.SourceFile): Issue[] {
-        const issues: Issue[] = [];
-        this.traversedNodes.clear();
-
-        this.checkNode(sourceFile, issues, sourceFile);
-        return issues;
-    }
-
-    /**
-     * 检查节点
-     */
-    private checkNode(node: ts.Node, issues: Issue[], sourceFile: ts.SourceFile): void {
-        if (this.traversedNodes.has(node)) {
+    public check = (arkFile: ArkFile): void => {
+        this.locationInfos = [];
+        const code = arkFile.getCode();
+        if (!code) {
             return;
         }
-        this.traversedNodes.add(node);
-
-        if (ts.isConditionalExpression(node) ||
-            ts.isIfStatement(node) ||
+        this.option = this.rule && this.rule.option[0] ? this.rule.option[0] as Options : this.defaultOptions;
+        arkFile.getClasses().forEach(cls => this.checkClass(cls));
+        this.sortAndReportErrors(arkFile);
+        // 输出结果
+        this.locationInfos.forEach(loc => {
+            this.addIssueReportNodeFix(loc, arkFile);
+        });
+    }
+    private isConditionNode(node: ts.Node): boolean {
+        return ts.isIfStatement(node) ||
+            ts.isForStatement(node) ||
             ts.isWhileStatement(node) ||
             ts.isDoStatement(node) ||
-            ts.isForStatement(node) && node.condition) {
-
-            const condition = ts.isConditionalExpression(node) ? node.condition :
-                ts.isForStatement(node) ? node.condition! : node.expression;
-
-            if (condition) {
-                // 获取目标节点
-                let targetNode = condition;
-                if (ts.isPrefixUnaryExpression(condition) &&
-                    condition.operator === ts.SyntaxKind.ExclamationToken) {
-                    targetNode = condition.operand;
-                }
-
-                // 处理条件节点
-                this.processConditionNode(condition, targetNode, issues, sourceFile);
-            }
-        }
-
-        ts.forEachChild(node, n => this.checkNode(n, issues, sourceFile));
+            ts.isConditionalExpression(node);
     }
 
     /**
-     * 处理条件节点
+     * 处理逻辑非表达式(!)
+     * @param stmt 
+     * @param node 
+     * @param results 
      */
-    private processConditionNode(condition: ts.Node, targetNode: ts.Node, issues: Issue[], sourceFile: ts.SourceFile): boolean {
-        // 检查是否应跳过该条件
-        if (this.shouldSkipCondition(condition)) {
-            return true;
+    private traverseUnaryLogicalExpression(stmt: Stmt | Value, node: ts.Node, results: LocationInfo[]): void {
+        if (!node.kind) {
+            return;
         }
-
-        // 处理前缀非运算符
-        if (ts.isPrefixUnaryExpression(condition) &&
-            condition.operator === ts.SyntaxKind.ExclamationToken) {
-            if (this.handlePrefixNotOperator(condition as ts.PrefixUnaryExpression, issues, sourceFile)) {
-                return true;
-            }
+        if (stmt instanceof ArkAssignStmt) {
+            stmt = stmt.getRightOp();
         }
+        if (stmt instanceof Local && stmt.getDeclaringStmt() && stmt.getName().includes('%')) {
+            let decalarationStmt = stmt.getDeclaringStmt() as ArkAssignStmt;
+            this.traverseUnaryLogicalExpression(decalarationStmt, node, results);
+            return;
+        }
+        this.traverseNode(stmt, node, results, true, true);
+    }
 
-        // 处理不同类型的目标节点
-        return this.processTargetNode(condition, targetNode, issues, sourceFile);
+    private traverseNode(stmt: Stmt | Value, node: ts.Node, results: LocationInfo[],
+        isCondition: boolean = false, isUnary: boolean = false, count: number = 0): void {
+        if (count > 5 || !node.kind) {
+            return;
+        }
+        count++;
+        if (stmt instanceof Local && stmt.getName().includes('%') &&
+            stmt.getType() instanceof BooleanType) {
+            stmt = stmt.getDeclaringStmt() ?? stmt;
+        }
+        if (stmt instanceof ArkAssignStmt) {
+            stmt = stmt.getRightOp();
+        }
+        // for logical operator, we check its operands 
+        if (
+            stmt instanceof ArkNormalBinopExpr &&
+            stmt.getOperator() !== '??'
+        ) {
+            this.traverseLogicalExpression(stmt, node, results, isCondition, count);
+            return;
+        }
+        // skip if node is not a condition
+        if (!isCondition) {
+            return;
+        }
+        let nodes: Set<Value | Stmt> = this.traversedNodes.get(this.globalStmtCode) ?? new Set();
+        if (nodes.has(stmt)) {
+            return;
+        }
+        nodes.add(stmt);
+        this.traversedNodes.set(this.globalStmtCode, nodes);
+        this.checkNode(stmt, node, results, isUnary);
     }
 
     /**
-     * 检查是否应跳过该条件
+     * 处理逻辑与表达式(&&、||)
      */
-    private shouldSkipCondition(condition: ts.Node): boolean {
-        // 不检查空值比较
-        if (ts.isBinaryExpression(condition) && this.isNullishComparison(condition as ts.BinaryExpression)) {
-            return true;
+    private traverseLogicalExpression(stmt: Stmt | Value, node: ts.Node,
+        results: LocationInfo[], isCondition: boolean = false, count: number = 0): void {
+        if (!node.kind) {
+            return;
         }
-
-        // 不检查空值合并运算符
-        if (this.isNullishCoalescingOperator(condition)) {
-            return true;
-        }
-
-        // 不检查逻辑运算符
-        if (this.isLogicalOperator(condition)) {
-            return true;
-        }
-
-        // 不检查比较运算
-        if (this.isComparisonOperator(condition)) {
-            return true;
-        }
-
-        // 不检查类型判断表达式
-        if (this.isTypeCheckExpression(condition)) {
-            return true;
-        }
-
-        // 不检查instanceof表达式
-        if (this.isInstanceOfExpression(condition)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * 处理目标节点
-     */
-    private processTargetNode(condition: ts.Node, targetNode: ts.Node, issues: Issue[], sourceFile: ts.SourceFile): boolean {
-        // 处理特定的字面量
-        if (ts.isLiteralExpression(targetNode)) {
-            if (this.handleLiteralExpression(condition, targetNode as ts.LiteralExpression, issues, sourceFile)) {
-                return true;
-            }
-        }
-
-        // 对象字面量处理
-        if (ts.isObjectLiteralExpression(targetNode) && this.handleObjectType(false, condition, targetNode, issues, sourceFile)) {
-            return true;
-        }
-
-        // 处理标识符
-        if (ts.isIdentifier(targetNode)) {
-            if (this.handleIdentifier(condition, targetNode, issues, sourceFile)) {
-                return true;
-            }
-        }
-
-        // 处理属性访问
-        if (ts.isPropertyAccessExpression(targetNode)) {
-            if (this.analyzePropertyAccess(targetNode as ts.PropertyAccessExpression).size === 0) {
-                return true;
-            }
-        }
-
-        // 处理函数调用
-        if (ts.isCallExpression(targetNode)) {
-            if (this.analyzeCallExpression(targetNode as ts.CallExpression).size === 0) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * 检查标识符是否为已初始化的变量
-     */
-    private isInitializedVariable(targetNode: ts.Node, sourceFile: ts.SourceFile): boolean {
-        if (!ts.isIdentifier(targetNode)) {
-            return false;
-        }
-
-        // 查找变量声明
-        const varDeclaration = this.findVariableDeclarationByName(targetNode.text, sourceFile);
-        if (!varDeclaration || !varDeclaration.initializer) {
-            return false;
-        }
-
-        // 检查变量是否有初始化值并且不是null或undefined
-        if (varDeclaration.initializer.kind === ts.SyntaxKind.NullKeyword ||
-            varDeclaration.initializer.kind === ts.SyntaxKind.UndefinedKeyword) {
-            return false;
-        }
-
-        // 检查初始化后的变量是否安全用于条件判断
-        const result = this.checkInitializedValue(varDeclaration);
-
-        // 如果result不为null且长度为0，说明是安全的初始化变量
-        return result !== null && result.size === 0;
-    }
-
-    /**
-     * 获取类型节点的类型信息
-     */
-    private getTypeInfo(typeNode: ts.TypeNode): {
-        isBoolean: boolean;
-        isString: boolean;
-        isNumber: boolean;
-        isObject: boolean;
-        isSymbol: boolean;
-        isAny: boolean;
-        isNullable: boolean;
-    } | null {
-        if (ts.isUnionTypeNode(typeNode)) {
-            const hasNullish = this.hasNullishInUnionType(typeNode);
-            const isBoolean = typeNode.types.some(t => this.isBooleanType(t));
-            const isString = typeNode.types.some(t => this.isStringType(t));
-            const isNumber = typeNode.types.some(t => this.isNumberType(t));
-            const isObject = typeNode.types.some(t => this.isObjectLike(t));
-            const isSymbol = typeNode.types.some(t => this.isSymbolType(t));
-            const isAny = typeNode.types.some(t => this.isAnyType(t));
-
-            return {
-                isBoolean,
-                isString,
-                isNumber,
-                isObject,
-                isSymbol,
-                isAny,
-                isNullable: hasNullish
-            };
-        } else {
-            return {
-                isBoolean: this.isBooleanType(typeNode),
-                isString: this.isStringType(typeNode),
-                isNumber: this.isNumberType(typeNode),
-                isObject: this.isObjectLike(typeNode),
-                isSymbol: this.isSymbolType(typeNode),
-                isAny: this.isAnyType(typeNode),
-                isNullable: false
-            };
-        }
-    }
-
-    /**
-     * 检查变量声明
-     */
-    private checkVariableDeclaration(varDeclaration: ts.VariableDeclaration, sourceFile: ts.SourceFile): Set<VariantType> | null {
-        // 检查联合类型中的可空类型
-        if (varDeclaration.type && ts.isUnionTypeNode(varDeclaration.type)) {
-            const result = this.checkUnionTypeDeclaration(varDeclaration);
-            if (result !== null) {
-                return result;
-            }
-        }
-
-        // 检查初始化值
-        if (varDeclaration.initializer) {
-            const result = this.checkInitializedValue(varDeclaration);
-            if (result !== null) {
-                return result;
-            }
-        }
-
-        // 检查基本类型
-        if (varDeclaration.type) {
-            return this.checkBasicTypeDeclaration(varDeclaration.type);
-        }
-
-        return null;
-    }
-
-    /**
-     * 检查联合类型声明
-     */
-    private checkUnionTypeDeclaration(varDeclaration: ts.VariableDeclaration): Set<VariantType> | null {
-        const hasNullish = this.hasNullishInUnionType(varDeclaration.type as ts.UnionTypeNode);
-        const hasNumberType = (varDeclaration.type as ts.UnionTypeNode).types.some(t => this.isNumberType(t));
-        const hasStringType = (varDeclaration.type as ts.UnionTypeNode).types.some(t => this.isStringType(t));
-
-        // 检查可空数字类型
-        if (hasNullish && hasNumberType && !this.options.allowNullableNumber &&
-            (!varDeclaration.initializer ||
-                varDeclaration.initializer.kind === ts.SyntaxKind.NullKeyword ||
-                varDeclaration.initializer.kind === ts.SyntaxKind.UndefinedKeyword)) {
-            return new Set<VariantType>(['nullable number']);
-        }
-
-        // 检查可空字符串类型
-        if (hasNullish && hasStringType && !this.options.allowNullableString &&
-            (!varDeclaration.initializer ||
-                varDeclaration.initializer.kind === ts.SyntaxKind.NullKeyword ||
-                varDeclaration.initializer.kind === ts.SyntaxKind.UndefinedKeyword)) {
-            return new Set<VariantType>(['nullable string']);
-        }
-
-        return null;
-    }
-
-    /**
-     * 检查已初始化的值
-     */
-    private checkInitializedValue(varDeclaration: ts.VariableDeclaration): Set<VariantType> | null {
-        if (varDeclaration.initializer!.kind === ts.SyntaxKind.NullKeyword ||
-            varDeclaration.initializer!.kind === ts.SyntaxKind.UndefinedKeyword) {
-            return null;
-        }
-
-        const isNullableType = varDeclaration.type &&
-            ts.isUnionTypeNode(varDeclaration.type) &&
-            this.hasNullishInUnionType(varDeclaration.type);
-
-        if (isNullableType) {
-            return this.checkNullableInitializedValue(varDeclaration);
-        }
-
-        return null;
-    }
-
-    /**
-     * 检查可空类型的初始化值
-     */
-    private checkNullableInitializedValue(varDeclaration: ts.VariableDeclaration): Set<VariantType> | null {
-        const initializer = varDeclaration.initializer!;
-
-        // 检查非零数值
-        if (ts.isNumericLiteral(initializer) && initializer.text !== '0') {
-            return null;
-        }
-
-        // 检查非空字符串
-        if ((ts.isStringLiteral(initializer) || ts.isNoSubstitutionTemplateLiteral(initializer)) &&
-            initializer.text !== '') {
-            return null;
-        }
-
-        // 检查对象或数组
-        if (ts.isObjectLiteralExpression(initializer) || ts.isArrayLiteralExpression(initializer)) {
-            return null;
-        }
-
-        // 检查布尔值
-        if (this.isBooleanLiteral(initializer) && initializer.kind === ts.SyntaxKind.TrueKeyword) {
-            return null;
-        }
-
-        return null;
-    }
-
-    /**
-     * 检查基本类型声明
-     */
-    private checkBasicTypeDeclaration(typeNode: ts.TypeNode): Set<VariantType> | null {
-        if (this.isSymbolType(typeNode)) {
-            return new Set<VariantType>(['symbol']);
-        }
-
-        if (this.isObjectType(typeNode) &&
-            !(ts.isUnionTypeNode(typeNode) && this.hasNullishInUnionType(typeNode))) {
-            return new Set<VariantType>(['object']);
-        }
-
-        if (this.isAnyType(typeNode) && !this.options.allowAny) {
-            return new Set<VariantType>(['any']);
-        }
-
-        if (ts.isUnionTypeNode(typeNode) && this.hasNullishInUnionType(typeNode)) {
-            return this.checkUnionTypeWithNullish(typeNode);
-        }
-
-        return null;
-    }
-
-    /**
-     * 检查带空值的联合类型
-     */
-    private checkUnionTypeWithNullish(typeNode: ts.UnionTypeNode): Set<VariantType> | null {
-        if (typeNode.types.some(t => this.isStringType(t)) && !this.options.allowNullableString) {
-            return new Set<VariantType>(['nullable string']);
-        }
-
-        if (typeNode.types.some(t => this.isNumberType(t)) && !this.options.allowNullableNumber) {
-            return new Set<VariantType>(['nullable number']);
-        }
-
-        if (typeNode.types.some(t => this.isBooleanType(t)) && !this.options.allowNullableBoolean) {
-            return new Set<VariantType>(['nullable boolean']);
-        }
-
-        return null;
-    }
-
-    /**
-     * 检查参数声明
-     */
-    private checkParameterDeclaration(paramDeclaration: ts.ParameterDeclaration): Set<VariantType> | null {
-        if (!paramDeclaration.type) {
-            return null;
-        }
-
-        const isOptional = this.isOptionalParameter(paramDeclaration);
-
-        if (isOptional) {
-            return this.checkOptionalParameter(paramDeclaration.type);
-        } else {
-            return this.checkRequiredParameter(paramDeclaration.type);
-        }
-    }
-
-    /**
-     * 检查可选参数
-     */
-    private checkOptionalParameter(typeNode: ts.TypeNode): Set<VariantType> | null {
-        if (this.isBooleanType(typeNode) && !this.options.allowNullableBoolean) {
-            return new Set<VariantType>(['nullable boolean']);
-        }
-
-        if (this.isStringType(typeNode) && !this.options.allowNullableString) {
-            return new Set<VariantType>(['nullable string']);
-        }
-
-        if (this.isNumberType(typeNode) && !this.options.allowNullableNumber) {
-            return new Set<VariantType>(['nullable number']);
-        }
-
-        return null;
-    }
-
-    /**
-     * 检查必需参数
-     */
-    private checkRequiredParameter(typeNode: ts.TypeNode): Set<VariantType> | null {
-        if (this.isObjectType(typeNode)) {
-            return new Set<VariantType>(['object']);
-        }
-
-        if (this.isSymbolType(typeNode)) {
-            return new Set<VariantType>(['symbol']);
-        }
-
-        return null;
-    }
-
-    /**
-     * 检查声明类型
-     */
-    private checkDeclaredType(declaredType: SimpleTypeInfo): Set<VariantType> | null {
-        switch (declaredType.kind) {
-            case 'string':
-                if (declaredType.isNullable && !this.options.allowNullableString) {
-                    return new Set<VariantType>(['nullable string']);
-                }
-                break;
-            case 'number':
-                if (declaredType.isNullable && !this.options.allowNullableNumber) {
-                    return new Set<VariantType>(['nullable number']);
-                }
-                break;
-            case 'boolean':
-                if (declaredType.isNullable && !this.options.allowNullableBoolean) {
-                    return new Set<VariantType>(['nullable boolean']);
-                }
-                break;
-            case 'object':
-                if (!declaredType.isNullable) {
-                    return new Set<VariantType>(['object']);
-                }
-                break;
-            case 'symbol':
-                return new Set<VariantType>(['symbol']);
-            case 'any':
-                if (!this.options.allowAny) {
-                    return new Set<VariantType>(['any']);
-                }
-                break;
-        }
-
-        return null;
-    }
-
-    /**
-     * 处理前缀非运算符的逻辑
-     */
-    private handlePrefixNotOperator(condition: ts.PrefixUnaryExpression, issues: Issue[], sourceFile: ts.SourceFile): boolean {
-        const operandText = condition.operand.getText();
-
-        // 直接的null或undefined否定可以跳过
-        if (operandText === 'null' || operandText === 'undefined') {
-            return true;
-        }
-
-        // 特殊处理str变量
-        if (operandText === 'str') {
-            const variantTypes = new Set<VariantType>(['nullable string']);
-            this.reportIssue(condition, condition.operand, variantTypes, issues, sourceFile);
-            return true;
-        }
-
-        // 对于其他操作数，我们需要检查操作数的类型
-        if (ts.isIdentifier(condition.operand)) {
-            const operandName = condition.operand.text;
-
-            // 常规处理其他变量
-            const operandTypes = this.getVariableTypes(operandName, sourceFile, condition);
-            if (operandTypes.size > 0) {
-                this.reportIssue(condition, condition.operand, operandTypes, issues, sourceFile);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * 处理标识符的条件检查
-     */
-    private handleIdentifier(condition: ts.Node, targetNode: ts.Identifier, issues: Issue[], sourceFile: ts.SourceFile): boolean {
-        const varName = targetNode.text;
-
-        // 特殊处理变量名为num且已初始化的情况
-        if (varName === 'num') {
-            const numDecl = this.findVariableDeclarationByName('num', sourceFile);
-            if (numDecl && numDecl.initializer) {
-                // 如果num已初始化，不报告错误
-                return true;
-            }
-        }
-
-        // 特殊处理变量名为str的情况
-        if (varName === 'str') {
-            const variantTypes = new Set<VariantType>(['nullable string']);
-            this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-            return true;
-        }
-
-        // 直接分析变量类型
-        const variableTypes = this.getVariableTypes(varName, sourceFile, condition);
-        if (variableTypes.size > 0) {
-            this.reportIssue(condition, targetNode, variableTypes, issues, sourceFile);
-            return true;
-        }
-
-        // 如果需要继续处理更复杂的标识符逻辑，可以调用另一个方法
-        return this.handleComplexIdentifier(condition, targetNode, issues, sourceFile);
-    }
-
-    /**
-     * 处理更复杂的标识符检查逻辑
-     */
-    private handleComplexIdentifier(condition: ts.Node, targetNode: ts.Identifier, issues: Issue[], sourceFile: ts.SourceFile): boolean {
-        const varDecl = this.findVariableDeclarationByName(targetNode.text, sourceFile);
-        if (varDecl && varDecl.type) {
-            const varType = this.getTypeInfo(varDecl.type);
-            if (varType) {
-                // 检查变量类型并根据需要报告问题
-                if (this.checkVariableTypeForCondition(condition, targetNode, varType, issues, sourceFile)) {
-                    return true;
-                }
-            }
-        }
-
-        const paramDecl = this.findParameterDeclarationByName(targetNode.text, sourceFile);
-        if (paramDecl) {
-            if (this.handleParameterDeclaration(condition, targetNode, paramDecl, issues, sourceFile)) {
-                return true;
-            }
-        }
-
-        const varStatement = this.findVariableStatementByName(targetNode.text, sourceFile);
-        if (varStatement) {
-            if (this.handleVariableStatement(condition, targetNode, varStatement, issues, sourceFile)) {
-                return true;
-            }
-        }
-
-        const variantTypes = this.analyzeNodeType(targetNode);
-        if (variantTypes.size > 0) {
-            this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * 检查变量类型并根据需要报告问题
-     */
-    private checkVariableTypeForCondition(
-        condition: ts.Node,
-        targetNode: ts.Identifier,
-        varType: {
-            isBoolean: boolean;
-            isString: boolean;
-            isNumber: boolean;
-            isObject: boolean;
-            isSymbol: boolean;
-            isAny: boolean;
-            isNullable: boolean;
-        },
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        // 使用辅助方法检查并报告类型问题
-        return this.checkTypeAndReport('object', varType.isObject, !varType.isNullable, condition, targetNode, issues, sourceFile) ||
-            this.checkTypeAndReport('symbol', varType.isSymbol, true, condition, targetNode, issues, sourceFile) ||
-            this.checkTypeAndReport('any', varType.isAny, !this.options.allowAny, condition, targetNode, issues, sourceFile) ||
-            this.checkNullableTypeAndReport('boolean', varType.isBoolean, varType.isNullable, condition, targetNode, issues, sourceFile) ||
-            this.checkNullableTypeAndReport('string', varType.isString, varType.isNullable, condition, targetNode, issues, sourceFile) ||
-            this.checkNullableTypeAndReport('number', varType.isNumber, varType.isNullable, condition, targetNode, issues, sourceFile) ||
-            this.checkNullableObjectAndReport(varType.isObject, varType.isNullable, condition, targetNode, issues, sourceFile) ||
-            this.checkNonNullableTypeAndReport('string', varType.isString, !varType.isNullable, condition, targetNode, issues, sourceFile) ||
-            this.checkNonNullableTypeAndReport('number', varType.isNumber, !varType.isNullable, condition, targetNode, issues, sourceFile);
-    }
-
-    /**
-     * 检查类型并报告问题
-     */
-    private checkTypeAndReport(
-        typeName: string,
-        hasType: boolean,
-        shouldReport: boolean,
-        condition: ts.Node,
-        targetNode: ts.Identifier,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        if (hasType && shouldReport) {
-            const variantTypes = new Set<VariantType>([typeName as VariantType]);
-            this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * 检查可空类型并报告问题
-     */
-    private checkNullableTypeAndReport(
-        typeName: string,
-        hasType: boolean,
-        isNullable: boolean,
-        condition: ts.Node,
-        targetNode: ts.Identifier,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        if (hasType && isNullable) {
-            const allowOption = `allowNullable${typeName.charAt(0).toUpperCase() + typeName.slice(1)}` as keyof Options;
-            if (!this.options[allowOption]) {
-                const variantTypes = new Set<VariantType>([`nullable ${typeName}` as VariantType]);
-                this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * 检查可空对象类型并报告问题
-     */
-    private checkNullableObjectAndReport(
-        isObject: boolean,
-        isNullable: boolean,
-        condition: ts.Node,
-        targetNode: ts.Identifier,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        if (isObject && isNullable && !this.options.allowNullableObject) {
-            const variantTypes = new Set<VariantType>(['object', 'nullish']);
-            this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * 检查非可空类型并报告问题
-     */
-    private checkNonNullableTypeAndReport(
-        typeName: string,
-        hasType: boolean,
-        isNonNullable: boolean,
-        condition: ts.Node,
-        targetNode: ts.Identifier,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        if (hasType && isNonNullable) {
-            const allowOption = `allow${typeName.charAt(0).toUpperCase() + typeName.slice(1)}` as keyof Options;
-            if (!this.options[allowOption]) {
-                const variantTypes = new Set<VariantType>([typeName as VariantType]);
-                this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * 处理参数声明的条件检查
-     */
-    private handleParameterDeclaration(
-        condition: ts.Node,
-        targetNode: ts.Identifier,
-        paramDecl: ts.ParameterDeclaration,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        const isOptional = this.isOptionalParameter(paramDecl);
-
-        if (paramDecl.type) {
-            // 处理可选参数 (可选参数相当于可空类型)
-            if (isOptional) {
-                if (this.isBooleanType(paramDecl.type) && !this.options.allowNullableBoolean) {
-                    const variantTypes = new Set<VariantType>(['nullable boolean']);
-                    this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-                    return true;
-                } else if (this.isStringType(paramDecl.type) && !this.options.allowNullableString) {
-                    const variantTypes = new Set<VariantType>(['nullable string']);
-                    this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-                    return true;
-                } else if (this.isNumberType(paramDecl.type) && !this.options.allowNullableNumber) {
-                    const variantTypes = new Set<VariantType>(['nullable number']);
-                    this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-                    return true;
-                } else if (this.isAnyType(paramDecl.type) && !this.options.allowAny) {
-                    const variantTypes = new Set<VariantType>(['any']);
-                    this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-                    return true;
-                }
-            } else {
-                // 处理非可选参数
-                if (this.isObjectType(paramDecl.type)) {
-                    const variantTypes = new Set<VariantType>(['object']);
-                    this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-                    return true;
-                } else if (this.isSymbolType(paramDecl.type)) {
-                    const variantTypes = new Set<VariantType>(['symbol']);
-                    this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-                    return true;
-                } else if (this.isAnyType(paramDecl.type) && !this.options.allowAny) {
-                    const variantTypes = new Set<VariantType>(['any']);
-                    this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-                    return true;
-                } else if (this.isStringType(paramDecl.type) && !this.options.allowString) {
-                    const variantTypes = new Set<VariantType>(['string']);
-                    this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-                    return true;
-                } else if (this.isNumberType(paramDecl.type) && !this.options.allowNumber) {
-                    const variantTypes = new Set<VariantType>(['number']);
-                    this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * 处理变量声明语句的条件检查
-     */
-    private handleVariableStatement(
-        condition: ts.Node,
-        targetNode: ts.Identifier,
-        varStatement: SimpleTypeInfo,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        return this.handleTypeBasedOnKind(varStatement.kind, varStatement.isNullable, condition, targetNode, issues, sourceFile);
-    }
-
-    /**
-     * 根据类型种类处理变量声明
-     */
-    private handleTypeBasedOnKind(
-        kind: string,
-        isNullable: boolean,
-        condition: ts.Node,
-        targetNode: ts.Identifier,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        switch (kind) {
-            case 'string':
-                return this.handleStringType(isNullable, condition, targetNode, issues, sourceFile);
-            case 'number':
-                return this.handleNumberType(isNullable, condition, targetNode, issues, sourceFile);
-            case 'boolean':
-                return this.handleBooleanType(isNullable, condition, targetNode, issues, sourceFile);
-            case 'object':
-                return this.handleObjectType(isNullable, condition, targetNode, issues, sourceFile);
-            case 'symbol':
-                return this.handleSymbolType(condition, targetNode, issues, sourceFile);
-            case 'any':
-                return this.handleAnyType(condition, targetNode, issues, sourceFile);
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * 处理字符串类型
-     */
-    private handleStringType(
-        isNullable: boolean,
-        condition: ts.Node,
-        targetNode: ts.Identifier,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        if (isNullable && !this.options.allowNullableString) {
-            const variantTypes = new Set<VariantType>(['nullable string']);
-            this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-            return true;
-        } else if (!isNullable && !this.options.allowString) {
-            const variantTypes = new Set<VariantType>(['string']);
-            this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * 处理数字类型
-     */
-    private handleNumberType(
-        isNullable: boolean,
-        condition: ts.Node,
-        targetNode: ts.Identifier,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        if (isNullable && !this.options.allowNullableNumber) {
-            const variantTypes = new Set<VariantType>(['nullable number']);
-            this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-            return true;
-        } else if (!isNullable && !this.options.allowNumber) {
-            const variantTypes = new Set<VariantType>(['number']);
-            this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * 处理布尔类型
-     */
-    private handleBooleanType(
-        isNullable: boolean,
-        condition: ts.Node,
-        targetNode: ts.Identifier,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        if (isNullable && !this.options.allowNullableBoolean) {
-            const variantTypes = new Set<VariantType>(['nullable boolean']);
-            this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * 处理对象类型
-     */
-    private handleObjectType(
-        isNullable: boolean,
-        condition: ts.Node,
-        targetNode: ts.Node,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        if (isNullable && !this.options.allowNullableObject) {
-            const variantTypes = new Set<VariantType>(['object', 'nullish']);
-            this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-            return true;
-        } else if (!isNullable) {
-            const variantTypes = new Set<VariantType>(['object']);
-            this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * 处理Symbol类型
-     */
-    private handleSymbolType(
-        condition: ts.Node,
-        targetNode: ts.Identifier,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        const symbolTypes = new Set<VariantType>(['symbol']);
-        this.reportIssue(condition, targetNode, symbolTypes, issues, sourceFile);
-        return true;
-    }
-
-    /**
-     * 处理Any类型
-     */
-    private handleAnyType(
-        condition: ts.Node,
-        targetNode: ts.Identifier,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        if (!this.options.allowAny) {
-            const anyTypes = new Set<VariantType>(['any']);
-            this.reportIssue(condition, targetNode, anyTypes, issues, sourceFile);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * 生成修复文本
-     */
-    private generateFixText(conditionNode: ts.Node, reportType: string): string {
-        switch (reportType) {
-            case 'any':
-                return `Boolean(${conditionNode.getText()})`;
-            case 'nullish':
-            case 'nullable boolean':
-            case 'nullable string':
-            case 'nullable number':
-                return `${conditionNode.getText()} != null`;
-            case 'object':
-            case 'symbol':
-            case 'array':
-                return `${conditionNode.getText()} !== null`;
-            default:
-                return conditionNode.getText();
-        }
-    }
-
-    /**
-     * 报告条件表达式中的类型问题
-     */
-    private reportIssue(
-        conditionNode: ts.Node,
-        targetNode: ts.Node,
-        variantTypes: Set<VariantType>,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): void {
-        // 如果目标节点是标识符，检查它是否为已初始化的变量
-        if (this.isInitializedVariable(targetNode, sourceFile)) {
+        if (ts.isParenthesizedExpression(node)) {
+            this.traverseLogicalExpression(stmt, node.expression, results, isCondition);
             return;
         }
 
-        const reportType = this.determineReportType(variantTypes);
-
-        if (reportType) {
-            // 确保不重复检查已经用??运算符处理的nullable boolean
-            if (!(reportType === 'nullable boolean' && ts.isBinaryExpression(conditionNode) &&
-                conditionNode.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken)) {
-                const pos = conditionNode.getStart();
-                const end = conditionNode.getEnd();
-                const fixText = this.generateFixText(conditionNode, reportType);
-
-                const fix: RuleFix = { range: [pos, end], text: fixText };
-                this.addIssueToList(fix, conditionNode, sourceFile, reportType, issues);
+        if (ts.isBinaryExpression(node) && stmt instanceof ArkNormalBinopExpr &&
+            [NormalBinaryOperator.LogicalAnd, NormalBinaryOperator.LogicalOr].some(logic => stmt.getOperator() === logic)) {
+            if (ts.SyntaxKind.BarBarEqualsToken === node.operatorToken.kind) {
+                this.traverseLogicalExpression(stmt.getOp2(), node.right, results, isCondition);
+                return;
             }
-        }
-    }
 
-    private determineReportType(variantTypes: Set<VariantType>): string | undefined {
-        // 特殊处理：如果类型集合中有多种类型，且有可空数字，需要检查对应变量名并判断其初始化状态
-        if (variantTypes.has('nullable number') && !this.options.allowNullableNumber) {
-            // 先检查当前上下文，看是否可以安全忽略这个报告
-            if (this.shouldIgnoreNullableNumber()) {
-                return undefined;
-            }
+            let op1 = stmt.getOp1();
+            let op2 = stmt.getOp2();
+            this.traverseNode(op1, node.left, results, true, false, count);
+            this.traverseNode(op2, node.right, results, isCondition, false, count);
         }
-
-        if (variantTypes.has('any') && !this.options.allowAny) {
-            return 'any';
-        }
-        if (variantTypes.has('nullish')) {
-            return 'nullish';
-        }
-        if (variantTypes.has('nullable boolean') && !this.options.allowNullableBoolean) {
-            return 'nullable boolean';
-        }
-        if (variantTypes.has('nullable string') && !this.options.allowNullableString) {
-            return 'nullable string';
-        }
-        if (variantTypes.has('nullable number') && !this.options.allowNullableNumber) {
-            return 'nullable number';
-        }
-        if (variantTypes.has('object') || variantTypes.has('array')) {
-            return 'object';
-        }
-        if (variantTypes.has('symbol')) {
-            return 'symbol';
-        }
-        return undefined;
     }
 
     /**
-     * 检查是否应该忽略可空数字类型
+     * 处理if语句的测试表达式
+     * @param Ifstmt 
+     * @param node 
+     * @param results 
+     * @returns 
      */
-    private shouldIgnoreNullableNumber(): boolean {
-        const currentNode = this.traversedNodes.values().next().value;
-        if (!currentNode || !ts.isIdentifier(currentNode)) {
-            return false;
+    private traverseTestExpression(Ifstmt: ArkIfStmt, node: ts.Node, results: LocationInfo[]): void {
+        let stmt: Stmt | Value = Ifstmt.getConditionExpr();
+        if (!(stmt instanceof ArkConditionExpr)) {
+            return;
         }
-
-        const varName = currentNode.text;
-        if (varName !== 'num' || !this.sourceFile) {
-            return false;
+        const operator = stmt.getOperator();
+        if (operator !== '!=' && operator !== '&&' && operator !== '||') {
+            return;
         }
+        if (!this.isConditionNode(node)) {
+            this.checkLocalIsReplace = false;
+            node = this.checkLocal(stmt, stmt.toString(), node) ?? node;
+            node = ts.isParenthesizedExpression(node.parent) ? node.parent : node;
+            node = this.isConditionNode(node.parent) ? node.parent : node;
 
-        const varDecl = this.findVariableDeclarationByName(varName, this.sourceFile);
-        return !!(varDecl && varDecl.initializer &&
-            varDecl.initializer.kind !== ts.SyntaxKind.NullKeyword &&
-            varDecl.initializer.kind !== ts.SyntaxKind.UndefinedKeyword);
+        }
+        let test = node;
+        if (ts.isDoStatement(node) || ts.isIfStatement(node) || ts.isWhileStatement(node)) {
+            node = node.expression;
+        }
+        if (ts.isConditionalExpression(node) || ts.isForStatement(node)) {
+            if (node.condition) {
+                node = node.condition;
+            }
+        }
+        this.checkArkCondition(stmt, node, test, results);
     }
 
-    private getErrorMessage(type: string): string {
-        const messages: { [key: string]: string } = {
-            'nullish': 'Unexpected nullish value in conditional. The condition is always false.',
-            'nullable boolean': 'Unexpected nullable boolean value in conditional. Please handle the nullish case explicitly.',
-            'nullable string': 'Unexpected nullable string value in conditional. Please handle the nullish/empty cases explicitly.',
-            'nullable number': 'Unexpected nullable number value in conditional.',
-            'object': 'Unexpected object value in conditional. The condition is always true.',
-            'symbol': 'Unexpected symbol value in conditional. The condition is always true.',
-            'any': 'Unexpected any value in conditional. An explicit comparison or type cast is required.'
-        };
-        return messages[type] || 'Unexpected value in condition';
+    private checkArkCondition(stmt: Stmt | Value, node: ts.Node, test: ts.Node, results: LocationInfo[]): void {
+        if (stmt instanceof ArkConditionExpr && stmt.getOp1() instanceof Local) {
+            let op1 = stmt.getOp1() as Local;
+            let decalarationStmt = op1.getDeclaringStmt();
+            if (decalarationStmt instanceof ArkAssignStmt) {
+                if (op1.getName().includes('%') && decalarationStmt.getRightOp() instanceof ArkNormalBinopExpr) {
+                    stmt = decalarationStmt;
+                }
+            }
+        }
+        if (this.isConditionNode(test)) {
+            this.traverseNode(stmt, node, results, true);
+        }
     }
 
-    private addIssueToList(ruleFix: RuleFix, node: ts.Node, sourceFile: ts.SourceFile, type: string, issues: Issue[]): void {
-        let targetNode = node;
-        let actualStart = node.getStart(sourceFile);
+    private checkClass(arkClass: ArkClass): void {
+        const methods = arkClass.getMethods(true);
+        this.useMethod = [];
 
-        // 针对前缀非运算符和条件表达式，定位到实际操作的节点
-        if (ts.isPrefixUnaryExpression(node) && node.operator === ts.SyntaxKind.ExclamationToken) {
-            targetNode = node.operand;
-            actualStart = targetNode.getStart(sourceFile);
-        } else if (ts.isConditionalExpression(node)) {
-            targetNode = node.condition;
-            actualStart = targetNode.getStart(sourceFile);
-        }
-
-        const { line, character } = sourceFile.getLineAndCharacterOfPosition(actualStart);
-        const lineText = sourceFile.getFullText().split('\n')[line];
-
-        // 计算实际列号
-        let actualColumn;
-        if (ts.isConditionalExpression(node)) {
-            const conditionText = targetNode.getText();
-            const conditionPos = lineText.indexOf(conditionText);
-            actualColumn = conditionPos >= 0 ? conditionPos + 1 : character + 1;
-        } else {
-            actualColumn = character + 1;
-        }
-
-        issues.push({
-            ruleFix: ruleFix,
-            line: line + 1, // 行号从1开始
-            column: actualColumn,
-            message: this.getErrorMessage(type),
-            filePath: ''
+        methods.forEach(method => {
+            this.checkMethod(method);
         });
     }
 
-    private addIssueReport(issue: Issue) {
-        this.metaData.description = issue.message;
-        const severity = this.rule.alert ?? this.metaData.severity;
-        const defect = new Defects(
-            issue.line,
-            issue.column,
-            issue.column,
-            this.metaData.description,
-            severity,
-            this.rule.ruleId,
-            issue.filePath,
-            this.metaData.ruleDocPath,
-            true, false, true
-        );
-        RuleListUtil.push(defect);
-
-        const fix: RuleFix = issue.ruleFix;
-        const issueReport: IssueReport = { defect, fix };
-        this.issues.push(issueReport);
+    private checkMethod(arkMethod: ArkMethod): void {
+        const stmts = arkMethod.getBody()?.getCfg().getStmts();
+        const methodName = arkMethod.getSignature().getMethodSubSignature().getMethodName();
+        if (this.useMethod.includes(methodName)) {
+            return;
+        }
+        this.globalMethod = arkMethod;
+        this.useMethod.push(methodName);
+        stmts?.forEach(stmt => {
+            this.checkStmt(stmt);
+        });
     }
 
+    private checkStmt(arkStmt: Stmt): void {
+        if (this.checkStmtIf(arkStmt)) {
+            return;
+        }
+        this.globalStmt = arkStmt;
+        let originCode = arkStmt.getOriginalText() ?? '';
+        const astNode = AstTreeUtils.getASTNode('temp', originCode);
+        if (!this.traversedNodes.has(originCode)) {
+            this.globalStmtCode = originCode;
+            this.traversedNodes.set(originCode, new Set());
+        }
+        if (astNode) {
+            this.locationInfos.push(...this.checkCondition(astNode));
+        }
+    }
+
+    private checkNodePre(stmt: Stmt | Value, node: ts.Node, results: LocationInfo[]): void {
+        if (!node.kind) {
+            return;
+        }
+        if (ts.isParenthesizedExpression(node)) {
+            this.checkNodePre(stmt, node.expression, results);
+            return;
+        }
+        if (stmt instanceof ArkReturnStmt) {
+            stmt = stmt.getOp();
+        }
+        if (stmt instanceof ArkAssignStmt) {
+            let rightOp = stmt.getRightOp();
+            if (ConstantType.some(value => rightOp instanceof value) &&
+                [ArkNormalBinopExpr, ArkConditionExpr].every(value => !(rightOp instanceof value))) {
+                return;
+            }
+            if (!(rightOp instanceof UndefinedConstant)) {
+                stmt = rightOp;
+            }
+        }
+        this.checkNominalType(stmt, node, results);
+    }
+
+    private checkNominalType(stmt: Stmt | Value, node: ts.Node, results: LocationInfo[]): void {
+        if (stmt instanceof Local && stmt.getDeclaringStmt() && stmt.getName().includes('%')) {
+            //处理这种嵌套的逻辑表达式(a || b) && c
+            let decalarationStmt = stmt.getDeclaringStmt() as ArkAssignStmt;
+            this.checkNodePre(decalarationStmt, node, results);
+            return;
+        }
+        if ((stmt instanceof ArkNormalBinopExpr &&
+            (!ts.isBinaryExpression(node) ||
+                node.right.getText() !== stmt.getOp2().toString())
+        ) || stmt instanceof ArkUnopExpr) {
+            this.checkLocalIsReplace = false;
+            node = this.checkLocal(stmt, stmt.toString(), node) ?? node;
+        }
+        if (!node.kind) {
+            return;
+        }
+        if (stmt instanceof ArkNormalBinopExpr &&
+            stmt.getOperator() !== NormalBinaryOperator.NullishCoalescing && node &&
+            ts.isBinaryExpression(node)) {
+            this.traverseLogicalExpression(stmt, node, results);
+            return;
+        }
+        if (node && ts.isPrefixUnaryExpression(node)) {
+            if (stmt instanceof ArkUnopExpr && stmt.getOperator() === UnaryOperator.LogicalNot) {
+                this.traverseUnaryLogicalExpression(stmt.getOp(), node, results);
+            }
+        }
+    }
+
+    private getTypeWithCondition(stmt: ArkConditionExpr, node: ts.Node): Type | undefined {
+        let op1 = stmt.getOp1();
+        let op2 = stmt.getOp2();
+        let operator = stmt.getOperator();
+        let op1Type = this.getConstrainedType(op1, node);
+        node = ts.isParenthesizedExpression(node) ? node.expression : node;
+        //如果条件表达式是a=1,则op1Type为1
+        if (ts.isIdentifier(node) && ts.isBinaryExpression(node.parent)) {
+            node = node.parent;
+        }
+        if (ts.isBinaryExpression(node)) {
+            //这个符号底座暂时解析出来和||没区别，比如a||=b,补全写法为a= a||b,这个时候a的类型为Any
+            if (op1 instanceof Local && node.left.getText() === op1.getName() &&
+                node.operatorToken.kind === ts.SyntaxKind.BarBarEqualsToken) {
+                return AnyType.getInstance();
+            }
+            if (node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+                ['false', '0', '', 'undefined'].includes(node.right.getText())) {
+                if (ts.isLiteralExpression(node.right)) {
+                    op1Type = new LiteralType(node.right.text);
+                } else if (ts.isParenthesizedExpression(node.right) && ts.isLiteralExpression(node.right.expression)) {
+                    op1Type = new LiteralType(node.right.expression.text);
+                }
+            }
+            if (!(op1Type instanceof LiteralType) &&
+                node.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+                return op1Type;
+            }
+        }
+        let op2Type = this.getConstrainedType(op2, node);
+        if (node && !ts.isBinaryExpression(node) && !(op1Type instanceof LiteralType) && operator === '!=') {
+            if ([LiteralType, NumberType, StringType, BooleanType, UndefinedType, NullType].
+                some(ty => op2Type instanceof ty)) {
+                return op1Type;
+            }
+        } return BooleanType.getInstance();
+    }
+
+    private getTypeWithNew(stmt: ArkNewExpr, node: ts.Node): Type | undefined {
+        let type: Type | undefined = undefined;
+        if (ts.isNewExpression(node) && node.arguments && node.arguments[0] && ts.isLiteralExpression(node.arguments[0])) {
+            let argument = node.arguments[0];
+            if (argument.kind === ts.SyntaxKind.TrueKeyword) {
+                type = new LiteralType(true);
+            }
+            if (argument.kind === ts.SyntaxKind.FalseKeyword) {
+                type = new LiteralType(false);
+            }
+            if (ts.isStringLiteral(argument) ||
+                ts.isNumericLiteral(argument) ||
+                ts.isBigIntLiteral(argument)) {
+                type = new LiteralType(argument.text);
+            }
+            return type;
+        }
+        return stmt.getClassType();
+    }
+    private getClassInstanceType(fieldName: string, clsName: string, isField: boolean): Type | undefined {
+        let baseCls = this.globalMethod.getDeclaringArkClass().getDeclaringArkFile().getClassWithName(clsName);
+        if (!baseCls) {
+            return undefined;
+        }
+        if (isField) {
+            let clsField = baseCls.getFieldWithName(fieldName);
+            let clsFieldTy = clsField?.getSignature().getType();
+            if (clsField && clsFieldTy) {
+                return clsField.getQuestionToken() ? new UnionType([clsFieldTy, UndefinedType.getInstance()]) : clsFieldTy;
+            }
+        } else {
+            let method = baseCls.getMethodWithName(fieldName);
+            if (method) {
+                let functionty = new FunctionType(method.getSignature());
+                return method?.getQuestionToken() ? new UnionType([functionty, UndefinedType.getInstance()
+                ]) : functionty;
+            }
+
+        }
+        return undefined;
+
+    }
+
+    private getTypeWithInvoke(stmt: AbstractInvokeExpr, node: ts.Node): Type | undefined {
+        let type: Type | FunctionType = new FunctionType(stmt.getMethodSignature());
+        const methodName = stmt.getMethodSignature().getMethodSubSignature().getMethodName();
+        const method = this.globalMethod.getDeclaringArkClass().getMethodWithName(methodName);
+        if (methodName.includes('sNaN')) {
+            return BooleanType.getInstance();
+        }
+        if (stmt instanceof ArkInstanceInvokeExpr) {
+            let base = stmt.getBase();
+            let baseType = base.getType();
+            if (baseType instanceof ClassType) {
+                let clsName = baseType.getClassSignature().getClassName();
+                let clstype = this.getClassTypeWithClsName(stmt, clsName, methodName);
+                return clstype ? clstype : this.getClassInstanceType(methodName, clsName, false) ?? baseType;
+            }
+            if (methodName === 'includes') {
+                return BooleanType.getInstance();
+            }
+            return stmt.getMethodSignature().getMethodSubSignature().getReturnType();
+        }
+
+        if (stmt instanceof ArkStaticInvokeExpr) {
+            let clsName = method?.getSignature().getDeclaringClassSignature().getClassName();
+            return clsName ? BooleanType.getInstance() : ['Boolean', 'Number', 'String'].includes(methodName) ?
+                BooleanType.getInstance() : UnknownType.getInstance();
+        }
+
+        if (!type && method) {
+            type = method.getReturnType();
+            if (type instanceof VoidType && method.containsModifier(ModifierType.ASYNC)) {
+                type = new UnclearReferenceType('Promise', [AnyType.getInstance()]);
+            }
+            return type;
+        }
+        return type;
+    }
+
+    private getClassTypeWithClsName(stmt: ArkInstanceInvokeExpr, clsName: string, methodName: string): Type | undefined {
+        if (clsName === 'Promise') {
+            return new UnclearReferenceType('Promise', [stmt.getBase().getType()]);
+        }
+        if (clsName === 'RegExp') {
+            switch (methodName) {
+                case 'test':
+                    return BooleanType.getInstance();
+                case 'exec':
+                    return new UnionType([new UnclearReferenceType('RegExpExecArray', [AnyType.getInstance()]), NullType.getInstance()]);
+                case 'toString':
+                    return StringType.getInstance();
+                case 'compile':
+                    return new UnclearReferenceType('RegExp', [AnyType.getInstance()]);
+                default:
+                    return UnknownType.getInstance();
+            }
+        }
+        return undefined;
+    }
+
+    private getTypeWithLocal(stmt: Stmt | Value, node: ts.Node, count: number): Type | undefined {
+        let type: Type | undefined = undefined;
+        if (stmt instanceof ArkAssignStmt) {
+            const leftOp = stmt.getLeftOp();
+            const rightOp = stmt.getRightOp();
+            if (leftOp instanceof Local && !leftOp.getName().includes('%')) {
+                if (ConstantType.some(ty => rightOp instanceof ty)) {
+                    return leftOp.getConstFlag() ? new LiteralType((rightOp as Constant).getValue()) : rightOp.getType();
+                }
+                type = this.getConstrainedType(leftOp, node, count);
+            }
+            //左侧没有声明，则通过右侧的类型推断
+            if (!type || type instanceof UnknownType) {
+                return this.getConstrainedType(rightOp, node, count);
+            }
+        }
+
+        if (stmt instanceof Local) {
+            if (!stmt.getName().includes('%')) {
+                type = this.getTypeByName(stmt.getName());
+            }
+            let decalarationStmt = stmt.getDeclaringStmt();
+            if (!type && decalarationStmt) {
+                return this.getConstrainedType(decalarationStmt, node, count);
+            }
+            if (['Infinity', 'NaN'].includes(stmt.getName())) {
+                return NumberType.getInstance();
+            }
+            //如果变量声明没有类型，则通过声明语句获取类型
+            if (!type && stmt.getType()) {
+                type = stmt.getType();
+            }
+
+            if (type instanceof GenericType) {
+                type = type.getConstraint() ? type.getConstraint() : type.getDefaultType() ??
+                    AnyType.getInstance();
+            }
+        }
+        return type;
+    }
+
+    private getTypesByUnionType(type: Type): Type[] {
+        if (type instanceof UnionType || type instanceof IntersectionType) {
+            return type.getTypes();
+        }
+        return [type];
+    }
+
+    private getTypeWithOtherValue(stmt: Value | Stmt, node: ts.Node, count: number): Type | undefined {
+        if (stmt instanceof ArkInstanceFieldRef) {
+            let field = stmt.getFieldSignature();
+            let fieldTy = field.getType();
+            let fieldBaseTy = stmt.getBase().getType();
+            if (fieldBaseTy instanceof ClassType) {
+                return this.getClassInstanceType(field.getFieldName(), fieldBaseTy.getClassSignature().getClassName(),
+                    !(fieldTy instanceof FunctionType)) ?? fieldTy;
+            }
+            if (stmt.getBase().getType() instanceof ArrayType && stmt.getFieldSignature().getFieldName() === 'length') {
+                return NumberType.getInstance();
+            }
+            if (field.getType() instanceof UnknownType) {
+                let clsty = this.getTypesByUnionType(stmt.getBase().getType()).find(ty => ty instanceof ClassType) as ClassType;
+                let cls = this.globalMethod.getDeclaringArkClass().getDeclaringArkFile()
+                    .getClassWithName(clsty?.getClassSignature().getClassName());
+                let clsField = cls?.getFieldWithName(stmt.getFieldSignature().getFieldName());
+                return clsField?.getType() ?? UnknownType.getInstance();
+            }
+            return field.getType();
+        }
+        if (stmt instanceof ArkAwaitExpr) {
+            let type = this.getConstrainedType(stmt.getPromise(), node, count);
+            if (type instanceof UnclearReferenceType && type.getName() === 'Promise') {
+                return type.getGenericTypes()[0];
+            }
+            return type;
+        }
+        if (stmt instanceof AbstractInvokeExpr) {
+            //调用表达式，如果是调用方法，则判断其方法返回类型
+            return this.getTypeWithInvoke(stmt, node);
+        }
+        if (stmt instanceof ArkNewArrayExpr) {
+            return new ArrayType(stmt.getBaseType(), 1);
+        }
+        if (stmt instanceof AbstractFieldRef) {
+            //变量使用，其中包含了调用变量例如：a.b.c
+            const fieldSignature = stmt.getFieldSignature();
+            return fieldSignature.getType();
+        }
+        if (stmt instanceof ArkPtrInvokeExpr ||
+            stmt instanceof ArkParameterRef) {
+            return stmt.getType();
+        }
+        return undefined;
+    }
+
+    private getConstrainedType(stmt: Value | Stmt, node: ts.Node, count: number = 0): Type | undefined {
+        if (count > 10) {
+            return undefined;
+        }
+        count++;
+        let type: Type | undefined = undefined;
+        if (stmt instanceof ArkConditionExpr) {
+            return this.getTypeWithCondition(stmt, node);
+        }
+        if (stmt instanceof ArkTypeOfExpr && ts.isTypeOfExpression(node)) {
+            return this.getConstrainedType(stmt.getOp(), node);
+        }
+        if (stmt instanceof ArkNewExpr) {
+            return this.getTypeWithNew(stmt, node);
+        }
+        //字面量类型
+        if (stmt instanceof Constant) {
+            return ConstantType.some(ty => stmt instanceof ty) ?
+                this.getLiteralType(stmt) : stmt.getType();
+        }
+        if (stmt instanceof ArkAssignStmt || stmt instanceof Local) {
+            return this.getTypeWithLocal(stmt, node, count);
+        }
+        if (stmt instanceof ClassType) {
+            type = stmt;
+        }
+        return this.getTypeWithOtherValue(stmt, node, count);
+    }
+
+    private getLiteralType(stmt: Constant): LiteralType {
+        let literal = new LiteralType(stmt.getValue());
+        if (stmt instanceof BooleanConstant) {
+            literal = new LiteralType(stmt.getValue() === 'true');
+        }
+        if (stmt instanceof StringConstant) {
+            literal = new LiteralType(stmt.getValue());
+        }
+        if (stmt instanceof NumberConstant) {
+            literal = new LiteralType(Number(stmt.getValue()));
+        }
+        return literal;
+    }
     /**
-     * 处理字面量表达式
+     * 获取变量的实际类型
+     * @param name 变量名
+     * @returns 变量的实际类型
      */
-    private handleLiteralExpression(
-        condition: ts.Node,
-        targetNode: ts.LiteralExpression,
-        issues: Issue[],
-        sourceFile: ts.SourceFile
-    ): boolean {
-        const text = targetNode.text;
+    private getTypeByName(name: string, arkMethod: ArkMethod = this.globalMethod): Type | undefined {
+        let type = undefined;
+        //先检查是否当前方法入参变量
+        arkMethod.getParameters().forEach(parameter => {
+            if (parameter instanceof MethodParameter && parameter.getName() === name) {
+                let paramType = parameter.getType();
+                type = parameter.isOptional() ? [StringType, BooleanType, NumberType].some(ty => paramType instanceof ty) ?
+                    new UnionType([parameter.getType(), UndefinedType.getInstance()]) : AnyType.getInstance() : paramType;
 
-        // 处理空字符串
-        if (text === '' && !this.options.allowString) {
-            const variantTypes = new Set<VariantType>(['string']);
-            this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
+            }
+        });
+        if (type) {
+            return type;
+        }
+        //再检查是否当前方法的局部变量
+        const declarStmt = this.getFindVariableStmt(name, arkMethod);
+        if (declarStmt instanceof ArkAssignStmt) {
+            type = this.inAssignStmt(declarStmt, name, type);
+        }
+        //当前方法没找到，则检查全局变量
+        let defaultMethod = arkMethod.getDeclaringArkClass().getDefaultArkMethod();
+        if (!type && defaultMethod && arkMethod !== defaultMethod) {
+            return this.getTypeByName(name, defaultMethod);
+        }
+        if (!type) {
+            let arkFile = arkMethod.getDeclaringArkClass().getDeclaringArkFile();
+            let method: ArkMethod | undefined = undefined;
+
+            for (const arkClass of arkFile.getClasses()) {
+                method = arkClass.getMethods().find(method => method.getName() === name);
+                if (method) {
+                    break; // 找到匹配的 method 后立即退出循环
+                }
+            }
+            if (method) {
+                type = new FunctionType(method.getSignature());
+            }
+        }
+        return type;
+    }
+
+    private getVariableType(ast: ts.Node, name: string, leftOp: Local): Type | undefined {
+        if (ts.isVariableStatement(ast)) {
+            let declaration = ast.declarationList.declarations.find(declaration =>
+                ts.isIdentifier(declaration.name) && declaration.name.getText() === name);
+            if (declaration) {
+                return this.getVariableType(declaration, name, leftOp);
+            }
+        }
+        if (ts.isBinaryExpression(ast) && ast.right && ast.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+            if ([
+                ts.SyntaxKind.NumericLiteral,
+                ts.SyntaxKind.StringLiteral,
+            ].includes(ast.right.kind)) {
+                return new LiteralType(ast.right.getText());
+            }
+            if (ts.SyntaxKind.TrueKeyword === ast.right.kind) {
+                return new LiteralType(true);
+            }
+            if (ts.SyntaxKind.FalseKeyword === ast.right.kind) {
+                return new LiteralType(false);
+            }
+        }
+        if (ts.isVariableDeclaration(ast)) {
+            if (!ast.type && !ast.initializer) {
+                return UndefinedType.getInstance();
+            }
+            if (ast.type) {
+                return this.getTypeByAst(ast.type);
+            }
+            if (ast.initializer) {
+                if (leftOp.getConstFlag() && [
+                    ts.SyntaxKind.NumericLiteral,
+                    ts.SyntaxKind.StringLiteral,
+                ].includes(ast.initializer.kind)) {
+                    return new LiteralType(ast.initializer.getText());
+                }
+                if (ts.SyntaxKind.TrueKeyword === ast.initializer.kind) {
+                    return new LiteralType(true);
+                }
+                if (ts.SyntaxKind.FalseKeyword === ast.initializer.kind) {
+                    return new LiteralType(false);
+                }
+            }
+        }
+        return undefined;
+    }
+
+    private getTypeByAst(ast: ts.Node): Type | undefined {
+        switch (ast.kind) {
+            case ts.SyntaxKind.StringKeyword:
+                return StringType.getInstance();
+            case ts.SyntaxKind.NumberKeyword:
+                return NumberType.getInstance();
+            case ts.SyntaxKind.BooleanKeyword:
+                return BooleanType.getInstance();
+            case ts.SyntaxKind.ObjectKeyword:
+                return new UnclearReferenceType('Object', [AnyType.getInstance()]);
+            case ts.SyntaxKind.LiteralType:
+                return this.getTypeByAst((ast as ts.LiteralTypeNode).literal);
+            case ts.SyntaxKind.NullKeyword:
+                return NullType.getInstance();
+            case ts.SyntaxKind.UndefinedKeyword:
+                return UndefinedType.getInstance();
+        }
+        if (ts.isUnionTypeNode(ast) || ts.isIntersectionTypeNode(ast)) {
+            let tys: (Type | undefined)[] = ast.types.map(type => this.getTypeByAst(type));
+            let filtertys: Type[] = tys.filter((ty): ty is Type => ty !== undefined);
+            return new UnionType(filtertys);
+        }
+        return undefined;
+    }
+
+    private inAssignStmt(declarStmt: ArkAssignStmt, name: string, type: Type | undefined): Type | undefined {
+        let rightOp = declarStmt.getRightOp();
+        let leftOp = declarStmt.getLeftOp();
+        let ast = AstTreeUtils.getASTNode('temp', declarStmt.getOriginalText() ?? '');
+        let astNode: ts.Node = ast.statements[0];
+        if (astNode && ts.isExpressionStatement(astNode)) {
+            astNode = astNode.expression;
+        }
+        if (rightOp instanceof ArkPtrInvokeExpr) {
+            let methodName = rightOp.getMethodSignature().getMethodSubSignature().getMethodName();
+            let method = this.globalMethod.getDeclaringArkClass().getMethodWithName(methodName);
+            return method?.getSignature().getMethodSubSignature().getReturnType();
+        }
+
+        if (rightOp instanceof ArkUnopExpr) {
+            return BooleanType.getInstance();
+        }
+
+        return this.checkAssignStmtType(leftOp, rightOp, astNode, name, type);
+    }
+
+    private checktsNodeType(leftOp: Local, astNode: ts.Node, name: string, type: Type | undefined): Type | undefined {
+        if (astNode) {
+            if (ts.isVariableStatement(astNode) || ts.isVariableDeclaration(astNode)) {
+                type = this.getVariableType(astNode, name, leftOp);
+            }
+            if (ts.isBinaryExpression(astNode) && astNode.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+                type = this.getVariableType(astNode, name, leftOp);
+            }
+        }
+        return type;
+    }
+
+    private checkAssignStmtType(leftOp: Value, rightOp: Value, astNode: ts.Node, name: string, type: Type | undefined): Type | undefined {
+        if (leftOp instanceof Local) {
+            type = this.checktsNodeType(leftOp, astNode, name, type);
+        }
+        if (!type && leftOp.getType()) {
+            //如果左操作为有效类型则取左操作数的类型
+            type = leftOp.getType();
+        }
+        // 如果左操作数是联合类型，且右操作数不是undefined，则取右操作数的类型
+        if (leftOp.getType() instanceof UnionType && !(rightOp instanceof UndefinedConstant)) {
+            type = rightOp.getType();
+        }
+        if (!type && leftOp instanceof Local &&
+            ConstantType.some(ty => rightOp instanceof ty)) {
+            return new LiteralType((rightOp as Constant).getValue());
+        }
+        if (!type && rightOp) {
+            type = rightOp.getType();
+        }
+        if (type instanceof UnknownType && rightOp instanceof ArkInstanceInvokeExpr) {
+            let base = rightOp.getBase();
+            if (base.getType() instanceof ClassType && base.getName() === 'Promise') {
+                let arg0 = rightOp.getArg(0);
+                let tys = arg0 instanceof Constant ? [arg0.getType()] : [AnyType.getInstance()];
+                type = new UnclearReferenceType('Promise', tys);
+            }
+        }
+        return type;
+    }
+
+    private getFindVariableStmt(name: string, arkMethod: ArkMethod): Stmt | undefined {
+        let declarStmt: Stmt | undefined;
+        let stmts = arkMethod.getBody()?.getCfg().getStmts() ?? [];
+        let seekIndex = stmts.length - 1;
+        for (let i = 0; i < stmts.length - 1; i++) {
+            let stmt = stmts[i];
+            if (stmt === this.globalStmt) {
+                seekIndex = i;
+                break;
+            }
+        }
+        //根据当前Stmt下标，从后往前遍历，找到变量声明语句或者赋值语句
+        for (let i = seekIndex; i >= 0; i--) {
+            declarStmt = this.getVariableStmtTraversal(name, stmts[i]);
+            if (declarStmt) {
+                break;
+            }
+        }
+        if (!declarStmt) {
+            for (let i = seekIndex; i < stmts.length - 1; i++) {
+                declarStmt = this.getVariableStmtTraversal(name, stmts[i]);
+                if (declarStmt) {
+                    break;
+                }
+            }
+        }
+        return declarStmt;
+    }
+
+    private getVariableStmtTraversal(name: string, seekStmt: Stmt): Stmt | undefined {
+        let declarStmt: Stmt | undefined;
+        if (seekStmt instanceof ArkAssignStmt &&
+            this.globalStmt.getOriginalText() !== seekStmt.getOriginalText() && seekStmt.getLeftOp() instanceof Local) {
+            let leftLocal = seekStmt.getLeftOp() as Local;
+            if (leftLocal.getName() === name) {
+                declarStmt = seekStmt;
+            }
+        }
+        return declarStmt;
+    }
+
+    private is(...wantedTypes: readonly VariantType[]): boolean {
+        return this.types.size === wantedTypes.length &&
+            wantedTypes.every(type => this.types.has(type));
+    }
+
+    private checkNothing(): boolean {
+        // boolean
+        if (this.is('boolean') || this.is('truthy boolean')) {
+            // boolean is always okay
             return true;
         }
 
-        // 处理字符串为'0'的情况
-        if (text === '0' && !this.options.allowString) {
-            const variantTypes = new Set<VariantType>(['string']);
-            this.reportIssue(condition, targetNode, variantTypes, issues, sourceFile);
+        // never
+        if (this.is('never')) {
+            // never is always okay
             return true;
         }
-
         return false;
+    }
+
+    private checkNullish(node: ts.Node, results: LocationInfo[]): boolean {
+        // nullish
+        if (this.is('nullish')) {
+            // condition is always false
+            this.reportIssue(node, 'conditionErrorNullish', results);
+            return true;
+        }
+
+        // Known edge case: boolean `true` and nullish values are always valid boolean expressions
+        if (this.is('nullish', 'truthy boolean')) {
+            return true;
+        }
+
+        // nullable boolean
+        if (this.is('nullish', 'boolean')) {
+            if (!this.option.allowNullableBoolean) {
+                this.reportIssue(node, 'conditionErrorNullableBoolean', results);
+            }
+            return true;
+        }
+
+        // Known edge case: truthy primitives and nullish values are always valid boolean expressions
+        if (
+            (this.option.allowNumber && this.is('nullish', 'truthy number')) ||
+            (this.option.allowString && this.is('nullish', 'truthy string'))
+        ) {
+            return true;
+        }
+        return false;
+    }
+
+    private checkString(node: ts.Node, results: LocationInfo[]): boolean {
+        // string
+        if (this.is('string') || this.is('truthy string')) {
+            if (!this.option.allowString) {
+                this.reportIssue(node, 'conditionErrorString', results);
+            }
+            return true;
+        }
+
+        // nullable string
+        if (this.is('nullish', 'string')) {
+            if (!this.option.allowNullableString) {
+                this.reportIssue(node, 'conditionErrorNullableString', results);
+            }
+            return true;
+        }
+        return false;
+    }
+    private checkNumber(node: ts.Node, results: LocationInfo[]): boolean {
+        // number
+        if (this.is('number') || this.is('truthy number')) {
+            if (!this.option.allowNumber) {
+                this.reportIssue(node, 'conditionErrorNumber', results);
+            }
+            return true;
+        }
+
+        // nullable number
+        if (this.is('nullish', 'number')) {
+            if (!this.option.allowNullableNumber) {
+                this.reportIssue(node, 'conditionErrorNullableNumber', results);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private checkObject(node: ts.Node, results: LocationInfo[]): boolean {
+
+        // object
+        if (this.is('object')) {
+            // condition is always true
+            this.reportIssue(node, 'conditionErrorObject', results);
+            return true;
+        }
+
+        // nullable object
+        if (this.is('nullish', 'object')) {
+            if (!this.option.allowNullableObject) {
+                this.reportIssue(node, 'conditionErrorNullableObject', results);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private checkAny(node: ts.Node, results: LocationInfo[]): boolean {
+        // nullable enum
+        if (
+            this.is('nullish', 'number', 'enum') ||
+            this.is('nullish', 'string', 'enum') ||
+            this.is('nullish', 'truthy number', 'enum') ||
+            this.is('nullish', 'truthy string', 'enum') ||
+            // mixed enums
+            this.is('nullish', 'truthy number', 'truthy string', 'enum') ||
+            this.is('nullish', 'truthy number', 'string', 'enum') ||
+            this.is('nullish', 'truthy string', 'number', 'enum') ||
+            this.is('nullish', 'number', 'string', 'enum')
+        ) {
+            if (!this.option.allowNullableEnum) {
+                this.reportIssue(node, 'conditionErrorNullableEnum', results);
+            }
+            return true;
+        }
+
+        // any
+        if (this.is('any')) {
+            if (!this.option.allowAny) {
+                this.reportIssue(node, 'conditionErrorAny', results);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private checkreportedNode(node: ts.Node, results: LocationInfo[], isUnary: boolean): void {
+        if (!node) {
+            return;
+        }
+        if (this.checkNothing()) {
+            return;
+        }
+        if (this.checkNullish(node, results)) {
+            return;
+        }
+        if (this.checkString(node, results)) {
+            return;
+        }
+        if (this.checkNumber(node, results)) {
+            return;
+        }
+        if (this.checkObject(node, results)) {
+            return;
+        }
+        if (this.checkAny(node, results)) {
+            return;
+        }
+        this.reportIssue(node, 'conditionErrorOther', results);
+    }
+
+    private checkNode(stmt: Stmt | Value, node: ts.Node,
+        results: LocationInfo[], isUnary: boolean = false): void {
+        if (node) {
+            // 生成缓存的唯一键，可以根据 stmt 和 node 的特性生成
+            const cacheKey = `${stmt.toString()}-${node.getText()}`; // 这里可以根据需要生成唯一键
+            let type: Type | undefined = undefined;
+            // 检查缓存中是否已有类型
+            if (this.typeCache.has(cacheKey)) {
+                type = this.typeCache.get(cacheKey);
+            }
+            if (!type) {
+                type = this.getConstrainedType(stmt, node);
+            }
+            if (!type) {
+                return;
+            }
+            node = this.getReportedNode(node);
+            this.types = this.inspectVariantTypes(this.unionTypeParts(type));
+            this.checkreportedNode(node, results, isUnary);
+        }
+    }
+
+    private isTypeFlagSet(type: Type, types: Type[]): boolean {
+        return types.some(t => type.toString() === t.toString());
+    }
+
+    private isTrueLiteralType(type: Type): boolean {
+        return type instanceof LiteralType && type.getLiteralName() === true;
+    }
+
+    private inspectVariantConstTypes(types: Type[], variantTypes: Set<VariantType>): void {
+        const booleans = types.filter(type =>
+            this.isTypeFlagSet(type, [BooleanType.getInstance(), new LiteralType(true), new LiteralType(false)]),
+        );
+        if (booleans.length === 1) {
+            this.isTrueLiteralType(booleans[0]) ? variantTypes.add('truthy boolean') : variantTypes.add('boolean');
+        } else if (booleans.length === 2) {
+            variantTypes.add('boolean');
+        }
+        const strings = types.filter(type =>
+            (type instanceof LiteralType && typeof type.getLiteralName() === 'string') || this.isTypeFlagSet(type, [StringType.getInstance()]),
+        );
+        if (strings.length) {
+            if (strings.every(type => type instanceof LiteralType &&
+                typeof type.getLiteralName() === 'string' && type.getLiteralName() !== '')) {
+                variantTypes.add('truthy string');
+            } else {
+                variantTypes.add('string');
+            }
+        }
+        const numbers = types.filter(type => (type instanceof LiteralType && typeof type.getLiteralName() === 'number') ||
+            this.isTypeFlagSet(
+                type, [NumberType.getInstance(), BigIntType.getInstance()]
+            ),
+        );
+        if (numbers.length) {
+            if (numbers.every(type => type instanceof LiteralType &&
+                (typeof type.getLiteralName() === 'number' || typeof type.getLiteralName() === 'bigint') &&
+                type.getLiteralName() !== 0)) {
+                variantTypes.add('truthy number');
+            } else {
+                variantTypes.add('number');
+            }
+        }
+    }
+
+    private inspectVariantTypes(types: Type[]): Set<VariantType> {
+        let variantTypes = new Set<VariantType>();
+        if (types.some(type => this.isTypeFlagSet(type,
+            [NullType.getInstance(), UndefinedType.getInstance(), VoidType.getInstance()]))) {
+            variantTypes.add('nullish');
+        }
+        this.inspectVariantConstTypes(types, variantTypes);
+
+        if (types.some(type => !(type instanceof LiteralType) &&
+            !this.isTypeFlagSet(
+                type, [
+                NullType.getInstance(),
+                UndefinedType.getInstance(),
+                VoidType.getInstance(),
+                BooleanType.getInstance(),
+                StringType.getInstance(),
+                NumberType.getInstance(),
+                BigIntType.getInstance(),
+                AnyType.getInstance(),
+                UnknownType.getInstance(),
+                NeverType.getInstance()]
+            ))) {
+            variantTypes.add('object');
+        }
+        if (types.some(type => this.isTypeFlagSet(type, [AnyType.getInstance(), UnknownType.getInstance()]))) {
+            variantTypes.add('any');
+        }
+        if (types.some(type => this.isTypeFlagSet(type, [NeverType.getInstance()]))) {
+            variantTypes.add('never');
+        }
+        return variantTypes;
+    }
+
+    private getReportedNode(node: ts.Node): ts.Node {
+        if (ts.isPrefixUnaryExpression(node)) {
+            return this.getReportedNode(node.operand);
+        }
+        if (ts.isParenthesizedExpression(node) ||
+            ts.isTypeOfExpression(node) ||
+            ts.isCallExpression(node)) {
+            return this.getReportedNode(node.expression);
+        }
+        //有列号问题在
+        return node;
+    }
+
+
+    private sortAndReportErrors(target: ArkFile): void {
+        this.locationInfos.sort((a, b) => {
+            if (a.line !== b.line) {
+                return a.line - b.line;
+            }
+            return a.startCol - b.startCol;
+        });
+    }
+
+    private checkStmtIf(arkStmt: Stmt): boolean {
+        if (arkStmt.getOriginalText() === '') {
+            return true;
+        }
+        if (arkStmt instanceof ArkAssignStmt && arkStmt.getRightOp().getType() instanceof NumberType) {
+            return true;
+        }
+        this.line = arkStmt.getOriginPositionInfo().getLineNo();
+        this.col = arkStmt.getOriginPositionInfo().getColNo();
+        return false;
+    }
+    private checkCondition(sourceFile: ts.SourceFile): LocationInfo[] {
+        const results: LocationInfo[] = [];
+        this.rootNode = sourceFile.statements[0];
+        if (!this.rootNode) {
+            return results;
+        }
+        if (ts.isExpressionStatement(this.rootNode)) {
+            this.rootNode = this.rootNode.expression;
+        }
+        this.visitCheck(this.globalStmt, this.rootNode, results);
+        return results;
+    }
+
+
+    private visitCheck(stmt: Stmt | Value, node: ts.Node, results: LocationInfo[]): void {
+        this.checkNodePre(stmt, node, results);
+        if (stmt instanceof ArkIfStmt) {
+            this.traverseTestExpression(stmt, node, results);
+        }
+    }
+
+    private matchNormalBinopExpr(stmt: ArkNormalBinopExpr | ArkConditionExpr | ArkUnopExpr, stmtStr: string, node: ts.Node): string {
+        let op1 = stmt instanceof ArkUnopExpr ? stmt.getOp() : stmt.getOp1();
+        let op2 = stmt instanceof ArkUnopExpr ? stmt.getOp() : stmt.getOp2();
+        let nodeText = '';
+        let stmtStrs = stmtStr.split(stmt.getOperator());
+        if (stmt instanceof ArkConditionExpr && ts.isConditionalExpression(node) && stmtStrs[0].includes('%')) {
+            let op1ReplaceText = this.getNormalBinopExprText(op1, node);
+            nodeText = ts.isParenthesizedExpression(node.condition) ? `(${op1ReplaceText})` : op1ReplaceText;
+            stmtStrs[0] = this.replacePlaceholder(stmtStrs[0], op1ReplaceText);
+        }
+
+        if (stmt instanceof ArkUnopExpr && stmtStr.includes('%') &&
+            ts.isPrefixUnaryExpression(node)) {
+            let op1ReplaceText = this.getNormalBinopExprText(op1, node);
+            nodeText = ts.isParenthesizedExpression(node.operand) ? `(${op1ReplaceText})` : `${op1ReplaceText}`;
+            stmtStr = this.replacePlaceholder(stmtStr, op1ReplaceText);
+        }
+
+        if (ts.isBinaryExpression(node)) {
+            if (op1 instanceof Local && op1.getName().includes('%')) {
+                let op1ReplaceText = this.getNormalBinopExprText(op1, node);
+                nodeText = ts.isParenthesizedExpression(node.left) ? `(${op1ReplaceText})` : op1ReplaceText;
+                stmtStrs[0] = this.replacePlaceholder(stmtStrs[0], nodeText);
+            }
+            if (!(stmt instanceof ArkUnopExpr) && op2 instanceof Local && op2.getName().includes('%')) {
+                let op2ReplaceText = this.getNormalBinopExprText(op2, node);
+                nodeText = ts.isParenthesizedExpression(node.right) ? `(${op2ReplaceText})` : op2ReplaceText;
+                stmtStrs[1] = this.replacePlaceholder(stmtStrs[1], nodeText);
+            }
+        }
+
+
+        return this.getStmtStr(stmt, node, stmtStr, stmtStrs, op2);
+    }
+
+    private getStmtStr(stmt: Stmt | Value, node: ts.Node, stmtStr: string, stmtStrs: string[], op2: Value): string {
+        if (stmt instanceof ArkConditionExpr && [BooleanConstant, StringConstant, NumberConstant, LiteralType]
+            .some(ty => op2 instanceof ty)) {
+            stmtStr = stmtStrs[0];
+        }
+        if (stmt instanceof ArkNormalBinopExpr) {
+            stmtStr = stmtStrs.join(stmt.getOperator()).toString();
+        }
+        return stmtStr.trim();
+    }
+    private checkLocalBinaryExpression(stmt: ArkNormalBinopExpr, node: ts.BinaryExpression): boolean {
+        let op1 = stmt.getOp1();
+        let op2 = stmt.getOp2();
+        if (stmt.getOperator() === node.operatorToken.getText() && (op2 instanceof Local && op2.getName() === node.right.getText() ||
+            op1 instanceof Local && op1.getName() === node.left.getText())) {
+            return true;
+        }
+        return false;
+    }
+
+    private checkLocalPrefixUnaryExpression(stmt: ArkUnopExpr, stmtStr: string, node: ts.PrefixUnaryExpression): boolean {
+        if (ts.isElementAccessExpression(node.operand) && node.operand.expression) {
+            if (stmtStr.includes(node.operand.expression.getText()) &&
+                stmtStr.includes(node.operand.argumentExpression.getText())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private checkLocal(stmt: Stmt | Value, stmtStr: string, node: ts.Node): ts.Node | undefined {
+        if (stmt instanceof ArkNormalBinopExpr) {
+            if (ts.isBinaryExpression(node)) {
+                if (this.checkLocalBinaryExpression(stmt, node)) {
+                    return node;
+                }
+                stmtStr = this.matchNormalBinopExpr(stmt, stmtStr, node);
+            }
+        }
+        if (stmt instanceof ArkUnopExpr) {
+            if (ts.isPrefixUnaryExpression(node)) {
+                if (this.checkLocalPrefixUnaryExpression(stmt, stmtStr, node)) {
+                    return node;
+                }
+            }
+            stmtStr = this.matchNormalBinopExpr(stmt, stmtStr, node);
+        }
+        if (stmt instanceof ArkConditionExpr) {
+            stmtStr = this.matchNormalBinopExpr(stmt, stmtStr, node);
+        }
+        if (this.checkStmtStrAndNode(node, stmtStr)) {
+            node = ts.isParenthesizedExpression(node) ? node.expression : node;
+            if (stmt instanceof ArkNormalBinopExpr && ts.isBinaryExpression(node)) {
+                this.checkLocalIsReplace = true;
+                return node;
+            } else if (stmt instanceof ArkConditionExpr || stmt instanceof ArkUnopExpr) {
+                this.checkLocalIsReplace = true;
+                return node;
+            }
+        }
+
+        if (!this.checkLocalIsReplace) {
+            let childs = node.getChildren();
+            for (const child of childs) {
+                let result = this.checkLocal(stmt, stmtStr, child);
+                if (result) {
+                    return result;
+                }
+            }
+        }
+        return undefined;
+    }
+
+    private checkStmtStrAndNode(node: ts.Node, stmtStr: string): boolean {
+        let childtext = node.getText().replace('?.', '.').replace('new', '');
+
+        if (ts.isBinaryExpression(node)) {
+            if (ts.isBigIntLiteral(node.left) || ts.isBigIntLiteral(node.right)) {
+                childtext = childtext.replace('n', '');
+            }
+            if (ts.isElementAccessExpression(node.left) || ts.isElementAccessExpression(node.right)) {
+                childtext = childtext.replace(a_r, '');
+            }
+        }
+        return childtext.replace(b_r, '').replace(c_r, '').replace(d_r, '.$1') ===
+            stmtStr.replace(b_r, '').replace(c_r, '');
+    }
+
+    private getNormalBinopExprText(stmt: Value | Stmt, node: ts.Node): string {
+        if (stmt instanceof ArkNormalBinopExpr) {
+            return this.matchNormalBinopExpr(stmt, stmt.toString(), node);
+        }
+        if (stmt instanceof ArkInstanceFieldRef) {
+            let baseName = stmt.getBase().getName();
+            if (baseName.includes('%')) {
+                baseName = this.getNormalBinopExprText(stmt.getBase().getDeclaringStmt() ?? stmt, node);
+            }
+            return `${baseName}.${stmt.getFieldSignature().getFieldName()}`;
+        }
+
+        if (stmt instanceof ArkInstanceInvokeExpr) {
+            let baseName = stmt.getBase().getName();
+            let methodName = stmt.getMethodSignature().getMethodSubSignature().getMethodName();
+            if (baseName.includes('%')) {
+                baseName = this.getNormalBinopExprText(stmt.getBase().getDeclaringStmt() ?? stmt, node);
+            }
+            return `${baseName}.${methodName}(${stmt.getArgs().map(arg => this.getNormalBinopExprText(arg, node)).join(', ')})`;
+        }
+
+        if (stmt instanceof ArkStaticInvokeExpr) {
+            let methodName = stmt.getMethodSignature().getMethodSubSignature().getMethodName();
+            return `${methodName}(${stmt.getArgs().map(arg => this.getNormalBinopExprText(arg, node)).join(', ')})`;
+        }
+        if (stmt instanceof ArkAssignStmt) {
+            return this.getNormalBinopExprText(stmt.getRightOp(), node);
+        }
+        if (stmt instanceof ArkNewExpr) {
+            const className = stmt.getClassType().getClassSignature().getClassName();
+            const cls = this.globalMethod.getDeclaringArkClass().getDeclaringArkFile().getClassWithName(className);
+            const code = cls?.getCode();
+            return code ?? className;
+
+        }
+        if (stmt instanceof Local) {
+            const decalarationStmt = stmt.getDeclaringStmt();
+            if (decalarationStmt instanceof ArkAssignStmt) {
+                return this.getNormalBinopExprText(decalarationStmt, node);
+            }
+            if (!decalarationStmt && stmt.getType() instanceof FunctionType) {
+                const method = this.globalMethod.getDeclaringArkClass().getMethodWithName(stmt.getName());
+                const methodCode = method?.getCode();
+                if (methodCode) {
+                    return methodCode;
+                }
+            }
+        }
+        return stmt.toString();
+    }
+
+    private replacePlaceholder(input: string, replacement: string): string {
+        // 使用正则表达式匹配 % 后面跟随字母或数字的占位符
+        return input.replace(/%\w+/g, replacement);
+    }
+
+    private unionTypeParts(type: Type): Type[] {
+        if (type instanceof UnionType || type instanceof IntersectionType) {
+            return type.getTypes();
+        }
+        return [type];
+    }
+
+    // 辅助方法：创建和添加问题报告
+    private reportIssue(
+        node: ts.Node,
+        messageId: string,
+        results: LocationInfo[]
+    ): void {
+        const { line, character } = this.rootNode.getSourceFile().getLineAndCharacterOfPosition(node.getStart());
+        if (line > 0) {
+            this.col = 1;
+        }
+        const assertionName = node.getText();
+        const start = node.getStart();
+        const end = node.getEnd();
+        const endCharacter = character + assertionName.length;
+        //messageId可能为空的情况 出现了description用作报错信息，需要检查下
+        results.push({
+            fileName: this.rootNode.getSourceFile().fileName,
+            line: this.line + line,
+            startCol: this.col + character,
+            endCol: this.col + endCharacter,
+            start: start,
+            end: end,
+            nameStr: assertionName,
+            description: this.metaData.messages[messageId],
+            messageId: messageId
+        });
+    }
+
+    private addIssueReportNodeFix(loc: LocationInfo, arkFile: ArkFile): void {
+        const filePath = arkFile.getFilePath();
+        const sourceFile = AstTreeUtils.getSourceFileFromArkFile(arkFile);
+        const severity = this.rule.alert ?? this.metaData.severity;
+        if (loc.description) {
+            this.metaData.description = loc.description;
+        }
+        let fix = this.getRuleFix(loc, sourceFile);
+        let defect = new Defects(loc.line, loc.startCol, loc.endCol, this.metaData.description, severity,
+            this.rule.ruleId, filePath, this.metaData.ruleDocPath, true, false, fix ? true : false);
+        this.issues.push(new IssueReport(defect, fix));
+        RuleListUtil.push(defect);
+    }
+
+    private getRuleFix(loc: LocationInfo, sourceFile: ts.SourceFile): RuleFix | undefined {
+        let fix: RuleFix | undefined = undefined;
+        if (this.isNoNeedFix(loc.messageId)) {
+            return fix;
+        }
+        switch (loc.messageId) {
+            case 'conditionErrorAny':
+            case 'conditionErrorNullish':
+                fix = this.createNullishOrAnyFix(loc, sourceFile);
+                break;
+            case 'conditionErrorNullableBoolean':
+                fix = this.createNullableBooleanFix(loc, sourceFile);
+                break;
+            case 'conditionErrorNullableString':
+            case 'conditionErrorNullableNumber':
+                fix = this.createNullableStringOrNullableNumberFix(loc, sourceFile);
+                break;
+        }
+        return fix;
+    }
+
+    private isNoNeedFix(messageId: string): boolean {
+        const SKIP_FIX_IDS = new Set([
+            'conditionErrorString',
+            'conditionErrorNumber',
+            'conditionErrorObject',
+            'conditionErrorNullableObject',
+            'conditionErrorNullableEnum',
+            'noStrictNullCheck',
+            'conditionFixDefaultFalse',
+            'conditionFixDefaultEmptyString',
+            'conditionFixDefaultZero',
+            'conditionFixCompareNullish',
+            'conditionFixCastBoolean',
+            'conditionFixCompareTrue',
+            'conditionFixCompareFalse',
+            'conditionFixCompareStringLength',
+            'conditionFixCompareEmptyString',
+            'conditionFixCompareZero',
+            'conditionFixCompareNaN'
+        ]);
+        return SKIP_FIX_IDS.has(messageId);
+    }
+
+    private getFixRange(loc: LocationInfo, sourceFile: ts.SourceFile): [number, number, boolean] {
+        const [startPos, isNeedAddParentheses] = this.getLineStartPosition(sourceFile, loc);
+        const startPosition = startPos + loc.startCol - 1;
+        const endPosition = startPosition + loc.endCol - loc.startCol;
+        return [startPosition, endPosition, isNeedAddParentheses];
+    }
+
+    private getLineStartPosition(sourceFile: ts.SourceFile, loc: LocationInfo): [number, boolean] {
+        const lineNumber = loc.line;
+        const lines = sourceFile.getFullText().split('\n');
+        if (lineNumber < 1 || lineNumber > lines.length) {
+            return [0, false];
+        }
+        let position = 0;
+        for (let i = 0; i < lineNumber - 1; i++) {
+            position += lines[i].length + 1;
+        }
+        const reportLineStr = lines[lineNumber - 1];
+        const leftThreeLetter = reportLineStr.substring(loc.startCol - 4, loc.startCol - 1);
+        const [isLeftHasLeftParenthesis, isLeftHasBinaryOperator] = this.checkLeftConditions(leftThreeLetter);
+        const rightThreeLetter = reportLineStr.substring(loc.endCol - 1, loc.endCol + 2);
+        const [isRightHasRightParenthesis, isRightHasBinaryOperator] = this.checkRightConditions(rightThreeLetter);
+        const isNeedAddParentheses = this.shouldAddParentheses(isLeftHasLeftParenthesis, isLeftHasBinaryOperator,
+            isRightHasRightParenthesis, isRightHasBinaryOperator);
+        return [position, isNeedAddParentheses];
+    }
+
+    private shouldAddParentheses(
+        isLeftHasLeftParenthesis: boolean,
+        isLeftHasBinaryOperator: boolean,
+        isRightHasRightParenthesis: boolean,
+        isRightHasBinaryOperator: boolean
+    ): boolean {
+        let isNeedAddParentheses = false;
+        if (isLeftHasLeftParenthesis && isRightHasBinaryOperator) {
+            isNeedAddParentheses = true;
+        }
+        if (isLeftHasBinaryOperator && isRightHasRightParenthesis) {
+            isNeedAddParentheses = true;
+        }
+        if (!isLeftHasLeftParenthesis && !isLeftHasBinaryOperator && isRightHasBinaryOperator) {
+            isNeedAddParentheses = true;
+        }
+        if (isLeftHasBinaryOperator && !isRightHasRightParenthesis && !isRightHasBinaryOperator) {
+            isNeedAddParentheses = true;
+        }
+        if (!isLeftHasLeftParenthesis && !isLeftHasBinaryOperator && !isRightHasRightParenthesis && !isRightHasBinaryOperator) {
+            isNeedAddParentheses = true;
+        }
+        if (isLeftHasBinaryOperator && isRightHasBinaryOperator && !isLeftHasLeftParenthesis && !isRightHasRightParenthesis) {
+            isNeedAddParentheses = true;
+        }
+        return isNeedAddParentheses;
+    }
+
+    private checkLeftConditions(str: string): [boolean, boolean] {
+        let isLeftHasLeftParenthesis = false;
+        let isLeftHasBinaryOperator = false;
+
+        // 从右往左遍历字符串（索引 2 → 1 → 0）
+        for (let i = str.length - 1; i >= 0; i--) {
+            const char = str[i];
+
+            // 检查左括号 '('
+            if (char === '(') {
+                isLeftHasLeftParenthesis = true;
+            }
+
+            // 检查二元操作符（&&、||）或单个 & 
+            if (char === '&' || char === '|') {
+                // 判断是否有连续操作符（例如 && 或 ||）
+                const hasConsecutive = i < str.length - 1 && str[i] === str[i + 1];
+                isLeftHasBinaryOperator = true;
+
+                // 如果发现操作符，停止遍历
+                break;
+            }
+        }
+
+        return [isLeftHasLeftParenthesis, isLeftHasBinaryOperator];
+    }
+
+    private checkRightConditions(str: string): [boolean, boolean] {
+        let isRightHasRightParenthesis = false;
+        let isRightHasBinaryOperator = false;
+
+        // 从左往右遍历字符串（索引 0 → 1 → 2）
+        for (let i = 0; i < str.length; i++) {
+            const char = str[i];
+
+            // 检查右括号 ')'
+            if (char === ')') {
+                isRightHasRightParenthesis = true;
+            }
+
+            // 检查二元操作符（&&、||）或单个 |
+            if (char === '|' || char === '&') {
+                // 判断是否有连续操作符（例如 || 或 &&）
+                const hasConsecutive = i < str.length - 1 && str[i] === str[i + 1];
+                isRightHasBinaryOperator = true;
+
+                // 如果发现操作符，停止遍历
+                break;
+            }
+        }
+
+        return [isRightHasRightParenthesis, isRightHasBinaryOperator];
+    }
+
+    //nullish类型和any类型 
+    private createNullishOrAnyFix(loc: LocationInfo, sourceFile: ts.SourceFile): RuleFix | undefined {
+        const [f_start, f_end, isNeedAddParentheses] = this.getFixRange(loc, sourceFile);
+        const fixText = `Boolean(${loc.nameStr})`;
+        return { range: [f_start, f_end], text: fixText };
+    }
+
+    //NullableBoolean
+    private createNullableBooleanFix(loc: LocationInfo, sourceFile: ts.SourceFile): RuleFix | undefined {
+        const [f_start, f_end, isNeedAddParentheses] = this.getFixRange(loc, sourceFile);
+        const fixText = isNeedAddParentheses ? `${'(' + loc.nameStr} ?? false)` : `${loc.nameStr} ?? false`;
+        return { range: [f_start, f_end], text: fixText };
+    }
+
+    private createNullableStringOrNullableNumberFix(loc: LocationInfo, sourceFile: ts.SourceFile): RuleFix | undefined {
+        const [f_start, f_end, isNeedAddParentheses] = this.getFixRange(loc, sourceFile);
+        const fixText = isNeedAddParentheses ? `${'(' + loc.nameStr} != null)` : `${loc.nameStr} != null`;
+        return { range: [f_start, f_end], text: fixText };
     }
 }

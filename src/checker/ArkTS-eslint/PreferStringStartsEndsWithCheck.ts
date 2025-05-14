@@ -44,7 +44,7 @@ export class PreferStringStartsEndsWithCheck implements BaseChecker {
     public fileSourceFile: ts.SourceFile;
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/prefer-string-starts-ends-with-check.md',
+        ruleDocPath: 'docs/prefer-string-starts-ends-with.md',
         description: "Use 'String#startsWith' method instead.",
     };
     private fileMatcher: FileMatcher = {

@@ -53,7 +53,7 @@ export class WaterFlowUpdateDataCheck implements BaseChecker {
         return [matchFileCb];
     }
 
-    public check = (arkFile: ArkFile) => {
+    public check = (arkFile: ArkFile): void => {
         this.usedComponentMap.clear();
         let fileSignature = arkFile.getFileSignature();
         let scene = arkFile.getScene();
@@ -65,7 +65,7 @@ export class WaterFlowUpdateDataCheck implements BaseChecker {
                 this.classProcess(clazz, fileSignature, scene);
             }
         }
-    }
+    };
 
     private classProcess(arkClass: ArkClass, fileSignature: FileSignature, scene: Scene): void {
         if (arkClass.hasViewTree() && !this.viewTreeTool.hasTraverse(arkClass)) {
@@ -121,7 +121,8 @@ export class WaterFlowUpdateDataCheck implements BaseChecker {
     private pushIssueReport(): void {
         if (this.warnInfo.line !== -1 && !this.isExistIssueReport()) {
             const severity = this.rule.alert ?? this.metaData.severity;
-            let defects = new Defects(this.warnInfo.line, this.warnInfo.startCol, this.warnInfo.endCol, this.metaData.description, severity, this.rule.ruleId, this.warnInfo.filePath,
+            let defects = new Defects(this.warnInfo.line, this.warnInfo.startCol, this.warnInfo.endCol,
+                this.metaData.description, severity, this.rule.ruleId, this.warnInfo.filePath,
                 this.metaData.ruleDocPath, true, false, false);
             this.issues.push(new IssueReport(defects, undefined));
             this.warnInfo = { line: -1, startCol: -1, endCol: -1, filePath: '' };
@@ -138,7 +139,8 @@ export class WaterFlowUpdateDataCheck implements BaseChecker {
         return false;
     }
 
-    private traverseViewTreeByChildren(viewTreeRoot: ViewTreeNode, fileSignature: FileSignature, scene: Scene, waterFlowCount: number, lazyForEachCount: number): boolean {
+    private traverseViewTreeByChildren(viewTreeRoot: ViewTreeNode, fileSignature: FileSignature, scene: Scene,
+        waterFlowCount: number, lazyForEachCount: number): boolean {
         let isFinded: boolean = false;
         for (let child of viewTreeRoot.children) {
             let classSignature = child?.signature;

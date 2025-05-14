@@ -51,7 +51,7 @@ const logger = Logger.getLogger(
 );
 const gMetaData: BaseMetaData = {
   severity: 1,
-  ruleDocPath: 'docs/no-unused-expressions-check.md', // TODO: support url
+  ruleDocPath: 'docs/no-unused-expressions.md', // TODO: support url
   description:
     'Expected an assignment or function call and instead saw an expression.',
 };

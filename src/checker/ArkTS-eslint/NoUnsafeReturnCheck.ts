@@ -29,7 +29,7 @@ import {RuleFix} from "../../model/Fix";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoUnsafeReturnCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/no-unsafe-return-check.md",
+    ruleDocPath: "docs/no-unsafe-return.md",
     description: "Unsafe return of an `any` typed value."
 };
 

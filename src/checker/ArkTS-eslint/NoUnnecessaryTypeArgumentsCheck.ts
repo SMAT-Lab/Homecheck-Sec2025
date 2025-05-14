@@ -25,7 +25,7 @@ import { RuleFix } from '../../model/Fix';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoUnnecessaryTypeArgumentsCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/no-unnecessary-type-arguments-check.md",
+    ruleDocPath: "docs/no-unnecessary-type-arguments.md",
     description: "This is the default value for this type parameter, so it can be omitted.",
 };
 

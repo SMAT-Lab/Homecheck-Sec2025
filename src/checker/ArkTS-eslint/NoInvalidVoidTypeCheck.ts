@@ -48,7 +48,7 @@ import { KeyofTypeExpr } from 'arkanalyzer/lib/core/base/TypeExpr';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoInvalidVoidTypeCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-invalid-void-type-check.md',
+    ruleDocPath: 'docs/no-invalid-void-type.md',
     description: 'Disallow `void` type outside of generic or return types',
     messages: {
         invalidVoidForGeneric:

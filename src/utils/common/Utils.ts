@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Logger, {LOG_LEVEL, LOG_MODULE_TYPE} from 'arkanalyzer/lib/utils/logger';
-import {Command, OptionValues} from 'commander';
+import Logger, { LOG_LEVEL, LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
+import { Command, OptionValues } from 'commander';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'Utils');
 
@@ -61,7 +61,7 @@ export class Utils {
      */
     static getEnumValues(value: string | number, enumType: any): any {
         const key = Object.keys(enumType).find(k => k.toLowerCase() === value || enumType[k as string] === value);
-        return enumType[key as string]
+        return enumType[key as string];
     }
 
     /**

@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-import {Utils} from '../utils/common/Utils';
-import {runTool, Tools} from './toolEntry';
+import { Utils } from '../utils/common/Utils';
+import { runTool, Tools } from './toolEntry';
 
-(function run() {
+(function run(): void {
     const argvObj = Utils.parseCliOptions(process.argv);
     runTool(Tools.DepGraph, argvObj);
 })();

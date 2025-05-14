@@ -35,7 +35,7 @@ export class UnifiedSignaturesCheck implements BaseChecker {
     public issues: IssueReport[] = [];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/unified-signatures-check.md',
+        ruleDocPath: 'docs/unified-signatures.md',
         description: 'Function overloads can be unified into a single signature.',
     };
 

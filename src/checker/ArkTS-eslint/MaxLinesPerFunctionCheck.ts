@@ -24,7 +24,7 @@ import { RuleListUtil } from "../../utils/common/DefectsList";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'MaxLinesPerFunctionCheck');
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: "docs/max-lines-per-function-check.md",
+  ruleDocPath: "docs/max-lines-per-function.md",
   description: "Enforce a maximum number of lines of code in a function.",
 };
 

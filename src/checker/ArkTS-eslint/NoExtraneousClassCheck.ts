@@ -21,7 +21,7 @@ import { IssueReport } from '../../model/Defects';
 
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/no-extraneous-class-check.md',
+    ruleDocPath: 'docs/no-extraneous-class.md',
     description: 'Disallow classes used as namespaces'
 };
 type Options = {
@@ -241,6 +241,7 @@ export class NoExtraneousClassCheck implements BaseChecker {
     };
     private report(node: ts.ClassDeclaration | ts.ClassExpression, messageId: MessageIds, arkFile: ArkFile): void {
         let reportNode = node.name || node;
+        const severity = this.rule.alert ?? this.metaData.severity;
         try {
             // 处理默认导出类 (export default class {})
             if (ts.isClassDeclaration(node)) {
@@ -260,7 +261,7 @@ export class NoExtraneousClassCheck implements BaseChecker {
                         location.startCol,
                         location.endCol,
                         messages[messageId],
-                        this.metaData.severity,
+                        severity,
                         this.rule.ruleId,
                         location.filePath,
                         this.metaData.ruleDocPath,
@@ -279,7 +280,7 @@ export class NoExtraneousClassCheck implements BaseChecker {
             location.startCol,
             location.endCol,
             messages[messageId],
-            this.metaData.severity,
+            severity,
             this.rule.ruleId,
             location.filePath,
             this.metaData.ruleDocPath,

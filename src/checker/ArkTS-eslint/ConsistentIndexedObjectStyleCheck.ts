@@ -26,7 +26,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'ConsistentIndexedObj
 
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/consistent-indexed-object-style-check.md',
+    ruleDocPath: 'docs/consistent-indexed-object-style.md',
     description: 'Require or disallow the Record type.'
 };
 

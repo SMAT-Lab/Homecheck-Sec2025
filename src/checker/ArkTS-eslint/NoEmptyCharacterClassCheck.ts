@@ -29,7 +29,7 @@ export class NoEmptyCharacterClassCheck implements BaseChecker {
     public issues: IssueReport[] = [];
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: "docs/no-empty-character-class-check.md",
+        ruleDocPath: "docs/no-empty-character-class.md",
         description: "Disallow empty character classes in regular expressions."
     };
 

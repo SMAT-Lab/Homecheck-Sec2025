@@ -39,7 +39,7 @@ interface SwitchMetadata {
 export class SwitchExhaustivenessCheck implements BaseChecker {
     metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/switch-exhaustiveness-check.md',
+        ruleDocPath: 'docs/switch-exhaustiveness.md',
         description: 'Enforce exhaustive checks in switch statements'
     };
 

@@ -24,7 +24,7 @@ import { RuleListUtil } from "../../utils/common/DefectsList";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'ExplicitFunctionReturnTypeCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/explicit-function-return-type-check.md",
+    ruleDocPath: "docs/explicit-function-return-type.md",
     description: "Require explicit return types on functions and class methods",
 };
 const defaultOptions: Options = {

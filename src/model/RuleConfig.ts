@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { GlobMatch } from "../utils/common/GlobMatch";
+import { GlobMatch } from '../utils/common/GlobMatch';
 
 export class RuleConfig {
     public files: GlobMatch;

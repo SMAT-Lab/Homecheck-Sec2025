@@ -25,7 +25,7 @@ import { RuleListUtil } from '../../utils/common/DefectsList';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'UseIsNaNCheck');
 const gMetaData: BaseMetaData = {
   severity: 2,
-  ruleDocPath: 'docs/use-isnan-check.md',
+  ruleDocPath: 'docs/use-isnan.md',
   description: 'Require calls to `isNaN()` when checking for `NaN`',
 };
 
@@ -108,6 +108,9 @@ export class UseIsNaNCheck implements BaseChecker {
   }
 
   private checkNode(node: ts.Node, sourceFile: ts.SourceFile, errorPositions: ReportBean[]): void {
+    const enforceForIndexOf = this.options.enforceForIndexOf ?? false;
+    const enforceForSwitchCase = this.options.enforceForSwitchCase ?? true;
+
     if (ts.isBinaryExpression(node)) {
       const left = node.left;
       const right = node.right;
@@ -120,11 +123,11 @@ export class UseIsNaNCheck implements BaseChecker {
       }
     }
 
-    if (this.options.enforceForSwitchCase && ts.isSwitchStatement(node)) {
+    if (enforceForSwitchCase && ts.isSwitchStatement(node)) {
       this.checkSwitchCase(node, sourceFile, errorPositions);
     }
 
-    if (this.options.enforceForIndexOf && ts.isCallExpression(node)) {
+    if (enforceForIndexOf && ts.isCallExpression(node)) {
       this.checkEnforceForIndexOf(node, sourceFile, errorPositions);
     }
     ts.forEachChild(node, (node) => this.checkNode(node, sourceFile, errorPositions));
@@ -167,7 +170,7 @@ export class UseIsNaNCheck implements BaseChecker {
 
   private checkIndexOf(methodName: string, node: ts.CallExpression,
     sourceFile: ts.SourceFile, errorPositions: ReportBean[]): void {
-    if (['indexOf', 'lastIndexOf'].includes(methodName) ||
+    if (['indexOf', 'lastIndexOf'].includes(methodName) &&
       (node.arguments.length > 0 && node.arguments.length <= 2 && isNaNIdentifier(node.arguments[0]))) {
       this.checkIndexOfTraversal(methodName, node, sourceFile, errorPositions);
     }

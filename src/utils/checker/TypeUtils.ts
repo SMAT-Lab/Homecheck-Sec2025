@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { AliasType, ArrayType, ClassType, FunctionType, GenericType, TupleType, Type, UnclearReferenceType, UnionType } from "arkanalyzer";
+import { AliasType, ArrayType, ClassType, FunctionType, GenericType, TupleType, Type, UnclearReferenceType, UnionType } from 'arkanalyzer';
 
 /**
  * 检查类型是否为指定类型

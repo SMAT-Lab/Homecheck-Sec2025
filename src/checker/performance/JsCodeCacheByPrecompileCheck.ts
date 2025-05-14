@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-import { ArkFile, ArkInstanceFieldRef, ArkMethod, Constant, FunctionType, MethodSignature, Scene, Stmt, UNKNOWN_FILE_NAME, UNKNOWN_PROJECT_NAME, Value, ViewTreeNode } from "arkanalyzer";
-import { ArkClass } from "arkanalyzer/lib/core/model/ArkClass";
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
-import { CheckerStorage, CheckerUtils, ClassMatcher, Defects, MatcherCallback, MatcherTypes, Rule } from "../../Index";
+import { ArkFile, ArkInstanceFieldRef, ArkMethod, Constant, FunctionType, MethodSignature, Scene, Stmt, UNKNOWN_FILE_NAME, UNKNOWN_PROJECT_NAME, Value, ViewTreeNode } from 'arkanalyzer';
+import { ArkClass } from 'arkanalyzer/lib/core/model/ArkClass';
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
+import { CheckerStorage, CheckerUtils, ClassMatcher, Defects, MatcherCallback, MatcherTypes, Rule } from '../../Index';
 import { ViewTreeTool } from '../../utils/checker/ViewTreeTool';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { IssueReport } from "../../model/Defects";
+import { IssueReport } from '../../model/Defects';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'JsCodeCacheByPrecompileCheck');
 const gMetaData: BaseMetaData = {
     severity: 3,
-    ruleDocPath: "docs/js-code-cache-by-precompile-check.md",
+    ruleDocPath: 'docs/js-code-cache-by-precompile-check.md',
     description: 'Pre-compile JavaScript into bytecode in the ' +
         'onControllerAttached phase of the Web component for faster page loading.'
 };
@@ -49,11 +49,11 @@ export class JsCodeCacheByPrecompileCheck implements BaseChecker {
         const matchBuildCb: MatcherCallback = {
             matcher: this.buildMatcher,
             callback: this.check
-        }
+        };
         return [matchBuildCb];
     }
 
-    public check = (arkClass: ArkClass) => {
+    public check = (arkClass: ArkClass): void => {
         let api = CheckerStorage.getInstance().getApiVersion();
         if (api < MIN_VERSION) {
             return;
@@ -66,7 +66,7 @@ export class JsCodeCacheByPrecompileCheck implements BaseChecker {
             return;
         }
         this.traverseViewTree(viewtreeRoot, arkClass, arkClass.getDeclaringArkFile().getScene());
-    }
+    };
 
     private traverseViewTree(viewtreeRoot: ViewTreeNode, arkClass: ArkClass, scene: Scene): void {
         if (!viewtreeRoot) {
@@ -208,7 +208,7 @@ export class JsCodeCacheByPrecompileCheck implements BaseChecker {
         }
     }
 
-    private reportIssue(arkFile: ArkFile, stmt: Stmt | undefined) {
+    private reportIssue(arkFile: ArkFile, stmt: Stmt | undefined): void {
         if (!stmt) {
             return;
         }

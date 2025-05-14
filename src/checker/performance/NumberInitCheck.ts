@@ -25,7 +25,7 @@ import { IssueReport } from '../../model/Defects';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NumberInitCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/number-init-check.md",
+    ruleDocPath: 'docs/number-init-check.md',
     description: 'Number variable of both int and float types detected. The value assigned to a variable should be of the type declared for the variable.'
 };
 
@@ -42,17 +42,17 @@ export class NumberInitCheck implements BaseChecker {
         const matchFileCb: MatcherCallback = {
             matcher: this.fileMatcher,
             callback: this.check
-        }
+        };
         return [matchFileCb];
     }
 
-    public check = (arkFile: ArkFile) => {
+    public check = (arkFile: ArkFile): void => {
         let filePath = arkFile.getFilePath();
         let scope = CheckerStorage.getInstance().getScope(filePath);
         if (scope) {
             this.traverseScope(scope);
         }
-    }
+    };
 
     private traverseScope(scope: Scope): void {
         this.parameteCheck(scope);
@@ -103,7 +103,7 @@ export class NumberInitCheck implements BaseChecker {
                 let reDefType = this.checkValueType(reDefStmtInfo, rightOp);
                 if (reDefType === ValueType.UNKNOWN) {
                     break;
-                } else if (reDefType != defType) {
+                } else if (reDefType !== defType) {
                     this.setIssueReports(reDefStmt);
                 }
             }

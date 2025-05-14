@@ -106,7 +106,7 @@ export class ImagePixelFormatCheck implements BaseChecker {
 
     private newExperProcess(newClassSignature: ClassSignature, stmt: Stmt): void {
         const newClass = stmt.getCfg().getDeclaringMethod().getDeclaringArkFile().getScene().getClass(newClassSignature);
-        const pixelFormatField = newClass?.getFieldWithName(this.PIXELFORMAT) ?? newClass?.getFieldWithName(this.DESIREDPIXELFORMAT)
+        const pixelFormatField = newClass?.getFieldWithName(this.PIXELFORMAT) ?? newClass?.getFieldWithName(this.DESIREDPIXELFORMAT);
         if (pixelFormatField === null || pixelFormatField === undefined) {
             return;
         }
@@ -185,7 +185,7 @@ export class ImagePixelFormatCheck implements BaseChecker {
             const startCol = originPosition.getColNo() + originalText.indexOf(this.CREATEPIXELMAP);
             const endCol = startCol + this.CREATEPIXELMAP.length;
             const originPath = arkFile.getFilePath();
-            return { line, startCol, endCol, filePath: originPath }
+            return { line, startCol, endCol, filePath: originPath };
         } else {
             logger.debug('ArkFile is null.');
         }

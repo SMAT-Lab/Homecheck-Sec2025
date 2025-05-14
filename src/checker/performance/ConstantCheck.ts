@@ -112,7 +112,7 @@ export class ConstantCheck implements BaseChecker {
                 const startCol = variable.defStmt.getOriginPositionInfo().getColNo() + pos + 1;
                 const endCol = startCol + variable.getName().length - 1;
                 const originPath = arkFile.getFilePath();
-                return { line: tsLine, startCol: startCol, endCol: endCol, filePath: originPath }
+                return { line: tsLine, startCol: startCol, endCol: endCol, filePath: originPath };
             }
         } else {
             logger.warn('Get originStmt failed.');

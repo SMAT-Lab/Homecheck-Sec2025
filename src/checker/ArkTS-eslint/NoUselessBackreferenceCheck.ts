@@ -44,7 +44,7 @@ export class NoUselessBackreferenceCheck implements BaseChecker {
 
     public metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-useless-backreference-check.md',
+        ruleDocPath: 'docs/no-useless-backreference.md',
         description: 'Disallow useless backreferences in regular expressions.',
     };
 

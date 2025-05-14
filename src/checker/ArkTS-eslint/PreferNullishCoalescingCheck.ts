@@ -55,7 +55,7 @@ export class PreferNullishCoalescingCheck implements BaseChecker {
   };
   public metaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: 'docs/prefer-nullish-coalescing-check.md',
+    ruleDocPath: 'docs/prefer-nullish-coalescing.md',
     description: 'Enforce using nullish coalescing operator instead of logical OR',
   };
 

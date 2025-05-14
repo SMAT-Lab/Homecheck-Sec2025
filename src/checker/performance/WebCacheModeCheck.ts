@@ -46,11 +46,11 @@ export class WebCacheModeCheck implements BaseChecker {
         const matchBuildCb: MatcherCallback = {
             matcher: this.buildMatcher,
             callback: this.check
-        }
+        };
         return [matchBuildCb];
     }
 
-    public check = (arkClass: ArkClass) => {
+    public check = (arkClass: ArkClass): void => {
         if (viewTreeTool.hasTraverse(arkClass)) {
             return;
         }
@@ -59,7 +59,7 @@ export class WebCacheModeCheck implements BaseChecker {
             return;
         }
         this.traverseViewTree(viewtreeRoot, arkClass);
-    }
+    };
 
     private traverseViewTree(viewtreeRoot: ViewTreeNode, arkClass: ArkClass): void {
         if (viewtreeRoot === undefined) {

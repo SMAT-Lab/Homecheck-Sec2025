@@ -12,21 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { BaseChecker, BaseMetaData } from "../BaseChecker";
+import { BaseChecker, BaseMetaData } from '../BaseChecker';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { ArkFile } from "arkanalyzer/lib/core/model/ArkFile";
-import { ArkClass } from "arkanalyzer/lib/core/model/ArkClass";
-import { ArkField } from "arkanalyzer/lib/core/model/ArkField";
-import { ViewTreeNode } from "arkanalyzer/lib/core/graph/ViewTree";
-import { ArkInstanceFieldRef } from "arkanalyzer/lib/core/base/Ref";
-import { Rule, Defects, FileMatcher, MatcherTypes, MatcherCallback } from "../../Index";
+import { ArkFile } from 'arkanalyzer/lib/core/model/ArkFile';
+import { ArkClass } from 'arkanalyzer/lib/core/model/ArkClass';
+import { ArkField } from 'arkanalyzer/lib/core/model/ArkField';
+import { ViewTreeNode } from 'arkanalyzer/lib/core/graph/ViewTree';
+import { ArkInstanceFieldRef } from 'arkanalyzer/lib/core/base/Ref';
+import { Rule, Defects, FileMatcher, MatcherTypes, MatcherCallback } from '../../Index';
 import { ViewTreeTool } from '../../utils/checker/ViewTreeTool';
-import { IssueReport } from "../../model/Defects";
+import { IssueReport } from '../../model/Defects';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'MultipleAssociationsStateVarCheck');
 const gMetaData: BaseMetaData = {
     severity: 3,
-    ruleDocPath: "docs/multiple-associations-state-var-check.md",
+    ruleDocPath: 'docs/multiple-associations-state-var-check.md',
     description: 'This data is associated with multiple components, you are advised to use the @Watch decorator to add update conditions to avoid unnecessary component update.'
 };
 const viewTreeTool = new ViewTreeTool();
@@ -45,11 +45,11 @@ export class MultipleAssociationsStateVarCheck implements BaseChecker {
         const matchFileCb: MatcherCallback = {
             matcher: this.fileMatcher,
             callback: this.check
-        }
+        };
         return [matchFileCb];
     }
 
-    public check = (arkFile: ArkFile) => {
+    public check = (arkFile: ArkFile): void => {
         for (let clazz of arkFile.getClasses()) {
             if (clazz.hasViewTree() && !viewTreeTool.hasTraverse(clazz)) {
                 this.processViewTreeClass(clazz);
@@ -62,9 +62,9 @@ export class MultipleAssociationsStateVarCheck implements BaseChecker {
                 }
             }
         }
-    }
+    };
 
-    private processViewTreeClass(clazz: ArkClass) {
+    private processViewTreeClass(clazz: ArkClass): void {
         let stateVarList: ArkField[] = [];
         for (let arkField of clazz.getFields()) {
             if (!arkField.hasDecorator('State')) {
@@ -171,8 +171,7 @@ export class MultipleAssociationsStateVarCheck implements BaseChecker {
             }
             let values = stmt2Value[1];
             for (let value of values) {
-                if (value instanceof ArkInstanceFieldRef
-                    && value.getFieldSignature() === field.getSignature()) {
+                if (value instanceof ArkInstanceFieldRef && value.getFieldSignature() === field.getSignature()) {
                     return true;
                 }
             }
@@ -196,7 +195,7 @@ export class MultipleAssociationsStateVarCheck implements BaseChecker {
         return false;
     }
 
-    private reportIssue(issueArkFile: ArkFile, lineNum: number, startColumn: number, endColumn: number) {
+    private reportIssue(issueArkFile: ArkFile, lineNum: number, startColumn: number, endColumn: number): void {
         let filePath = issueArkFile.getFilePath();
         const severity = this.rule.alert ?? this.metaData.severity;
         let defects = new Defects(lineNum, startColumn, endColumn, this.metaData.description, severity, this.rule.ruleId, filePath,

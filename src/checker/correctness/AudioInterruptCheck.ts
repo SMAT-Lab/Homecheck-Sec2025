@@ -14,13 +14,13 @@
  */
 
 import { BaseChecker, BaseMetaData } from '../BaseChecker';
-import { AbstractFieldRef, AbstractInvokeExpr, ArkAssignStmt, ArkAwaitExpr, ArkField, ArkFile, ArkInstanceFieldRef, ArkInstanceInvokeExpr, ArkInvokeStmt, ArkMethod, ArkPtrInvokeExpr, ArkReturnStmt, ArkStaticFieldRef, ClassSignature, DEFAULT_ARK_CLASS_NAME, FunctionType, Local, MethodSignature, Scene, Stmt, Type, UnionType, UnknownType, Value } from "arkanalyzer";
+import { AbstractFieldRef, AbstractInvokeExpr, ArkAssignStmt, ArkAwaitExpr, ArkField, ArkFile, ArkInstanceFieldRef, ArkInstanceInvokeExpr, ArkInvokeStmt, ArkMethod, ArkPtrInvokeExpr, ArkReturnStmt, ArkStaticFieldRef, ClassSignature, DEFAULT_ARK_CLASS_NAME, FunctionType, Local, MethodSignature, Scene, Stmt, Type, UnionType, UnknownType, Value } from 'arkanalyzer';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
-import { CheckerStorage, CheckerUtils, Defects, MatcherCallback, Rule } from "../../Index";
-import { VarInfo } from "../../model/VarInfo";
-import { StringUtils } from "../../utils/checker/StringUtils";
-import { StmtExt } from "../../model/StmtExt";
-import { IssueReport } from "../../model/Defects";
+import { CheckerStorage, CheckerUtils, Defects, MatcherCallback, Rule } from '../../Index';
+import { VarInfo } from '../../model/VarInfo';
+import { StringUtils } from '../../utils/checker/StringUtils';
+import { StmtExt } from '../../model/StmtExt';
+import { IssueReport } from '../../model/Defects';
 
 const multimediaAPI8CreateSignList: string[] = [
     `@ohosSdk/api/@ohos.multimedia.audio.d.ts: audio.${DEFAULT_ARK_CLASS_NAME}.createAudioRenderer(@ohosSdk/api/@ohos.multimedia.audio.d.ts: audio.AudioRendererOptions, @ohosSdk/api/@ohos.base.d.ts: AsyncCallback<@ohosSdk/api/@ohos.multimedia.audio.d.ts: audio.AudioRenderer>)`,
@@ -57,7 +57,7 @@ const multimediaCreateList: CreateMultimediaInfo[] = [];
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'AudioInterruptCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/audio-interrupt-check.md",
+    ruleDocPath: 'docs/audio-interrupt-check.md',
     description: 'When implementing audio playback or recording features in your app, make sure it listens for audio focus changes and acts accordingly.'
 };
 
@@ -85,24 +85,13 @@ export class AudioInterruptCheck implements BaseChecker {
         const matchBuildCb: MatcherCallback = {
             matcher: undefined,
             callback: this.check
-        }
+        };
         return [matchBuildCb];
     }
 
-    public check = (scene: Scene) => {
+    public check = (scene: Scene): void => {
         for (let arkFile of scene.getFiles()) {
-            for (let clazz of arkFile.getClasses()) {
-                for (let mtd of clazz.getMethods()) {
-                    this.processArkMethod(arkFile, mtd);
-                }
-            }
-            for (let namespace of arkFile.getAllNamespacesUnderThisFile()) {
-                for (let clazz of namespace.getClasses()) {
-                    for (let mtd of clazz.getMethods()) {
-                        this.processArkMethod(arkFile, mtd);
-                    }
-                }
-            }
+            this.processClass(arkFile);
         }
         this.commonInvokerMatch();
         for (let cmi of multimediaCreateList) {
@@ -112,6 +101,21 @@ export class AudioInterruptCheck implements BaseChecker {
                     continue;
                 }
                 this.reportIssue(targetArkFile, cmi.createStmt, cmi.methodName);
+            }
+        }
+    };
+
+    private processClass(arkFile: ArkFile): void {
+        for (let clazz of arkFile.getClasses()) {
+            for (let mtd of clazz.getMethods()) {
+                this.processArkMethod(arkFile, mtd);
+            }
+        }
+        for (let namespace of arkFile.getAllNamespacesUnderThisFile()) {
+            for (let clazz of namespace.getClasses()) {
+                for (let mtd of clazz.getMethods()) {
+                    this.processArkMethod(arkFile, mtd);
+                }
             }
         }
     }
@@ -143,7 +147,7 @@ export class AudioInterruptCheck implements BaseChecker {
                 varInfo: null,
                 fieldInfo: null,
                 interruptInfo: null
-            }
+            };
             multimediaCreateList.push(createInfo);
             if (stmt instanceof ArkInvokeStmt) {
                 let callbackMethod = this.getInvokeCallbackMethod(arkFile, stmt, methodName);
@@ -368,7 +372,8 @@ export class AudioInterruptCheck implements BaseChecker {
         return arkFile.getScene().getMethod(type.getMethodSignature());
     }
 
-    private parseInvokerAudioInterruptStmt(callbackMethod: ArkMethod, stmt: Stmt, invoker: AbstractInvokeExpr, createInfo: CreateMultimediaInfo, useType: UseType): void {
+    private parseInvokerAudioInterruptStmt(callbackMethod: ArkMethod, stmt: Stmt, invoker: AbstractInvokeExpr,
+        createInfo: CreateMultimediaInfo, useType: UseType): void {
         if (!(invoker instanceof ArkInstanceInvokeExpr)) {
             return;
         }
@@ -687,7 +692,6 @@ export class AudioInterruptCheck implements BaseChecker {
         }
         let methodNameIndex = text.indexOf(methodName);
         if (methodNameIndex === -1) {
-            logger.debug(`Can not find ${methodName} in ${text}.`);
             return;
         }
         const severity = this.rule.alert ?? this.metaData.severity;

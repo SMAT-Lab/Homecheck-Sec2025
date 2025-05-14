@@ -24,7 +24,7 @@ import { IssueReport } from '../../model/Defects';
 
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: 'docs/no-magic-numbers-check.md',
+    ruleDocPath: 'docs/no-magic-numbers.md',
     description: 'Magic number found: ${magicNumber}. Consider using a named constant'
 };
 

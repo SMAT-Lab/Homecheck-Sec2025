@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { Scope } from "../../model/Scope";
+import { Scope } from '../../model/Scope';
 
 export class CheckerStorage {
     private static instance: CheckerStorage;
@@ -45,7 +45,7 @@ export class CheckerStorage {
      * 设置Scope映射
      * @param scopeMap - Scope映射，类型为 Map<string, Scope>
      */
-    public setScopeMap(scopeMap: Map<string, Scope>) {
+    public setScopeMap(scopeMap: Map<string, Scope>): void {
         this.scopeMap = scopeMap;
     }
 

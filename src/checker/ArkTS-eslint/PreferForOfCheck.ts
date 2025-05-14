@@ -24,7 +24,7 @@ import { IssueReport } from '../../model/Defects';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'PreferForOfCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/prefer-for-of-check.md",
+    ruleDocPath: "docs/prefer-for-of.md",
     description: "Enforce the use of `for-of` loop over the standard `for` loop where possible",
 };
 

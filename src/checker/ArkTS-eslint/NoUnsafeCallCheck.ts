@@ -25,7 +25,7 @@ import {RuleFix} from "../../model/Fix";
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoUnsafeCallCheck');
 const gMetaData: BaseMetaData = {
     severity: 2,
-    ruleDocPath: "docs/no-unsafe-call-check.md",
+    ruleDocPath: "docs/no-unsafe-call.md",
     description: "Disallow calling a function with a value with type `any`"
 };
 // 添加特定错误消息常量
@@ -502,6 +502,16 @@ export class NoUnsafeCallCheck implements BaseChecker {
             ts.isBinaryExpression(callExpr.expression.expression.expression)) {
             this.addAstIssueReport(
                 arkFile, positionInfo.startPosition.line + 1, positionInfo.startPosition.character + 1,
+                positionInfo.endPosition.character + 1, UNSAFE_CALL_MESSAGE);
+            return true;
+        }
+        if (ts.isParenthesizedExpression(callExpr.expression) &&
+            ts.isPropertyAccessExpression(callExpr.expression.expression) &&
+            callExpr.expression.expression.name.getText() === 'indexOf' &&
+            callExpr.expression.expression.questionDotToken !== undefined) {
+            positionInfo = this.getPositionInfo(
+                ts.isCallExpression(callExpr) ? callExpr.expression.expression : callExpr, sourceFile);
+            this.addAstIssueReport(arkFile, positionInfo.startPosition.line + 1, positionInfo.startPosition.character + 1,
                 positionInfo.endPosition.character + 1, UNSAFE_CALL_MESSAGE);
             return true;
         }
@@ -1261,6 +1271,10 @@ export class NoUnsafeCallCheck implements BaseChecker {
                 if (this.isFunctionDefinedInClassOrBlock(param, functionName)) {
                     return true;
                 }
+            } else if (ts.isFunctionDeclaration(param)) {
+                if (param.name && ts.isIdentifier(param.name) && param.name.getText() === functionName) {
+                    return true;
+                }
             }
         }
         return false;
@@ -1414,7 +1428,7 @@ export class NoUnsafeCallCheck implements BaseChecker {
             // 全局对象和函数
             'Intl', 'console', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval',
             'encodeURI', 'decodeURI', 'encodeURIComponent', 'decodeURIComponent', 'eval',
-            'isFinite', 'isNaN', 'parseFloat', 'parseInt',
+            'isFinite', 'isNaN', 'parseFloat', 'parseInt', 'globalThis', 'NaN',
             // TypeScript特有的对象
             'any', 'unknown', 'never', 'void'
         ];

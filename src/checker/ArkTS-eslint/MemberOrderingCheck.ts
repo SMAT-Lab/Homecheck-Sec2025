@@ -25,7 +25,7 @@ import { IssueReport } from '../../model/Defects';
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'MemberOrderingCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
-    ruleDocPath: "docs/member-ordering-check.md",
+    ruleDocPath: "docs/member-ordering.md",
     description: "Require consistent member ordering in classes, interfaces, and type literals",
 };
 

@@ -31,7 +31,7 @@ interface Issue {
 export class NoArrayConstructorTSCheck implements BaseChecker {
     metaData: BaseMetaData = {
         severity: 2,
-        ruleDocPath: 'docs/no-array-constructor-ts-check.md',
+        ruleDocPath: 'docs/no-array-constructor-ts.md',
         description: 'The array literal notation [] is preferable.'
     };
     public defects: Defects[] = [];

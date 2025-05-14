@@ -4,7 +4,7 @@
 
 ## 规则来源
 
-参考文档：[最佳实践](https://developer.huawei.com/consumer/cn/doc/best-practices/bpta-stability-coding-standard-api#section178871719112717)
+参考文档：[文档链接](https://developer.huawei.com/consumer/cn/doc/best-practices/bpta-stability-coding-standard-api#section178871719112717)
 
 ## 反例代码
 

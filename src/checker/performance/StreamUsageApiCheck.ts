@@ -19,18 +19,18 @@ import { ClassMatcher, Defects, FileMatcher, MatcherCallback, MatcherTypes, Meth
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
 import { IssueReport } from '../../model/Defects';
 
-const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'LowerPowerConsumptionCheck');
+const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'StreamUsageApiCheck');
 const SIGNATURESTR = '@ohosSdk/api/@ohos.multimedia.audio.d.ts: audio.AudioRendererInfo';
 const SIGNATURESTR2 = '@ohosSdk/api/@ohos.multimedia.audio.d.ts: audio.AudioRendererInfo.usage';
 const SIGNATURESTR3 = '@ohosSdk/api/@ohos.multimedia.audio.d.ts: audio.StreamUsage.[static]STREAM_USAGE_UNKNOWN';
 const keyword: string = 'usage';
 const gMetaData: BaseMetaData = {
     severity: 3,
-    ruleDocPath: 'docs/lower-power-consumption-check.md',
+    ruleDocPath: 'docs/stream-usage-api-check.md',
     description: 'When creating an AudioRenderer instance, the correct usage type should be set.'
 };
 
-export class LowerPowerConsumptionCheck implements BaseChecker {
+export class StreamUsageApiCheck implements BaseChecker {
     readonly metaData: BaseMetaData = gMetaData;
     public rule: Rule;
     public defects: Defects[] = [];
@@ -209,7 +209,6 @@ export class LowerPowerConsumptionCheck implements BaseChecker {
         }
         let index = text.indexOf(keyword);
         if (index === -1) {
-            logger.debug(`Can not find ${keyword} in ${text}.`);
             return;
         }
         const severity = this.rule.alert ?? this.metaData.severity;

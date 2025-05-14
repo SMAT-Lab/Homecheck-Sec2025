@@ -1,9 +1,9 @@
 {
-  "projectName": "KikaInput",
-  "projectPath": "D:/File/Research/Abc2ArkIR/applications_app_samples/code/Solutions/InputMethod/KikaInput",
+  "projectName": "ArkTSClock",
+  "projectPath": "D:/Elouan/Research/ArkAnything/applications_app_samples/code/Solutions/Tools/ArkTSClock",
   "logPath": "./HomeCheck.log",
-  "ohosSdkPath": "D:/Resource/SDKs/DecEcoSDK/OpenHarmonySDK/13/ets",
-  "hmsSdkPath": "",
+  "ohosSdkPath": "C:/Program Files/Huawei/DevEco Studio/sdk/default/openharmony/ets",
+  "hmsSdkPath": "C:/Program Files/Huawei/DevEco Studio/sdk/default/hms/ets",
   "checkPath": "",
   "sdkVersion": 14,
   "fix": "false",
@@ -12,11 +12,5 @@
   "reportDir": "./report",
   "arkCheckPath": "./",
   "product": "default",
-  "sdksThirdParty": [
-    {
-      "name": "thirdParty",
-      "path": "./resources/thirdPartyModules",
-      "moduleName": ""
-    }
-  ]
+  "sdksThirdParty": []
 }

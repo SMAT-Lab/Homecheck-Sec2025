@@ -69,10 +69,10 @@ export class JsCodeCacheByInterceptionCheck implements BaseChecker {
         const matchBuildCb: MatcherCallback = {
             matcher: this.buildMatcher,
             callback: this.check
-        }
+        };
         return [matchBuildCb];
     }
-    public check = (arkClass: ArkClass) => {
+    public check = (arkClass: ArkClass): void => {
         let api = CheckerStorage.getInstance().getApiVersion();
         if (api < MIN_VERSION) {
             return;
@@ -85,7 +85,7 @@ export class JsCodeCacheByInterceptionCheck implements BaseChecker {
             return;
         }
         this.traverseViewTree(arkClass.getDeclaringArkFile(), viewRoot);
-    }
+    };
 
     private traverseViewTree(arkFile: ArkFile, treeNode: ViewTreeNode): void {
         if (!treeNode) {
@@ -248,7 +248,7 @@ export class JsCodeCacheByInterceptionCheck implements BaseChecker {
     private getIfConditionStmt(block: BasicBlock): Stmt | null {
         let curScopeLevel = this.getScopeLevel(block);
         let predecessorBlock = block.getPredecessors();
-        while (predecessorBlock.length != 0) {
+        while (predecessorBlock.length !== 0) {
             let firstPredecessorBlock = predecessorBlock[0];
             const blkStmts = firstPredecessorBlock.getStmts();
             if (blkStmts.length === 0) {
@@ -623,7 +623,7 @@ export class JsCodeCacheByInterceptionCheck implements BaseChecker {
         return false;
     }
 
-    private reportIssue(arkFile: ArkFile, nodeOrField: ViewTreeNode | ArkField, keyword: string, description: string) {
+    private reportIssue(arkFile: ArkFile, nodeOrField: ViewTreeNode | ArkField, keyword: string, description: string): void {
         const severity = this.rule.alert ?? this.metaData.severity;
         let filePath = arkFile.getFilePath();
         let lineNum = -1;
