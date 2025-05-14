@@ -41,11 +41,11 @@ export async function start(checkEntry: CheckEntry): Promise<boolean> {
     return true;
 }
 
-export async function run(): Promise<boolean> {
+export async function run(projectConfigPath: string, configPath: string): Promise<boolean> {
     const startTime = new Date().getTime();
     const checkEntry = new CheckEntry();
-    // 构建ruleConfig和projectConfig，保存至checkEntry中
-    if (!ConfigUtils.parseConfig(Utils.parseCliOptions(process.argv), checkEntry)) {
+    // 直接使用传入的配置文件路径解析配置
+    if (!ConfigUtils.parseConfig({ projectConfigPath, configPath }, checkEntry)) {
         return false;
     }
 
@@ -58,4 +58,4 @@ export async function run(): Promise<boolean> {
     const endTime = new Date().getTime();
     logger.info(`HomeCheck took: ${(endTime - startTime) / 1000} s.`);
     return true;
-};
+}

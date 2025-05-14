@@ -15,4 +15,4 @@
 
 import { run } from "./Main";
 
-run();
+run("./config/projectConfig.json", "./config/ruleConfig.json");
