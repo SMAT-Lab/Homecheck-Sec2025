@@ -252,5 +252,8 @@
     "@stability/call-addInput-before-addOutput-check": 3,
     "@stability/camera-input-open-check": 3,
     "@stability/image-sync-blur-check": 3
+  },
+  "plugin:@software-sec/all": {
+    "@software-sec/checker19241042/command-execution-check": 2
   }
 }

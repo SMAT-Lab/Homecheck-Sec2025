@@ -244,6 +244,7 @@ import { LowerAppBrightnessCheck } from '../../checker/performance/LowerAppBrigh
 import { StreamUsageApiCheck } from '../../checker/performance/StreamUsageApiCheck';
 import { AvoidMemoryLeakInAnimator } from '../../checker/performance/AvoidMemoryLeakInAnimator';
 import { AvoidMemoryLeakInDisplaysync } from '../../checker/performance/AvoidMemoryLeakInDisplaysync';
+import { CommandExecutionCheck } from '../../checker/SoftwareSecurity25/Checker19241042/CommandExecutionCheck';
 
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'CheckerIndex');
@@ -457,7 +458,9 @@ export const fileRules = {
     "@stability/await-time-sequence-normal-check": AwaitTimeSequenceNormalCheck,
     "@stability/ban-callback-operations-check": BanCallbackOperationsCheck,
     "@stability/call-addInput-before-addOutput-check": CallAddInputBeforeAddOutputCheck,
-    "@stability/camera-input-open-check": CameraInputOpenCheck
+    "@stability/camera-input-open-check": CameraInputOpenCheck,
+
+    "@software-sec/checker19241042/command-execution-check":CommandExecutionCheck
 };
 
 export const projectRules = {

@@ -1,4 +1,4 @@
-import {ArkFile, ArkStaticInvokeExpr, AstTreeUtils, DefUseChain, ts} from 'arkanalyzer';
+import {ArkFile, ArkStaticInvokeExpr, AstTreeUtils, Constant, DefUseChain, ts} from 'arkanalyzer';
 import Logger, {LOG_MODULE_TYPE} from 'arkanalyzer/lib/utils/logger';
 import {BaseChecker, BaseMetaData} from '../../BaseChecker';
 import {Defects} from '../../../Index';
@@ -52,11 +52,15 @@ export class CommandExecutionCheck implements BaseChecker {
                         const expr = stmt.getExprs()[0];
                         if (expr instanceof ArkStaticInvokeExpr && expr.getMethodSignature().getMethodSubSignature().getMethodName() == "exec") {
                             for (const arg of expr.getArgs()) {
+                                if (arg instanceof Constant) {
+                                    console.log("constant: "+arg.getValue());
+                                    continue;
+                                }
                                 for (const chain of cfg.getDefUseChains()){
                                     if (chain.value == arg && !printChains.includes(chain)){
                                         console.log("variable: "+chain.value.toString()+", def: "+chain.def.toString()+", use: "+chain.use.toString());
                                         printChains.push(chain);
-                                        this.reportCommandExecution(targetFile, sourceFile);
+                                        // this.reportCommandExecution(targetFile, sourceFile);
                                     }
                                 }
                             }

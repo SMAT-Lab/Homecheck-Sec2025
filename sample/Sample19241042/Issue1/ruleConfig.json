@@ -12,12 +12,9 @@
     "**/.preview/**/*"
   ],
   "rules": {
-    "@performance/foreach-args-check": 3
+    "@software-sec/checker19241042/command-execution-check": 2
   },
   "ruleSet": [
-    "plugin:@ArkTS-eslint/all",
-    "plugin:@performance/all",
-    "plugin:@correctness/all"
   ],
   "overrides": [],
   "extRuleSet": []

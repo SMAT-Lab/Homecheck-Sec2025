@@ -1,9 +1,9 @@
 {
   "projectName": "TestProject",
-  "projectPath": "D:\\arkProject",
+  "projectPath": "./sample/Sample19241042/Issue1",
   "logPath": "./HomeCheck.log",
-  "ohosSdkPath": "D:\\DevEco Studio\\sdk\\default\\openharmony\\ets",
-  "hmsSdkPath": "D:\\DevEco Studio\\sdk\\default\\hms\\ets",
+  "ohosSdkPath": "D:/IDE/DevEco Studio/sdk/default/openharmony/ets",
+  "hmsSdkPath": "D:/IDE/DevEco Studio/sdk/default/hms/ets",
   "checkPath": "",
   "sdkVersion": 14,
   "fix": "false",
