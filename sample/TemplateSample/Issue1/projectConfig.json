@@ -1,6 +1,6 @@
 {
-  "projectName": "TestProject",
-  "projectPath": "D:/arkProject",
+  "projectName": "Issue1",
+  "projectPath": "./sample/TemplateSample/Issue1",
   "logPath": "./HomeCheck.log",
   "ohosSdkPath": "D:/DevEco Studio/sdk/default/openharmony/ets",
   "hmsSdkPath": "D:/DevEco Studio/sdk/default/hms/ets",

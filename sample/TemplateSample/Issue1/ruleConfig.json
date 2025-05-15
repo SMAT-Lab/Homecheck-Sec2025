@@ -12,9 +12,14 @@
     "**/.preview/**/*"
   ],
   "rules": {
-    "@software-sec/checker19241042/command-execution-check": 1
+    "@performance/foreach-args-check": 3
   },
   "ruleSet": [
+    "plugin:@correctness/all",
+    "plugin:@performance/all",
+    "plugin:@cross-device-app-dev/all",
+    "plugin:@security/all",
+    "plugin:@stability/all"
   ],
   "overrides": [],
   "extRuleSet": []

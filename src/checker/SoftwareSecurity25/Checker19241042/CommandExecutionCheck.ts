@@ -1,16 +1,15 @@
-import {ArkFile, ArkStaticInvokeExpr, AstTreeUtils, Constant, DefUseChain, ts} from 'arkanalyzer';
+import {ArkFile, ArkStaticInvokeExpr, AstTreeUtils, Constant, DefUseChain, Stmt, ts} from 'arkanalyzer';
 import Logger, {LOG_MODULE_TYPE} from 'arkanalyzer/lib/utils/logger';
 import {BaseChecker, BaseMetaData} from '../../BaseChecker';
 import {Defects} from '../../../Index';
 import {FileMatcher, MatcherCallback, MatcherTypes} from '../../../Index';
 import {Rule} from '../../../Index';
-import {RuleListUtil} from '../../../utils/common/DefectsList';
 import {IssueReport} from '../../../model/Defects';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'CommandExecutionCheck');
 
 const gMetaData: BaseMetaData = {
-    severity: 2,
+    severity: 1,
     ruleDocPath: '',
     description: 'Detects unsafe command execution via exec() calls.'
 };
@@ -41,30 +40,16 @@ export class CommandExecutionCheck implements BaseChecker {
                 if (arkMethod.getName() == '_DEFAULT_ARK_METHOD') {
                     continue;
                 }
+                const methodName = arkMethod.getName();
                 const cfg = arkMethod.getCfg();
                 if (cfg == undefined) {
                     continue;
                 }
-                cfg.buildDefUseChain();
-                const printChains: DefUseChain[] = [];
                 for (const stmt of cfg.getStmts()) {
                     if (stmt.getExprs().length > 0) {
                         const expr = stmt.getExprs()[0];
                         if (expr instanceof ArkStaticInvokeExpr && expr.getMethodSignature().getMethodSubSignature().getMethodName() == "exec") {
-                            for (const arg of expr.getArgs()) {
-                                if (arg instanceof Constant) {
-                                    console.log("constant: "+arg.getValue());
-                                    continue;
-                                }
-                                for (const chain of cfg.getDefUseChains()){
-                                    if (chain.value == arg && !printChains.includes(chain)){
-                                        console.log("variable: "+chain.value.toString()+", def: "+chain.def.toString()+", use: "+chain.use.toString());
-                                        printChains.push(chain);
-                                        // this.reportCommandExecution(targetFile, sourceFile);
-                                    }
-                                }
-                            }
-                            
+                            this.reportIssue(targetFile, stmt, methodName);
                         }
                     }
                 }
@@ -72,23 +57,19 @@ export class CommandExecutionCheck implements BaseChecker {
         }
     }
 
-    private reportCommandExecution(targetFile: ArkFile, sourceFile: ts.SourceFileLike, aNode: ts.Node): void {
-        const message = 'Unsafe command execution.';
-        const startPosition = ts.getLineAndCharacterOfPosition(sourceFile, aNode.getStart());
-        const startLine = startPosition.line + 1;
-        const startCol = startPosition.character + 1;
-        const endPosition = ts.getLineAndCharacterOfPosition(sourceFile, aNode.getEnd());
-        const endLine = endPosition.line + 1;
-        const endCol = endPosition.character + 1;
-        this.addIssueReport(targetFile, startLine, startCol, endLine, endCol, message);
-    }
-
-    private addIssueReport(arkFile: ArkFile, startLine: number, startCol: number, endLine: number, endCol: number, message: string): void {
+    public reportIssue(arkFile: ArkFile, stmt: Stmt, methodName: string): void {
         const severity = this.rule.alert ?? this.metaData.severity;
         const filePath = arkFile.getFilePath();
-        const defect = new Defects(startLine, startCol, endCol, message, severity, this.rule.ruleId,
+        const originPositionInfo = stmt.getOriginPositionInfo();
+        const lineNum = originPositionInfo.getLineNo();
+        const text = stmt.getOriginalText();
+        if (!text || text.length === 0) {
+            return;
+        }
+        const startColumn = originPositionInfo.getColNo() + text.lastIndexOf(methodName);
+        const endColunm = startColumn + methodName.length;
+        let defects = new Defects(lineNum, startColumn, endColunm, this.metaData.description, severity, this.rule.ruleId,
             filePath, this.metaData.ruleDocPath, true, false, false);
-        this.issues.push(new IssueReport(defect, undefined));
-        RuleListUtil.push(defect);
+        this.issues.push(new IssueReport(defects, undefined));
     }
 }
