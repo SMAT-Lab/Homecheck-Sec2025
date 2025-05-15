@@ -459,8 +459,9 @@ export const fileRules = {
     "@stability/ban-callback-operations-check": BanCallbackOperationsCheck,
     "@stability/call-addInput-before-addOutput-check": CallAddInputBeforeAddOutputCheck,
     "@stability/camera-input-open-check": CameraInputOpenCheck,
-
+    //software-security2025 start
     "@software-sec/checker19241042/command-execution-check":CommandExecutionCheck
+    //software-security2025 finish
 };
 
 export const projectRules = {
@@ -485,6 +486,9 @@ export const projectRules = {
     "@performance/dark-color-mode-check": DarkColorModeCheck,
     "@security/no-cycle-check": NoCycleCheck,
     "@stability/image-sync-blur-check": ImageSyncBlurCheck
+    //software-security2025 start
+
+    //software-security2025 finish
 };
 
 // 新增文件级的checker，需要在此处注册

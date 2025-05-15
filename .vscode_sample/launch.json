@@ -7,9 +7,8 @@
             "name": "启动程序",
             "runtimeArgs": ["-r", "ts-node/register"],
             "args":[
-                "src/run.ts",
-                "--projectConfigPath=./config/projectConfig.json",
-                "--configPath=./config/ruleConfig.json"
+                // "src/run.ts",
+                "test/SoftwareSecurity25/Test$YourStudentNumber$.ts",
             ]
         }
     ]

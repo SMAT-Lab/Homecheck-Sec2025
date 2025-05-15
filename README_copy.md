@@ -1,28 +1,43 @@
 # Homecheck-Sec2025
-## 文件结构
+## 目录结构说明
 
 ```
 Homecheck-Sec2025
+|---.vscode_sample
+|---|---launch.json //vscode调试配置文件 
 |---sample //存放含有安全漏洞的被检测代码示例
 |---|---TemplateSample //示例模板
 |---|---|---Issue1
-|---|---|---|---config.json //ArkAnalyzer配置文件
+|---|---|---|---projectConfig.json //homecheck项目配置文件
+|---|---|---|---ruleConfig.json //homecheck规则配置文件
 |---|---|---|---sample1.ts //含有安全问题1的代码示例
 |---|---|---Issue2
-|---|---|---|---config.json //ArkAnalyzer配置文件
+|---|---|---|---projectConfig.json //homecheck项目配置文件
+|---|---|---|---ruleConfig.json //homecheck规则配置文件
 |---|---|---|---sample2.ts //含有安全问题2的代码示例
 |---|---Sample19241042 //建一个自己的文件夹
 |---|---|---Issue1 //每一个安全问题一个Issue
-|---|---|---|---config.json
+|---|---|---|---projectConfig.json
+|---|---|---|---ruleConfig.json
 |---|---|---|---sample1.ts //问题代码示例
 |---src
 |---|---checker //存放基于ArkAnalyzer实现的针对sample中的样例的安全漏洞检测器
-|---|---|---TemplateChecker.ts  //Checker模板
-|---|---|---Checker19241042.ts  //检测逻辑示例，每人建一个自己的文件
-|---|---bundle.js  //ArkAnalyzer包
+|---|---|---SoftwareSecurity25
+|---|---|---|---TemplateChecker.ts  //Checker模板
+|---|---|---|---Checker19241042  //每人建一个自己的目录
+|---|---|---|---|---CommandExecutionCheck.ts  //规则示例，每个规则建一个单独的checker文件
+|---|---utils
+|---|---|---common
+|---|---|---|---CheckerIndex.ts //规则列表 注册新规则用
+|---test
+|---|---SoftwareSecurity25 //测试文件 批量运行一个人的全部规则 最后我通过这个评测
+|---|---|---TemplateTest.ts //模板文件
+|---|---|---Test19241042.ts //自己创一个 参考样例 改成自己的路径
+|---ruleSet.json //规则集 注册新规则用
 |---README.md
-|---tsconfig.json
 ```
+
+未做说明的文件可以理解为本次作业暂不涉及，有兴趣可以参考[homecheck说明文档](https://gitcode.com/openharmony-sig/homecheck)
 
 ## 样例运行
 

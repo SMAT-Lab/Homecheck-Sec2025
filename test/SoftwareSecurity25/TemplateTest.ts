@@ -2,40 +2,58 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { run } from '../../src/Main';
 
-async function scanProjects(basePath: string): Promise<void> {
-    const issues = fs.readdirSync(basePath).filter((dir) => {
-        const fullPath = path.join(basePath, dir);
-        return fs.statSync(fullPath).isDirectory();
-    });
+// Run tests for a specific issue directory
+async function runTestForIssue(issueDir: string): Promise<boolean> {
+    const projectConfigPath = path.join(issueDir, 'projectConfig.json');
+    const ruleConfigPath = path.join(issueDir, 'ruleConfig.json');
 
-    for (const issue of issues) {
-        const projectConfigPath = path.join(basePath, issue, 'projectConfig.json');
-        const configPath = path.join(basePath, issue, 'ruleConfig.json');
+    // Check if configuration files exist
+    if (!fs.existsSync(projectConfigPath) || !fs.existsSync(ruleConfigPath)) {
+        console.log(`Missing configuration files in: ${issueDir}`);
+        return false;
+    }
 
-        if (fs.existsSync(projectConfigPath) && fs.existsSync(configPath)) {
-            console.log(`Starting scan for project: ${issue}`);
-            process.argv = [
-                'node',
-                'run.ts',
-                `--projectConfigPath=${projectConfigPath}`,
-                `--configPath=${configPath}`
-            ];
-
-            try {
-                await run();
-                console.log(`Scan completed for project: ${issue}`);
-            } catch (error) {
-                console.error(`Error scanning project: ${issue}`, error);
-            }
-        } else {
-            console.warn(`Skipping project: ${issue} (missing config files)`);
-        }
+    console.log(`Running test for: ${path.basename(issueDir)}`);
+    try {
+        await run(projectConfigPath, ruleConfigPath);
+        console.log(`Test finished for: ${path.basename(issueDir)}`);
+        return true;
+    } catch (error) {
+        console.log(`Test failed for: ${path.basename(issueDir)}, Error: ${error}`);
+        return false;
     }
 }
 
-(async () => {
-    const basePath = path.resolve(__dirname, 'sample', 'Sample19241042');
-    console.log(`Scanning projects in: ${basePath}`);
-    await scanProjects(basePath);
-    console.log('All projects scanned.');
-})();
+// Main function to iterate and run tests for all issue directories
+async function main(): Promise<void> {
+    const sampleDir = path.join(__dirname, '../../sample/TemplateSample');
+
+    // Check if the sample directory exists
+    if (!fs.existsSync(sampleDir)) {
+        console.log(`Directory does not exist: ${sampleDir}`);
+        return;
+    }
+
+    // Get all issue directories
+    const issueDirs = fs.readdirSync(sampleDir)
+        .map(dir => path.join(sampleDir, dir))
+        .filter(dir => fs.statSync(dir).isDirectory());
+
+    if (issueDirs.length === 0) {
+        console.log('No issue directories found.');
+        return;
+    }
+
+    // Run tests for each issue directory
+    for (const issueDir of issueDirs) {
+        await runTestForIssue(issueDir);
+    }
+
+    console.log('All tests completed.');
+}
+
+// Execute the main function and handle errors
+main().catch(error => {
+    console.log(`Test execution failed: ${error}`);
+    process.exit(1);
+});
