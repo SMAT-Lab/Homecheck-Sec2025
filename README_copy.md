@@ -112,7 +112,7 @@ main()
 
 ## 需要做的
 
-1. 在./sample下建一个自己的文件夹，存放含有安全漏洞的被检测代码示例，文件夹命名：Sample学号，例：Sample19241042，该文件夹下每一种安全漏洞作为一个单独的项目，创建一个独立的文件夹，写好config.json（参考模板，注意路径），在sampleX.ts中写含有第X种安全漏洞的被检测代码示例。
+1. 在./sample下建一个自己的文件夹，存放含有安全漏洞的被检测代码示例，文件夹命名：Sample学号，例：Sample19241042，该文件夹下每一种安全漏洞作为一个单独的项目，创建一个独立的文件夹，写好projectConfig.json和ruleConfig.json（参考模板，注意路径），对于文件级规则在sampleX.ts中写含有第X种安全漏洞的被检测代码示例，对于项目级规则，整个IssueX为包含安全漏洞的项目示例。
 2. 在./src/checker下建一个自己的Checker，文件夹命名：Checker学号.ts，例：Checker19241042.ts（参考模板）。
 3. 实现Checker，针对sample下的每种含有安全漏洞的问题代码实现检测逻辑，输出不做具体要求，能表述清楚问题所在即可。
 
@@ -121,6 +121,11 @@ main()
 [homecheck：鸿蒙应用高性能编码检测工具](https://gitcode.com/openharmony-sig/homecheck)
 
 [方舟分析器：面向ArkTS语言的静态程序分析框架](https://gitcode.com/openharmony-sig/arkanalyzer)
+
+## 评分标准
+
+正确完成两个checker可得大作业60%分数，正确完成五个checker可得大作业90%分数，其余综合最后整体完成情况。
+（如何判断“正确”： ）
 
 ## 截止时间
 
