@@ -1,0 +1,16 @@
+{
+  "projectName": "SQLInjection",
+  "projectPath": "./sample/Sample21241088/Issue1",
+  "logPath": "./HomeCheck.log",
+  "ohosSdkPath": "C:/Program Files/Huawei/DevEco Studio/sdk/default/openharmony/ets",
+  "hmsSdkPath": "C:/Program Files/Huawei/DevEco Studio/sdk/default/hms/ets",
+  "checkPath": "",
+  "sdkVersion": 14,
+  "fix": "false",
+  "npmPath": "",
+  "npmInstallDir": "./",
+  "reportDir": "./report",
+  "arkCheckPath": "./",
+  "product": "default",
+  "sdksThirdParty": []
+}

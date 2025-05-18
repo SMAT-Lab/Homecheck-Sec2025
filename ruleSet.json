@@ -254,6 +254,7 @@
     "@stability/image-sync-blur-check": 3
   },
   "plugin:@software-sec/all": {
-    "@software-sec/checker19241042/command-execution-check": 1
+    "@software-sec/checker19241042/command-execution-check": 1,
+    "@software-sec/checker21241088/sql-injection-check": 1
   }
 }
