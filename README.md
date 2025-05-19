@@ -171,6 +171,11 @@ export const fileRules = {
 
 3. 实现Checker，针对sample下的每种含有安全漏洞的问题代码实现检测逻辑，并报告问题。
 
+### 添加测试文件
+在./test/SoftwareSecurity25目录下建一个自己的测试文件，文件命名Test学号.ts，例：Test19241042.ts(参考模板，注意修改路径)。
+
+这个文件用于一次测试一个人的所有checker，最后我们会通过运行大家的这个文件来评测，请大家确保这个文件能正确执行。
+
 ## 参考源码
 
 [homecheck：鸿蒙应用高性能编码检测工具](https://gitcode.com/openharmony-sig/homecheck)
