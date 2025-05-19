@@ -461,7 +461,7 @@ export const fileRules = {
     "@stability/camera-input-open-check": CameraInputOpenCheck,
     //software-security2025 start
     "@software-sec/checker19241042/command-execution-check":CommandExecutionCheck
-    //software-security2025 finish
+    //software-security2025 end
 };
 
 export const projectRules = {

@@ -6,7 +6,7 @@ import {FileMatcher, MatcherCallback, MatcherTypes} from '../../Index';
 import {Rule} from '../../Index';
 import {IssueReport} from '../../model/Defects';
 
-const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'CommandExecutionCheck');
+const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'TemplaterChecker');
 
 const gMetaData: BaseMetaData = {
     severity: 1,
