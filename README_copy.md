@@ -43,21 +43,51 @@ Homecheck-Sec2025
 
 ```
 npm install
-ts-node .\src\checker\TemplateChecker.ts
-ts-node .\src\checker\Checker19241042.ts
+ts-node ./test/SoftwareSecurity25/Test19241042.ts
 ```
 
-TemplateChecker.ts输出
+控制台输出
 
 ```
-Issue1
-Issue2
+Running test for: Issue1
+Test finished for: Issue1
+All tests completed.
 ```
 
-Checker19241042.ts输出
+HomeCheck.log输出
 
 ```
-variable: $temp1, def: $temp1 = 'rm -rf /bin', use: staticinvoke <@_UnkownProjectName/_UnkownFileName: .exec()>($temp1)
+[INFO] [30588] [HomeCheck] - [ConfigUtils] Checking started.
+[INFO] [30588] [HomeCheck] - [CheckEntry] File count: 1
+[INFO] [30588] [HomeCheck] - [CheckEntry] Build sceneConfig completed.
+[INFO] [30588] [HomeCheck] - [CheckEntry] Build scene completed.
+[INFO] [30588] [HomeCheck] - [CheckEntry] Infer types completed.
+[INFO] [30588] [HomeCheck] - [CheckEntry] Build scope completed.
+[INFO] [30588] [HomeCheck] - [ConfigUtils] The npmPath:npm
+[INFO] [30588] [HomeCheck] - [ConfigUtils] The npmInstallDir:./
+[INFO] [30588] [HomeCheck] - [Message] ===== progress: 100% ======
+[INFO] [30588] [HomeCheck] - [CheckEntry] 1 issues from checker - @software-sec/checker19241042/command-execution-check
+[INFO] [30588] [HomeCheck] - [Main] Checking completed.
+[INFO] [30588] [HomeCheck] - [Main] HomeCheck took: 2.276 s.
+```
+
+report/issuesReport.json输出
+
+```
+[
+  {
+    "filePath": "D:\\Elouan\\Research\\ArkAnything\\Homecheck-Sec2025\\sample\\Sample19241042\\Issue1\\sample1.ts",
+    "messages": [
+      {
+        "line": 5,
+        "column": 4,
+        "severity": "WARN",
+        "message": "Detects unsafe command execution via exec() calls.",
+        "rule": "@software-sec/checker19241042/command-execution-check"
+      }
+    ]
+  }
+]
 ```
 
 ## Checker说明
