@@ -1,0 +1,84 @@
+{
+  "app": {
+    "bundleName": "com.example.insecureapp",
+    "vendor": "example",
+    "versionCode": 1000000,
+    "versionName": "1.0.0"
+  },
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "description": "$string:module_desc",
+    "mainElement": "MainAbility",
+    "deviceTypes": [
+      "phone",
+      "tablet"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "abilities": [
+      {
+        "name": "MainAbility",
+        "srcEntry": "./ets/MainAbility/MainAbility.ts", 
+        "description": "$string:MainAbility_desc",
+        "icon": "$media:icon",
+        "label": "$string:MainAbility_label",
+        "type": "page",
+        "launchType": "standard",
+        "exported": true 
+      },
+      {
+        "name": "VulnerableService",
+        "srcEntry": "./ets/VulnerableService/VulnerableService.ts",
+        "description": "A service exported without strong permissions",
+        "type": "service",
+        "exported": true,
+        "permissions": ["com.example.insecureapp.USER_PERMISSION"] 
+      },
+      {
+        "name": "SecureService",
+        "srcEntry": "./ets/SecureService/SecureService.ts",
+        "description": "A service exported with system permission",
+        "type": "service",
+        "exported": true,
+        "permissions": ["ohos.permission.DISTRIBUTED_DATASYNC"]
+      },
+      {
+        "name": "InternalService",
+        "srcEntry": "./ets/InternalService/InternalService.ts",
+        "description": "An internal service not exported",
+        "type": "service",
+        "exported": false 
+      },
+      {
+        "name": "CodeMissingPermissionCheckAbility",
+        "srcEntry": "./ets/CodeMissingPermissionCheckAbility/CodeMissingPermissionCheckAbility.ts",
+        "description": "Exported ability but code lacks permission check",
+        "type": "page",
+        "exported": true,
+        "permissions": ["ohos.permission.CAMERA"] 
+      }
+    ],
+    "defPermissions": [
+      {
+        "name": "com.example.insecureapp.USER_PERMISSION",
+        "grantMode": "user_grant", 
+        "availableScope": ["signature"],
+        "label": "User level permission",
+        "description": "A permission granted by user."
+      },
+      {
+        "name": "com.example.insecureapp.SYSTEM_APP_PERMISSION",
+        "grantMode": "system_grant",
+        "availableScope": ["signature"],
+        "label": "System app permission",
+        "description": "A permission granted to system apps."
+      }
+    ],
+    "requestPermissions": [ 
+        { "name": "ohos.permission.CAMERA" },
+        { "name": "ohos.permission.DISTRIBUTED_DATASYNC" }
+    ]
+  }
+}

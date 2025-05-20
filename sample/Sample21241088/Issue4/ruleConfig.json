@@ -1,0 +1,20 @@
+{
+  "files": [
+    "entry/src/main/ets/**/*.ets", 
+    "entry/src/main/ets/**/*.ts"
+  ],
+  "ignore": [
+    "**/ohosTest/**/*",
+    "**/node_modules/**/*",
+    "**/build/**/*",
+    "**/hvigorfile/**/*",
+    "**/oh_modules/**/*",
+    "**/.preview/**/*"
+  ],
+  "rules": {
+    "@software-sec/checker21241088/insecure-component-exposure": 2 
+  },
+  "ruleSet": [],
+  "overrides": [],
+  "extRuleSet": []
+}

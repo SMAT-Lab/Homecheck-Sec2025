@@ -95,47 +95,63 @@ export class SqlInjectionCheck implements BaseChecker {
             logger.info("未发现SQL注入漏洞");
         }
     }
+// 在类中添加一个Set来记录已经报告过的位置
+private reportedLocations = new Set<string>();
 
-    public reportIssue(arkFile: ArkFile, stmt: Stmt, methodName: string): void {
-        const severity = this.rule?.alert ?? this.metaData.severity;
-        const filePath = arkFile.getFilePath();
-        const originPositionInfo = stmt.getOriginPositionInfo();
-        if (!originPositionInfo) {
-            logger.error("无法获取位置信息");
-            return;
-        }
-        
-        const lineNum = originPositionInfo.getLineNo();
-        const text = stmt.getOriginalText();
-        if (!text || text.length === 0) {
-            logger.error("无法获取原始文本");
-            return;
-        }
-        
-        // 尝试找到方法名位置
-        let startColumn = originPositionInfo.getColNo();
-        let endColunm = startColumn + methodName.length;
-        
-        if (text.includes(methodName)) {
-            startColumn = originPositionInfo.getColNo() + text.indexOf(methodName);
-            endColunm = startColumn + methodName.length;
-        }
-        
-        logger.info(`报告问题: 行${lineNum}, 列${startColumn}, 方法${methodName}`);
-        
-        const defects = new Defects(
-            lineNum, 
-            startColumn, 
-            endColunm, 
-            '检测到SQL注入漏洞风险，避免在SQL查询中直接拼接用户输入。', 
-            severity, 
-            this.rule?.ruleId || "@software-sec/checker21241088/sql-injection-check",
-            filePath, 
-            this.metaData.ruleDocPath, 
-            true, false, false
-        );
-        
-        this.issues.push(new IssueReport(defects, undefined));
-        logger.info("问题已报告");
+// 修改reportIssue方法
+public reportIssue(arkFile: ArkFile, stmt: Stmt, methodName: string): void {
+    const severity = this.rule?.alert ?? this.metaData.severity;
+    const filePath = arkFile.getFilePath();
+    const originPositionInfo = stmt.getOriginPositionInfo();
+    if (!originPositionInfo) {
+        logger.error("无法获取位置信息");
+        return;
     }
+    
+    const lineNum = originPositionInfo.getLineNo();
+    const text = stmt.getOriginalText();
+    if (!text || text.length === 0) {
+        logger.error("无法获取原始文本");
+        return;
+    }
+    
+    // 尝试找到方法名位置
+    let startColumn = originPositionInfo.getColNo();
+    let endColunm = startColumn + methodName.length;
+    
+    if (text.includes(methodName)) {
+        startColumn = originPositionInfo.getColNo() + text.indexOf(methodName);
+        endColunm = startColumn + methodName.length;
+    }
+    
+    // 创建唯一位置标识
+    const locationKey = `${filePath}:${lineNum}:${startColumn}`;
+    
+    // 检查是否已经报告过这个位置
+    if (this.reportedLocations.has(locationKey)) {
+        logger.info(`位置 ${locationKey} 已经报告过，跳过`);
+        return;
+    }
+    
+    // 记录这个位置已经报告过
+    this.reportedLocations.add(locationKey);
+    
+    logger.info(`报告问题: 行${lineNum}, 列${startColumn}, 方法${methodName}`);
+    
+    const defects = new Defects(
+        lineNum, 
+        startColumn, 
+        endColunm, 
+        '检测到SQL注入漏洞风险，避免在SQL查询中直接拼接用户输入。', 
+        severity, 
+        this.rule?.ruleId || "@software-sec/checker21241088/sql-injection-check",
+        filePath, 
+        this.metaData.ruleDocPath, 
+        true, false, false
+    );
+    
+    this.issues.push(new IssueReport(defects, undefined));
+    logger.info("问题已报告");
+    logger.info(`在语句 '${text}' 发现SQL注入风险`);
+}
 }

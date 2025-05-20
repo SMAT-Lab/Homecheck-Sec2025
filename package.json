@@ -8,6 +8,7 @@
     "arkanalyzer": "^1.0.29",
     "commander": "11.0.0",
     "fs-extra": "11.2.0",
+    "jsonpath-plus": "^10.3.0",
     "sqlite": "^5.1.1"
   },
   "devDependencies": {

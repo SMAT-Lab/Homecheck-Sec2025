@@ -255,6 +255,10 @@
   },
   "plugin:@software-sec/all": {
     "@software-sec/checker19241042/command-execution-check": 1,
-    "@software-sec/checker21241088/sql-injection-check": 1
+    "@software-sec/checker21241088/sql-injection-check": 1,
+    "@software-sec/checker21241088/sensitive-data-storage-check": 2,
+    "@software-sec/checker21241088/xss-check": 2,
+    "@software-sec/checker21241088/insecure-component-exposure": 2,
+    "@software-sec/checker21241088/logging-sensitive-data": 1
   }
 }

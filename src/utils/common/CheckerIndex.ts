@@ -246,7 +246,10 @@ import { AvoidMemoryLeakInAnimator } from '../../checker/performance/AvoidMemory
 import { AvoidMemoryLeakInDisplaysync } from '../../checker/performance/AvoidMemoryLeakInDisplaysync';
 import { CommandExecutionCheck } from '../../checker/SoftwareSecurity25/Checker19241042/CommandExecutionCheck';
 import { SqlInjectionCheck } from '../../checker/SoftwareSecurity25/Checker21241088/SqlInjectionCheck';
-
+import { SensitiveDataStorageCheck } from '../../checker/SoftwareSecurity25/Checker21241088/SensitiveDataStorageCheck';
+import { InsecureComponentExposureCheck } from '../../checker/SoftwareSecurity25/Checker21241088/InsecureComponentExposureCheck';
+import { XssCheck } from '../../checker/SoftwareSecurity25/Checker21241088/XssCheck';
+import { LoggingSensitiveDataCheck } from '../../checker/SoftwareSecurity25/Checker21241088/LoggingSensitiveDataCheck';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'CheckerIndex');
 
@@ -462,7 +465,11 @@ export const fileRules = {
     "@stability/camera-input-open-check": CameraInputOpenCheck,
     //software-security2025 start
     "@software-sec/checker19241042/command-execution-check":CommandExecutionCheck,
-    "@software-sec/checker21241088/sql-injection-check": SqlInjectionCheck
+    "@software-sec/checker21241088/sql-injection-check": SqlInjectionCheck,
+    "@software-sec/checker21241088/sensitive-data-storage-check": SensitiveDataStorageCheck,
+    "@software-sec/checker21241088/xss-check": XssCheck,
+    "@software-sec/checker21241088/insecure-component-exposure": InsecureComponentExposureCheck,
+    "@software-sec/checker21241088/logging-sensitive-data": LoggingSensitiveDataCheck,
     //software-security2025 finish
 };
 

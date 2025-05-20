@@ -1,0 +1,20 @@
+{
+  "files": [
+    "**/*.ets",
+    "**/*.ts"
+  ],
+  "ignore": [
+    "**/ohosTest/**/*",
+    "**/node_modules/**/*",
+    "**/build/**/*",
+    "**/hvigorfile/**/*",
+    "**/oh_modules/**/*",
+    "**/.preview/**/*"
+  ],
+  "rules": {
+    "@software-sec/checker21241088/logging-sensitive-data": 1
+  },
+  "ruleSet": [],
+  "overrides": [],
+  "extRuleSet": []
+}
