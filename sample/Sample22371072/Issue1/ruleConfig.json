@@ -1,0 +1,33 @@
+{
+  "files": [
+    "**/*.ets",
+    "**/*.ts"
+  ],
+  "ignore": [
+    "**/ohosTest/**/*",
+    "**/node_modules/**/*",
+    "**/build/**/*",
+    "**/hvigorfile/**/*",
+    "**/oh_modules/**/*",
+    "**/.preview/**/*"
+  ],
+  "rules": {
+    "@performance/foreach-args-check": 3
+  },
+  "ruleSet": [
+    "plugin:@correctness/all",
+    "plugin:@performance/all",
+    "plugin:@cross-device-app-dev/all",
+    "plugin:@security/all",
+    "plugin:@stability/all"
+  ],
+  "overrides": [],
+  "extRuleSet": [],
+  "rules": [
+    {
+      "ruleId": "SoftwareSecurity25/Checker22371072",
+      "alert": 1,
+      "enabled": true
+    }
+  ]
+}

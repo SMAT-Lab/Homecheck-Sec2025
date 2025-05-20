@@ -1,9 +1,9 @@
 {
-  "projectName": "TestProject",
-  "projectPath": "D:/arkProject",
+  "projectName": "Issue2",
+  "projectPath": "./sample/TemplateSample/Issue2",
   "logPath": "./HomeCheck.log",
-  "ohosSdkPath": "./resources/sdk/openharmony/ets",
-  "hmsSdkPath": "./resources/sdk/hms/ets",
+  "ohosSdkPath": "./resource/sdk/openharmony/ets",
+  "hmsSdkPath": "./resource/sdk/hms/ets",
   "checkPath": "",
   "sdkVersion": 14,
   "fix": "false",
