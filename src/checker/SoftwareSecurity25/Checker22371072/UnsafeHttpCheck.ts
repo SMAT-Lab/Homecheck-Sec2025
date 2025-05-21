@@ -40,21 +40,56 @@ export class UnsafeHttpCheck implements BaseChecker {
             logger.error('Failed to get parse tree node from source file');
             return;
         }
+
+        let hasHttpImport = false;
+        let httpImportName = 'http';
         
-        // 遍历文件中的所有字符串字面量
-        const visitor = (node: ts.Node) => {
-            if (ts.isStringLiteral(node)) {
-                const value = node.text;
-                if (value.startsWith('http://')) {
-                    const start = node.getStart();
-                    const lineAndChar = sourceFile.getLineAndCharacterOfPosition(start);
-                    this.reportIssue(targetFile, lineAndChar.line + 1, lineAndChar.character + 1, value);
+        // 检查 http 模块导入
+        const importVisitor = (node: ts.Node) => {
+            if (ts.isImportDeclaration(node)) {
+                const importPath = (node.moduleSpecifier as ts.StringLiteral).text;
+                if (importPath === 'http') {
+                    hasHttpImport = true;
+                    if (node.importClause && node.importClause.name) {
+                        httpImportName = node.importClause.name.text;
+                    }
                 }
             }
-            ts.forEachChild(node, visitor);
+            ts.forEachChild(node, importVisitor);
         };
-
-        visitor(sourceFileObject);
+        
+        importVisitor(sourceFileObject);
+        
+        if (!hasHttpImport) {
+            return;
+        }
+        
+        // 检查 http.request 调用
+        const requestVisitor = (node: ts.Node) => {
+            if (ts.isCallExpression(node)) {
+                const expression = node.expression;
+                if (ts.isPropertyAccessExpression(expression)) {
+                    const objectName = expression.expression.getText();
+                    const propertyName = expression.name.getText();
+                    console.log(objectName, propertyName);
+                    
+                    if (objectName === httpImportName && propertyName === 'request') {
+                        const start = node.getStart();
+                        const lineAndChar = sourceFile.getLineAndCharacterOfPosition(start);
+                        this.reportIssue(
+                            targetFile, 
+                            lineAndChar.line + 1, 
+                            lineAndChar.character + 1, 
+                            `use of ${httpImportName}.request`
+                        );
+                        console.log(lineAndChar.line + 1, lineAndChar.character + 1);
+                    }
+                }
+            }
+            ts.forEachChild(node, requestVisitor);
+        };
+        
+        requestVisitor(sourceFileObject);
     }
 
     public reportIssue(arkFile: ArkFile, lineNum: number, startColumn: number, text: string): void {
