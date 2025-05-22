@@ -166,6 +166,18 @@ export const fileRules = {
 
 冒号后面是checker文件导出的规则检查类。
 
+### 实现Checker并报告问题
+1. 在./src/checker/SoftwareSecurity25下建一个自己的Checker目录，文件夹命名：Checker学号，例：Checker19241042。
+
+2. 每一条规则新建一个checker文件，命名：规则名Check.ts，例：CommandExecutionCheck.ts（参考模板TemplateChecker.ts）。
+
+3. 实现Checker，针对sample下的每种含有安全漏洞的问题代码实现检测逻辑，并报告问题。
+
+### 添加测试文件
+在./test/SoftwareSecurity25目录下建一个自己的测试文件，文件命名Test学号.ts，例：Test19241042.ts(参考模板，注意修改路径)。
+
+这个文件用于一次测试一个人的所有checker，最后我们会通过运行大家的这个文件来评测，请大家确保这个文件能正确执行。
+
 ## 提交
 
 每个人需要基于main分支创建自己的分支，命名为B+学号（例如，B19241042）。只能在自己的分支上提交代码，禁止推送至main分支和其他人的分支。main分支更新后需要从main分支拉取更新以保持代码同步。
@@ -195,20 +207,6 @@ git push origin B<学号>
 git checkout B<学号>
 git pull origin main
 ```
-
-### 实现Checker并报告问题
-1. 在./src/checker/SoftwareSecurity25下建一个自己的Checker目录，文件夹命名：Checker学号，例：Checker19241042。
-
-2. 每一条规则新建一个checker文件，命名：规则名Check.ts，例：CommandExecutionCheck.ts（参考模板TemplateChecker.ts）。
-
-3. 实现Checker，针对sample下的每种含有安全漏洞的问题代码实现检测逻辑，并报告问题。
-
-### 添加测试文件
-在./test/SoftwareSecurity25目录下建一个自己的测试文件，文件命名Test学号.ts，例：Test19241042.ts(参考模板，注意修改路径)。
-
-这个文件用于一次测试一个人的所有checker，最后我们会通过运行大家的这个文件来评测，请大家确保这个文件能正确执行。
-
-
 
 ## 参考源码
 
