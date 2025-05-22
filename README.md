@@ -28,7 +28,7 @@ Homecheck-Sec2025
 |---src
 |---|---checker //存放基于ArkAnalyzer实现的针对sample中的样例的安全漏洞检测器
 |---|---|---SoftwareSecurity25
-|---|---|---|---TemplateChecker.ts  //Checker模板
+|---|---|---|---HardcodedCredentialCheck.ts  //Checker模板
 |---|---|---|---Checker19241042  //每人建一个自己的目录
 |---|---|---|---|---CommandExecutionCheck.ts  //规则示例，每个规则建一个单独的checker文件
 |---|---utils

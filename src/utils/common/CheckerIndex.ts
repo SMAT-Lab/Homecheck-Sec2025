@@ -250,6 +250,18 @@ import { BanCallbackOperationsCheck } from '../../checker/stability/BanCallbackO
 import { CallAddInputBeforeAddOutputCheck } from '../../checker/stability/CallAddInputBeforeAddOutputCheck';
 import { CameraInputOpenCheck } from '../../checker/stability/CameraInputOpenCheck';
 import { ImageSyncBlurCheck } from '../../checker/stability/ImageSyncBlurCheck';
+import { DarkColorModeCheck } from '../../checker/performance/DarkColorModeCheck';
+import { LowerAppBrightnessCheck } from '../../checker/performance/LowerAppBrightnessCheck';
+import { StreamUsageApiCheck } from '../../checker/performance/StreamUsageApiCheck';
+import { AvoidMemoryLeakInAnimator } from '../../checker/performance/AvoidMemoryLeakInAnimator';
+import { AvoidMemoryLeakInDisplaysync } from '../../checker/performance/AvoidMemoryLeakInDisplaysync';
+import { CommandExecutionCheck } from '../../checker/SoftwareSecurity25/Checker19241042/CommandExecutionCheck';
+import { HardcodedCredentialCheck } from '../../checker/SoftwareSecurity25/Checker22371329/HardcodedCredentialCheck';
+import { EvalUsageCheck } from '../../checker/SoftwareSecurity25/Checker22371329/EvalUsageCheck';
+import { InsecureHttpCheck } from '../../checker/SoftwareSecurity25/Checker22371329/InsecureHttpCheck';
+import { InsecureRandomCheck } from '../../checker/SoftwareSecurity25/Checker22371329/InsecureRandomCheck';
+import { PathTraversalCheck } from '../../checker/SoftwareSecurity25/Checker22371329/PathTraversalCheck';
+
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'CheckerIndex');
 
@@ -470,7 +482,13 @@ export const fileRules = {
     "@software-sec/checker22373212/Innerhtml-check": InnerHtmlCheck,
     "@software-sec/checker22373212/PrototypePollution-check": PrototypePollutionCheck,
     "@software-sec/checker22373212/Redirect-check": RedirectCheck
+    "@software-sec/checker19241042/command-execution-check": CommandExecutionCheck,
     //software-security2025 end
+    '@software-sec/checker22371329/hardcoded-credential-check': HardcodedCredentialCheck,
+    '@software-sec/checker22371329/eval-usage-check': EvalUsageCheck,
+    '@software-sec/checker22371329/insecure-http-check': InsecureHttpCheck,
+    '@software-sec/checker22371329/path-traversal-check': PathTraversalCheck,
+    '@software-sec/checker22371329/insecure-random-check': InsecureRandomCheck,
 };
 
 export const projectRules = {
@@ -496,7 +514,11 @@ export const projectRules = {
     "@security/no-cycle-check": NoCycleCheck,
     "@stability/image-sync-blur-check": ImageSyncBlurCheck,
     //software-security2025 start
-
+    '@software-sec/checker22371329/hardcoded-credential-check': HardcodedCredentialCheck,
+    '@software-sec/checker22371329/eval-usage-check': EvalUsageCheck,
+    '@software-sec/checker22371329/insecure-http-check': InsecureHttpCheck,
+    '@software-sec/checker22371329/path-traversal-check': PathTraversalCheck,
+    '@software-sec/checker22371329/insecure-random-check': InsecureRandomCheck,
     //software-security2025 finish
 };
 
