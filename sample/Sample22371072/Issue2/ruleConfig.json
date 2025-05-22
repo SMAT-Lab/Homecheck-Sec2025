@@ -15,11 +15,6 @@
     "@software-sec/checker22371072/unsafe-file-operation-check": 1
   },
   "ruleSet": [
-    "plugin:@correctness/all",
-    "plugin:@performance/all",
-    "plugin:@cross-device-app-dev/all",
-    "plugin:@security/all",
-    "plugin:@stability/all"
   ],
   "overrides": [],
   "extRuleSet": []

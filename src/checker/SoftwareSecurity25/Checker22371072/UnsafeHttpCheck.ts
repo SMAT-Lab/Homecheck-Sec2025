@@ -71,7 +71,7 @@ export class UnsafeHttpCheck implements BaseChecker {
                 if (ts.isPropertyAccessExpression(expression)) {
                     const objectName = expression.expression.getText();
                     const propertyName = expression.name.getText();
-                    console.log(objectName, propertyName);
+                    // console.log(objectName, propertyName);
                     
                     if (objectName === httpImportName && propertyName === 'request') {
                         const start = node.getStart();
@@ -82,7 +82,7 @@ export class UnsafeHttpCheck implements BaseChecker {
                             lineAndChar.character + 1, 
                             `use of ${httpImportName}.request`
                         );
-                        console.log(lineAndChar.line + 1, lineAndChar.character + 1);
+                        // console.log(lineAndChar.line + 1, lineAndChar.character + 1);
                     }
                 }
             }

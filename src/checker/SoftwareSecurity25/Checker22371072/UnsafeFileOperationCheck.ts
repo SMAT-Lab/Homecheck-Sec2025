@@ -66,8 +66,8 @@ export class UnsafeFileOperationCheck implements BaseChecker {
         };
         
         importVisitor(sourceFileObject);
-        console.log('hasFsImport', hasFsImport);
-        console.log('hasPathImport', hasPathImport);
+        // console.log('hasFsImport', hasFsImport);
+        // console.log('hasPathImport', hasPathImport);
         if (!hasFsImport && !hasPathImport) {
             return;
         }

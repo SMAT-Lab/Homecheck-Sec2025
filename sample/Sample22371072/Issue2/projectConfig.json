@@ -12,5 +12,11 @@
   "reportDir": "./report",
   "arkCheckPath": "./",
   "product": "default",
-  "sdksThirdParty": []
+  "sdksThirdParty": [
+    {
+      "name": "thirdParty",
+      "path": "./resources/thirdPartyModules",
+      "moduleName": ""
+    }
+  ]
 }

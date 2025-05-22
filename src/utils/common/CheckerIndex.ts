@@ -247,7 +247,9 @@ import { AvoidMemoryLeakInDisplaysync } from '../../checker/performance/AvoidMem
 import { CommandExecutionCheck } from '../../checker/SoftwareSecurity25/Checker19241042/CommandExecutionCheck';
 import { UnsafeHttpCheck } from '../../checker/SoftwareSecurity25/Checker22371072/UnsafeHttpCheck';
 import { UnsafeFileOperationCheck } from '../../checker/SoftwareSecurity25/Checker22371072/UnsafeFileOperationCheck';
-
+import { XSSChecker } from '../../checker/SoftwareSecurity25/Checker22371072/XSSChecker';
+import { SensitiveDataLeakCheck } from '../../checker/SoftwareSecurity25/Checker22371072/SensitiveDataLeakCheck';
+import { UnsafeEncryptionCheck } from '../../checker/SoftwareSecurity25/Checker22371072/UnsafeEncryptionCheck';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'CheckerIndex');
 
@@ -461,7 +463,12 @@ export const fileRules = {
     "@stability/ban-callback-operations-check": BanCallbackOperationsCheck,
     "@stability/call-addInput-before-addOutput-check": CallAddInputBeforeAddOutputCheck,
     "@stability/camera-input-open-check": CameraInputOpenCheck,
-    "@software-sec/checker19241042/command-execution-check": CommandExecutionCheck
+    "@software-sec/checker19241042/command-execution-check": CommandExecutionCheck,
+    "@software-sec/checker22371072/unsafe-http-check": UnsafeHttpCheck,
+    "@software-sec/checker22371072/unsafe-file-operation-check": UnsafeFileOperationCheck,
+    "@software-sec/checker22371072/xss-check": XSSChecker,
+    "@software-sec/checker22371072/sensitive-data-leak-check": SensitiveDataLeakCheck,
+    "@software-sec/checker22371072/unsafe-encryption-check": UnsafeEncryptionCheck
 };
 
 export const projectRules = {
@@ -487,8 +494,6 @@ export const projectRules = {
     "@security/no-cycle-check": NoCycleCheck,
     "@stability/image-sync-blur-check": ImageSyncBlurCheck,
     //software-security2025 start
-    "@software-sec/checker22371072/unsafe-http-check": UnsafeHttpCheck,
-    "@software-sec/checker22371072/unsafe-file-operation-check": UnsafeFileOperationCheck
     //software-security2025 finish
 };
 

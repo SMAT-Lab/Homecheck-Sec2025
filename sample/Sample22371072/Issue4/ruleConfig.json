@@ -12,7 +12,7 @@
     "**/.preview/**/*"
   ],
   "rules": {
-    "@software-sec/checker22371072/unsafe-http-check": 1
+    "@software-sec/checker22371072/sensitive-data-leak-check": 1
   },
   "ruleSet": [
   ],
