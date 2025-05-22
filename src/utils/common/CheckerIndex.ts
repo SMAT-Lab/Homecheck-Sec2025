@@ -248,8 +248,8 @@ import { CommandExecutionCheck } from '../../checker/SoftwareSecurity25/Checker1
 import { HardcodedCredentialCheck } from '../../checker/SoftwareSecurity25/Checker22371329/HardcodedCredentialCheck';
 import { EvalUsageCheck } from '../../checker/SoftwareSecurity25/Checker22371329/EvalUsageCheck';
 import { InsecureHttpCheck } from '../../checker/SoftwareSecurity25/Checker22371329/InsecureHttpCheck';
-import { SqlInjectionCheck } from '../../checker/SoftwareSecurity25/Checker22371329/SqlInjectionCheck';
 import { InsecureRandomCheck } from '../../checker/SoftwareSecurity25/Checker22371329/InsecureRandomCheck';
+import { PathTraversalCheck } from '../../checker/SoftwareSecurity25/Checker22371329/PathTraversalCheck';
 
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'CheckerIndex');
@@ -470,7 +470,7 @@ export const fileRules = {
     '@software-sec/checker22371329/hardcoded-credential-check': HardcodedCredentialCheck,
     '@software-sec/checker22371329/eval-usage-check': EvalUsageCheck,
     '@software-sec/checker22371329/insecure-http-check': InsecureHttpCheck,
-    '@software-sec/checker22371329/sql-injection-check': SqlInjectionCheck,
+    '@software-sec/checker22371329/path-traversal-check': PathTraversalCheck,
     '@software-sec/checker22371329/insecure-random-check': InsecureRandomCheck,
 };
 
@@ -500,7 +500,7 @@ export const projectRules = {
     '@software-sec/checker22371329/hardcoded-credential-check': HardcodedCredentialCheck,
     '@software-sec/checker22371329/eval-usage-check': EvalUsageCheck,
     '@software-sec/checker22371329/insecure-http-check': InsecureHttpCheck,
-    '@software-sec/checker22371329/sql-injection-check': SqlInjectionCheck,
+    '@software-sec/checker22371329/path-traversal-check': PathTraversalCheck,
     '@software-sec/checker22371329/insecure-random-check': InsecureRandomCheck,
     //software-security2025 finish
 };

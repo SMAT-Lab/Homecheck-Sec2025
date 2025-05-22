@@ -12,7 +12,7 @@
     "**/.preview/**/*"
   ],
   "rules": {
-     "@software-sec/checker22371329/sql-injection-check": 2
+     "@software-sec/checker22371329/path-traversal-check": 2
   },
   "ruleSet": [
     "plugin:@correctness/all",

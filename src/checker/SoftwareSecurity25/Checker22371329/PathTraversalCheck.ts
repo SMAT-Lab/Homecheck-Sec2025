@@ -6,14 +6,14 @@ import { FileMatcher, MatcherCallback, MatcherTypes } from '../../../Index';
 import { Rule } from '../../../Index';
 import { IssueReport } from '../../../model/Defects';
 
-const logger_SqlInj = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'SqlInjectionCheck');
-const gMetaData_SqlInj: BaseMetaData = {
+const logger_Path = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'PathTraversalCheck');
+const gMetaData_Path: BaseMetaData = {
     severity: 2,
     ruleDocPath: '',
-    description: 'Detects potential SQL injection via string concatenation.'
+    description: 'Detects file path traversal via "../" patterns.'
 };
-export class SqlInjectionCheck implements BaseChecker {
-    readonly metaData: BaseMetaData = gMetaData_SqlInj;
+export class PathTraversalCheck implements BaseChecker {
+    readonly metaData: BaseMetaData = gMetaData_Path;
     public rule: Rule;
     public defects: Defects[] = [];
     public issues: IssueReport[] = [];
@@ -27,7 +27,7 @@ export class SqlInjectionCheck implements BaseChecker {
                 const cfg = arkMethod.getCfg(); if (!cfg) continue;
                 for (const stmt of cfg.getStmts()) {
                     const text = stmt.getOriginalText() || '';
-                    if (/SELECT\s+.*\+/.test(text)) {
+                    if (/\.\.\//.test(text)) {
                         this.reportIssue(targetFile, stmt);
                     }
                 }
@@ -49,6 +49,6 @@ export class SqlInjectionCheck implements BaseChecker {
             true, false, false
         );
         this.issues.push(new IssueReport(defect, undefined));
-        logger_SqlInj.warn(`Potential SQL injection detected at ${arkFile.getFilePath()}:${pos.getLineNo()}`);
+        logger_Path.warn(`Path traversal pattern detected at ${arkFile.getFilePath()}:${pos.getLineNo()}`);
     }
 }
