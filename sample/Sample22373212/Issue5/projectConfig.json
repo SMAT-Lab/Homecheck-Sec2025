@@ -1,6 +1,6 @@
 {
-  "projectName": "TestProject",
-  "projectPath": "./sample/Sample19241042/Issue1",
+  "projectName": "Issue5",
+  "projectPath": "./sample/Sample22373212/Issue5",
   "logPath": "./HomeCheck.log",
   "ohosSdkPath": "./resources/sdk/openharmony/ets",
   "hmsSdkPath": "./resources/sdk/hms/ets",
@@ -9,14 +9,8 @@
   "fix": "false",
   "npmPath": "",
   "npmInstallDir": "./",
-  "reportDir": "./report",
+  "reportDir": "./report/5",
   "arkCheckPath": "./",
   "product": "default",
-  "sdksThirdParty": [
-    {
-      "name": "thirdParty",
-      "path": "./resources/thirdPartyModules",
-      "moduleName": ""
-    }
-  ]
+  "sdksThirdParty": []
 }
