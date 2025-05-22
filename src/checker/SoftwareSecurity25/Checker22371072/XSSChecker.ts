@@ -11,7 +11,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'XSSChecker');
 const gMetaData: BaseMetaData = {
     severity: 1,
     ruleDocPath: '',
-    description: 'Detects Cross-Site Scripting (XSS) vulnerabilities, including unsafe DOM operations and user input handling'
+    description: 'Cross-Site Scripting (XSS) vulnerabilities, including unsafe DOM operations and user input handling'
 };
 
 export class XSSChecker implements BaseChecker {
