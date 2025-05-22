@@ -245,6 +245,11 @@ import { StreamUsageApiCheck } from '../../checker/performance/StreamUsageApiChe
 import { AvoidMemoryLeakInAnimator } from '../../checker/performance/AvoidMemoryLeakInAnimator';
 import { AvoidMemoryLeakInDisplaysync } from '../../checker/performance/AvoidMemoryLeakInDisplaysync';
 import { CommandExecutionCheck } from '../../checker/SoftwareSecurity25/Checker19241042/CommandExecutionCheck';
+import { HardcodedCredentialCheck } from '../../checker/SoftwareSecurity25/Checker22371329/HardcodedCredentialCheck';
+import { EvalUsageCheck } from '../../checker/SoftwareSecurity25/Checker22371329/EvalUsageCheck';
+import { InsecureHttpCheck } from '../../checker/SoftwareSecurity25/Checker22371329/InsecureHttpCheck';
+import { SqlInjectionCheck } from '../../checker/SoftwareSecurity25/Checker22371329/SqlInjectionCheck';
+import { InsecureRandomCheck } from '../../checker/SoftwareSecurity25/Checker22371329/InsecureRandomCheck';
 
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'CheckerIndex');
@@ -460,8 +465,13 @@ export const fileRules = {
     "@stability/call-addInput-before-addOutput-check": CallAddInputBeforeAddOutputCheck,
     "@stability/camera-input-open-check": CameraInputOpenCheck,
     //software-security2025 start
-    "@software-sec/checker19241042/command-execution-check":CommandExecutionCheck
+    "@software-sec/checker19241042/command-execution-check":CommandExecutionCheck,
     //software-security2025 end
+    '@software-sec/checker22371329/hardcoded-credential-check': HardcodedCredentialCheck,
+    '@software-sec/checker22371329/eval-usage-check': EvalUsageCheck,
+    '@software-sec/checker22371329/insecure-http-check': InsecureHttpCheck,
+    '@software-sec/checker22371329/sql-injection-check': SqlInjectionCheck,
+    '@software-sec/checker22371329/insecure-random-check': InsecureRandomCheck,
 };
 
 export const projectRules = {
@@ -485,9 +495,13 @@ export const projectRules = {
     "@performance/resources-file-check": ResourcesFileCheck,
     "@performance/dark-color-mode-check": DarkColorModeCheck,
     "@security/no-cycle-check": NoCycleCheck,
-    "@stability/image-sync-blur-check": ImageSyncBlurCheck
+    "@stability/image-sync-blur-check": ImageSyncBlurCheck,
     //software-security2025 start
-
+    '@software-sec/checker22371329/hardcoded-credential-check': HardcodedCredentialCheck,
+    '@software-sec/checker22371329/eval-usage-check': EvalUsageCheck,
+    '@software-sec/checker22371329/insecure-http-check': InsecureHttpCheck,
+    '@software-sec/checker22371329/sql-injection-check': SqlInjectionCheck,
+    '@software-sec/checker22371329/insecure-random-check': InsecureRandomCheck,
     //software-security2025 finish
 };
 
