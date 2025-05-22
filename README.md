@@ -104,14 +104,20 @@ All tests completed.
 ``` Json
 [
   {
-    "filePath": "D:\\Elouan\\Research\\ArkAnything\\Homecheck-Sec2025\\sample\\Sample19241042\\Issue1\\sample1.ts",
-    "messages": [
+    "projectName": "TestProject",
+    "projectPath": "./sample/Sample19241042/Issue1",
+    "issues": [
       {
-        "line": 5,
-        "column": 4,
-        "severity": "WARN",
-        "message": "Detects unsafe command execution via exec() calls.",
-        "rule": "@software-sec/checker19241042/command-execution-check"
+        "filePath": "D:\\File\\2025Spring\\软件安全基础2025\\BigHomework\\Homecheck-Sec2025\\sample\\Sample19241042\\Issue1\\sample1.ts",
+        "messages": [
+          {
+            "line": 5,
+            "column": 4,
+            "severity": "WARN",
+            "message": "Detects unsafe command execution via exec() calls.",
+            "rule": "@software-sec/checker19241042/command-execution-check"
+          }
+        ]
       }
     ]
   }
