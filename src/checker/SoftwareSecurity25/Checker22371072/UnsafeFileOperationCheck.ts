@@ -11,7 +11,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'UnsafeFileOperationC
 const gMetaData: BaseMetaData = {
     severity: 1,
     ruleDocPath: '',
-    description: 'Detects unsafe file operations that may lead to security vulnerabilities.'
+    description: 'Detects unsafe file operations that may lead to security vulnerabilities'
 };
 
 export class UnsafeFileOperationCheck implements BaseChecker {
@@ -66,8 +66,7 @@ export class UnsafeFileOperationCheck implements BaseChecker {
         };
         
         importVisitor(sourceFileObject);
-        // console.log('hasFsImport', hasFsImport);
-        // console.log('hasPathImport', hasPathImport);
+        
         if (!hasFsImport && !hasPathImport) {
             return;
         }
@@ -117,7 +116,7 @@ export class UnsafeFileOperationCheck implements BaseChecker {
                     targetFile,
                     lineAndChar.line + 1,
                     lineAndChar.character + 1,
-                    `不安全的文件操作: ${node.expression.getText()}`
+                    `Unsafe file operation detected: ${node.expression.getText()}`
                 );
             }
         }
@@ -133,7 +132,7 @@ export class UnsafeFileOperationCheck implements BaseChecker {
                     targetFile,
                     lineAndChar.line + 1,
                     lineAndChar.character + 1,
-                    `不安全的路径拼接: ${node.expression.getText()}`
+                    `Unsafe path concatenation detected: ${node.expression.getText()}`
                 );
                 break;
             }

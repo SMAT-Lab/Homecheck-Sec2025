@@ -11,7 +11,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'XSSChecker');
 const gMetaData: BaseMetaData = {
     severity: 1,
     ruleDocPath: '',
-    description: '检测代码中的跨站脚本(XSS)漏洞，包括不安全的DOM操作和用户输入处理'
+    description: 'Detects Cross-Site Scripting (XSS) vulnerabilities, including unsafe DOM operations and user input handling'
 };
 
 export class XSSChecker implements BaseChecker {
@@ -61,7 +61,7 @@ export class XSSChecker implements BaseChecker {
                         targetFile,
                         lineAndChar.line + 1,
                         lineAndChar.character + 1,
-                        `发现不安全的 DOM 操作: ${propertyName}`
+                        `Unsafe DOM operation detected: ${propertyName}`
                     );
                 }
             }
@@ -76,7 +76,7 @@ export class XSSChecker implements BaseChecker {
                         targetFile,
                         lineAndChar.line + 1,
                         lineAndChar.character + 1,
-                        `发现不安全的函数调用: ${functionName}`
+                        `Unsafe function call detected: ${functionName}`
                     );
                 }
             }
@@ -93,7 +93,7 @@ export class XSSChecker implements BaseChecker {
                             targetFile,
                             lineAndChar.line + 1,
                             lineAndChar.character + 1,
-                            `发现不安全的赋值操作: ${propertyName}`
+                            `Unsafe assignment operation detected: ${propertyName}`
                         );
                     }
                 }

@@ -12,7 +12,7 @@ const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'UnsafeEncryptionChec
 const gMetaData: BaseMetaData = {
     severity: 1,
     ruleDocPath: '',
-    description: '检测代码中的不安全加密操作，包括弱加密算法和不安全的加密实现'
+    description: 'Detects unsafe encryption operations, including weak algorithms, insecure implementations, ECB mode, and hardcoded keys'
 };
 
 export class UnsafeEncryptionCheck implements BaseChecker {
@@ -38,7 +38,20 @@ export class UnsafeEncryptionCheck implements BaseChecker {
         'createDecipher',
         'createHmac',
         'createSign',
-        'createVerify'
+        'createVerify',
+        'createCipheriv'
+    ];
+
+    private readonly unsafeModes = [
+        'ecb'
+    ];
+
+    private readonly keyPatterns = [
+        'key',
+        'secret',
+        'password',
+        'token',
+        'credential'
     ];
 
     private fileMatcher: FileMatcher = {
@@ -76,32 +89,45 @@ export class UnsafeEncryptionCheck implements BaseChecker {
                             targetFile,
                             lineAndChar.line + 1,
                             lineAndChar.character + 1,
-                            `发现不安全的加密函数调用: ${functionName}`
+                            `Unsafe encryption function call detected: ${functionName}`
                         );
                     }
                 }
 
-                // 检查函数参数中的不安全算法
+                // 检查函数参数中的不安全算法和模式
                 node.arguments.forEach(arg => {
                     if (ts.isStringLiteral(arg)) {
-                        const algorithm = arg.text.toLowerCase();
-                        if (this.unsafeAlgorithms.includes(algorithm)) {
+                        const text = arg.text.toLowerCase();
+                        // 检查不安全算法
+                        if (this.unsafeAlgorithms.includes(text)) {
                             const start = arg.getStart();
                             const lineAndChar = sourceFile.getLineAndCharacterOfPosition(start);
                             this.reportIssue(
                                 targetFile,
                                 lineAndChar.line + 1,
                                 lineAndChar.character + 1,
-                                `发现不安全的加密算法: ${algorithm}`
+                                `Unsafe encryption algorithm detected: ${text}`
+                            );
+                        }
+                        // 检查 ECB 模式
+                        if (this.unsafeModes.includes(text)) {
+                            const start = arg.getStart();
+                            const lineAndChar = sourceFile.getLineAndCharacterOfPosition(start);
+                            this.reportIssue(
+                                targetFile,
+                                lineAndChar.line + 1,
+                                lineAndChar.character + 1,
+                                `Unsafe encryption mode detected: ${text}`
                             );
                         }
                     }
                 });
             }
 
-            // 检查字符串字面量中的不安全算法
+            // 检查字符串字面量中的不安全算法和模式
             if (ts.isStringLiteral(node)) {
                 const text = node.text.toLowerCase();
+                // 检查不安全算法
                 for (const algo of this.unsafeAlgorithms) {
                     if (text.includes(algo)) {
                         const start = node.getStart();
@@ -110,10 +136,47 @@ export class UnsafeEncryptionCheck implements BaseChecker {
                             targetFile,
                             lineAndChar.line + 1,
                             lineAndChar.character + 1,
-                            `发现不安全的加密算法: ${text}`
+                            `Unsafe encryption algorithm detected: ${text}`
                         );
                     }
                 }
+                // 检查 ECB 模式
+                for (const mode of this.unsafeModes) {
+                    if (text.includes(mode)) {
+                        const start = node.getStart();
+                        const lineAndChar = sourceFile.getLineAndCharacterOfPosition(start);
+                        this.reportIssue(
+                            targetFile,
+                            lineAndChar.line + 1,
+                            lineAndChar.character + 1,
+                            `Unsafe encryption mode detected: ${text}`
+                        );
+                    }
+                }
+            }
+
+            // 检查对象字面量中的硬编码密钥
+            if (ts.isObjectLiteralExpression(node)) {
+                node.properties.forEach(prop => {
+                    if (ts.isPropertyAssignment(prop)) {
+                        const name = prop.name.getText().toLowerCase();
+                        // 检查是否是密钥相关的属性
+                        if (this.keyPatterns.some(pattern => name.includes(pattern))) {
+                            const value = prop.initializer;
+                            // 检查值是否是字符串字面量
+                            if (ts.isStringLiteral(value)) {
+                                const start = prop.getStart();
+                                const lineAndChar = sourceFile.getLineAndCharacterOfPosition(start);
+                                this.reportIssue(
+                                    targetFile,
+                                    lineAndChar.line + 1,
+                                    lineAndChar.character + 1,
+                                    `Hardcoded key detected: ${name}`
+                                );
+                            }
+                        }
+                    }
+                });
             }
 
             ts.forEachChild(node, visitor);
