@@ -61,11 +61,11 @@ https://bhpan.buaa.edu.cn/link/AAE5BECB39B8534C65A587AD9211A965F2
   "hmsSdkPath": "D:/DevEco Studio/sdk/default/hms/ets",
 ```
 
-无论通过以上哪种方式获取的SDK，推荐大家将自己的SDK文件放在./resource/sdk下(resource目录已被我ignore)，所有的projectConfig.json文件中统一按如下所示相对路径配置，这样便于我们最后测试大家的代码。
+无论通过以上哪种方式获取的SDK，推荐大家将自己的SDK文件放在./resources/sdk下(resources目录已被我ignore)，所有的projectConfig.json文件中统一按如下所示相对路径配置，这样便于我们最后测试大家的代码。
 
 ``` Json
-  "ohosSdkPath": "./resource/sdk/openharmony/ets",
-  "hmsSdkPath": "./resource/sdk/hms/ets",
+  "ohosSdkPath": "./resources/sdk/openharmony/ets",
+  "hmsSdkPath": "./resources/sdk/hms/ets",
 ```
 
 ### 运行示例
