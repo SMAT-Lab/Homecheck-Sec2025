@@ -70,23 +70,3 @@ function handleError(error: Error) {
         console.error(`密码错误: ${error.message}`);
     }
 }
-
-// 6. 不安全的文件操作
-function saveUserData(user: UserInfo) {
-    const data = JSON.stringify(user);
-    // 直接写入文件，没有加密
-    fs.writeFileSync(`users/${user.idCard}.json`, data);
-}
-
-// 7. 不安全的网络请求
-async function sendUserData(user: UserInfo) {
-    const response = await fetch('https://api.example.com/users', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${API_KEY}`
-        },
-        body: JSON.stringify(user)  // 直接发送敏感数据
-    });
-    return response.json();
-} 
