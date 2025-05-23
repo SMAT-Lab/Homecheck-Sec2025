@@ -1,0 +1,1 @@
+export { LogUtil } from './src/main/ets/common/utils/LogUtil';

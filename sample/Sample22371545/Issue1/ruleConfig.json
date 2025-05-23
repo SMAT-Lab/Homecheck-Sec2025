@@ -1,0 +1,22 @@
+{
+  "files": [
+    "**/*.ets",
+    "**/*.ts"
+  ],
+  "ignore": [
+    "**/ohosTest/**/*",
+    "**/node_modules/**/*",
+    "**/build/**/*",
+    "**/hvigorfile/**/*",
+    "**/oh_modules/**/*",
+    "**/.preview/**/*"
+  ],
+  "rules": {
+    "@software-sec/checker22371545/null-pointer-check": 2
+  },
+  "ruleSet": [
+    
+  ],
+  "overrides": [],
+  "extRuleSet": []
+}

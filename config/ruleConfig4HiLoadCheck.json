@@ -1,0 +1,46 @@
+{
+  "files": [
+    "**/*.ets",
+    "**/*.ts"
+  ],
+  "ignore": [
+    "**/src/ohosTest/**/*",
+    "**/src/test/**/*",
+    "**/src/mock/**/*",
+    "**/node_modules/**/*",
+    "**/oh_modules/**/*",
+    "**/build/**/*",
+    "**/.preview/**/*"
+  ],
+  "ruleSet": [],
+  "rules": {
+    "@performance/high-frequency-log-check": "warn",
+    "@performance/no-use-any-export-current-check": "suggestion",
+    "@performance/no-use-any-export-other-check": "suggestion",
+    "@performance/avoid-update-auto-state-var-in-aboutToReuse-check": "suggestion",
+    "@performance/no-state-var-access-in-loop-check": "suggestion",
+    "@performance/remove-redundant-state-var-check": "suggestion",
+    "@performance/remove-unchanged-state-var-check": "suggestion",
+    "@performance/combine-same-arg-animateto-check": "warn",
+    "@performance/load-on-demand-check": "suggestion",
+    "@performance/foreach-args-check": "warn",
+    "@performance/remove-container-without-property-check": "suggestion",
+    "@performance/remove-redundant-nest-container-check": "warn",
+    "@performance/replace-nested-reusable-component-by-builder-check": "suggestion",
+    "@performance/cache-avplayer-check": "suggestion",
+    "@performance/effectkit-blur-check": "suggestion",
+    "@performance/use-reusable-component-check": "suggestion",
+    "@performance/use-grid-layout-options-check": "suggestion",
+    "@performance/use-object-link-to-replace-prop-check": "suggestion",
+    "@performance/layout-properties-scale-check": "suggestion",
+    "@performance/multiple-associations-state-var-check": "suggestion",
+    "@performance/no-high-loaded-frame-rate-range": "warn",
+    "@performance/dark-color-mode-check": "warn",
+    "@performance/lower-app-brightness-check": "warn",
+    "@performance/stream-usage-api-check": "warn",
+    "@performance/web-on-active-check": "warn",
+    "@performance/avoid-memory-leak-in-animator": "warn",
+    "@performance/avoid-memory-leak-in-displaysync": "warn",
+    "@performance/gif-hardware-decoding-check": "warn"
+  }
+}

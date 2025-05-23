@@ -1,0 +1,9 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "name": "homecheck",
+    "entryPoints": [
+        "./src/Index.ts"
+    ],
+    "out": "doc",
+    "readme": "./README.md"
+}

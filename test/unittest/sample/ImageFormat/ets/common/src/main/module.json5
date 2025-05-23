@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "common",
+    "type": "har",
+    "description": "$string:module_desc",
+    "deviceTypes": [
+      "phone",
+      "tablet"
+    ]
+  }
+}

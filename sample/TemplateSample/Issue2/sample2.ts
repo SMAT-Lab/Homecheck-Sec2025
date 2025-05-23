@@ -1,0 +1,1 @@
+// Code Sample with Security Issue 2

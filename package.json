@@ -1,0 +1,33 @@
+{
+  "scripts": {
+    "prepack": "tsc -p ./tsconfig.prod.json",
+    "test": "vitest --no-color run",
+    "coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "arkanalyzer": "^1.0.29",
+    "commander": "11.0.0",
+    "fs-extra": "11.2.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "9.0.13",
+    "ts-node": "^10.9.1",
+    "typedoc": "^0.25.13",
+    "typescript": "4.9.5",
+    "vite-tsconfig-paths": "4.3.1",
+    "vitest": "1.6.1"
+  },
+  "name": "homecheck",
+  "version": "1.0.0",
+  "description": "该项目（homecheck）专为提升代码质量而设计，能高效识别代码缺陷并提出方案；其核心功能是对应用工程项目执行静态代码分析，评估代码在安全性、性能等方面上的表现，精准定位问题及其在代码中的位置。",
+  "main": "lib/Index.js",
+  "files": [
+    "docs",
+    "lib",
+    "resources",
+    "ruleSet.json",
+    "config"
+  ],
+  "author": "",
+  "license": "ISC"
+}

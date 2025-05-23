@@ -1,0 +1,17 @@
+{
+  "modelVersion": "5.0.0",
+  "license": "",
+  "author": "",
+  "main": "",
+  "name": "myappnfc",
+  "version": "1.0.0",
+  "description": "Please describe the basic information.",
+  "dynamicDependencies": {},
+  "dependencies": {
+    "@ohos/lottie": "^2.0.10",
+    "@ohos/axios": "^2.2.0"
+  },
+  "devDependencies": {
+    "@ohos/hypium": "1.0.16",
+  }
+}

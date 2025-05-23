@@ -1,0 +1,16 @@
+@Entry
+@Component
+struct ForegroundBlurStyleDemo {
+  build() {
+    Column() {
+      Text('Thin Material').fontSize(30).fontColor(0xCCCCCC)
+      Image($r('app.media.app_icon'))
+        .width(300)
+        .height(350)
+        .foregroundBlurStyle(BlurStyle.Thin,
+          { colorMode: ThemeColorMode.LIGHT, adaptiveColor: AdaptiveColor.AVERAGE, scale: 1.0 })
+    }
+    .height('100%')
+    .width('100%')
+  }
+}

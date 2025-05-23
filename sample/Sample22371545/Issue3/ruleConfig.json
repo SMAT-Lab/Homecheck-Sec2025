@@ -1,0 +1,22 @@
+{
+  "files": [
+    "**/*.ets",
+    "**/*.ts"
+  ],
+  "ignore": [
+    "**/ohosTest/**/*",
+    "**/node_modules/**/*",
+    "**/build/**/*",
+    "**/hvigorfile/**/*",
+    "**/oh_modules/**/*",
+    "**/.preview/**/*"
+  ],
+  "rules": {
+    "@software-sec/checker22371545/unused-local-variables-check": 1
+  },
+  "ruleSet": [
+    
+  ],
+  "overrides": [],
+  "extRuleSet": []
+}

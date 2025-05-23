@@ -1,0 +1,16 @@
+{
+  "projectName": "Issue2",
+  "projectPath": "./sample/TemplateSample/Issue2",
+  "logPath": "./HomeCheck.log",
+  "ohosSdkPath": "./resource/sdk/openharmony/ets",
+  "hmsSdkPath": "./resource/sdk/hms/ets",
+  "checkPath": "",
+  "sdkVersion": 14,
+  "fix": "false",
+  "npmPath": "",
+  "npmInstallDir": "./",
+  "reportDir": "./report",
+  "arkCheckPath": "./",
+  "product": "default",
+  "sdksThirdParty": []
+}
