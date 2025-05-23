@@ -1,10 +1,11 @@
-import { AbstractBinopExpr, AbstractExpr, ArkAssignStmt, ArkFile, ArkMethod, ArkNormalBinopExpr, ArkStaticInvokeExpr, AstTreeUtils, Constant, DefUseChain, NullType, Stmt, ts, UndefinedType } from 'arkanalyzer';
+import { AbstractBinopExpr, AbstractExpr, ArkAssignStmt, ArkFile, ArkIfStmt, ArkMethod, ArkNormalBinopExpr, ArkStaticInvokeExpr, AstTreeUtils, Constant, DefUseChain, NullType, Stmt, ts, UndefinedType } from 'arkanalyzer';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
 import { BaseChecker, BaseMetaData } from '../../BaseChecker';
 import { Defects } from '../../../Index';
 import { FileMatcher, MatcherCallback, MatcherTypes } from '../../../Index';
 import { Rule } from '../../../Index';
 import { IssueReport } from '../../../model/Defects';
+import { log } from 'console';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'EmptyBranchCheck');
 
@@ -33,36 +34,36 @@ export class EmptyBranchCheck implements BaseChecker {
     }
 
     public check = (targetFile: ArkFile) => {
-        console.log("check 5");
+        // console.log("check 5");
 
         for (const arkClass of targetFile.getClasses()) {
             for (const arkMethod of arkClass.getMethods()) {
                 const methodName = arkMethod.getName();
                 const cfg = arkMethod.getCfg();
-                if (!cfg) continue;
+                if (cfg == undefined) {
+                    continue;
+                }
 
                 const stmts = cfg.getStmts();
-                for (let i = 0; i < stmts.length; i++) {
-                    const stmt = stmts[i];
-                    const text = stmt.getOriginalText()?.trim() ?? "";
-
-                    // 粗略判断是否为 if/else 分支语句
-                    const isIf = text.startsWith("if");
-                    const isElse = text.startsWith("else");
-
-                    if (isIf || isElse) {
-                        // 检查下一个语句是否为空块
-                        const nextStmt = stmts[i + 1];
-                        if (nextStmt) {
-                            const nextText = nextStmt.getOriginalText()?.trim() ?? "";
-                            if (nextText === "{}" || nextText === "") {
-                                // 报告空分支
-                                this.reportIssue(targetFile, nextStmt, methodName);
-                                logger.info(`Empty ${isIf ? "if" : "else"} block detected in method ${methodName}`);
-                            }
+                const blocks = cfg.getBlocks();
+                blocks.forEach(block => {
+                    // console.log(block);
+                    if (block.getSuccessors().length == 1) {
+                        let nextBlock = block.getSuccessors()[0];
+                        // console.log("next: " + nextBlock.toString());
+                        let name = nextBlock.toString();
+                        // console.log(name);
+                        let length = block.getStmts().length - 1;
+                        let lastStmt = block.getStmts()[length];
+                        // 没有后续stmt
+                        if (lastStmt instanceof ArkIfStmt) {
+                            this.reportIssue(targetFile, lastStmt, methodName);
+                            const text = lastStmt.getOriginalText();
+                            logger.info(`Empty block: \n${text}\ndetected in method ${methodName}`);
                         }
                     }
-                }
+                });
+
             }
         }
     }

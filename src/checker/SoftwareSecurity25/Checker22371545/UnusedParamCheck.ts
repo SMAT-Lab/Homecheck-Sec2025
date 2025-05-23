@@ -33,7 +33,7 @@ export class UnusedParamCheck implements BaseChecker {
     }
 
     public check = (targetFile: ArkFile) => {
-        console.log("check 4");
+        // console.log("check 4");
 
         for (const arkClass of targetFile.getClasses()) {
             for (const arkMethod of arkClass.getMethods()) {
@@ -43,19 +43,18 @@ export class UnusedParamCheck implements BaseChecker {
                     continue;
                 }
 
-                // 获取参数名列表
                 const params = arkMethod.getParameters();
                 const paramVars = arkMethod.getParameters().map(param => param.getName());
                 const usedVars = new Set<string>();
 
-                // 遍历方法体语句，收集所有 use 中出现的变量
+                // 收集所有 use 中出现的变量
                 for (const stmt of cfg.getStmts()) {
                     for (const use of stmt.getUses()) {
                         usedVars.add(use.toString());
                     }
                 }
 
-                // 哪些参数未被使用
+                // 集合相减获取未被使用的变量
                 for (const param of paramVars) {
                     if (!usedVars.has(param)) {
                         this.reportIssue(targetFile, arkMethod, param);

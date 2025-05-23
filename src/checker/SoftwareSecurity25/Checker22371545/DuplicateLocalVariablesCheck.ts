@@ -33,7 +33,7 @@ export class DuplicateLocalVariablesCheck implements BaseChecker {
     }
 
     public check = (targetFile: ArkFile) => {
-        console.log("check 2");
+        // console.log("check 2");
         
         for (const arkClass of targetFile.getClasses()) {
             for (const arkMethod of arkClass.getMethods()) {

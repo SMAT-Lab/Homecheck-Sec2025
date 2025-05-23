@@ -33,7 +33,7 @@ export class UnusedLocalVariablesCheck implements BaseChecker {
     }
 
     public check = (targetFile: ArkFile) => {
-        console.log("check 3");
+        // console.log("check 3");
 
         for (const arkClass of targetFile.getClasses()) {
             for (const arkMethod of arkClass.getMethods()) {

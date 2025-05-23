@@ -64,7 +64,7 @@ export class NullPointerCheck implements BaseChecker {
     // }
 
     public check = (targetFile: ArkFile) => {
-        console.log("check 1");
+        // console.log("check 1");
         
         const sourceFile = AstTreeUtils.getSourceFileFromArkFile(targetFile);
         const sourceFileObject = ts.getParseTreeNode(sourceFile);

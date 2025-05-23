@@ -1,17 +1,20 @@
-function check(flag) {
+function check_if(flag) {
     if (flag) {
         // None
     }
-    else {
-        // None
-    }
-    while (false) {
-        // None
+}
+
+function ok(flag) {
+    if (flag) {
+        console.log("ok!");
+    } else {
+        console.log("ok?");
     }
 }
 
 function main() {
     let flag = true;
-    check(flag);
+    check_if(flag);
+    ok(flag);
     return;
 }
