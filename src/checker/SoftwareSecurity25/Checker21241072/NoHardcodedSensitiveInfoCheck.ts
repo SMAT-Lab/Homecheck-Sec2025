@@ -1,9 +1,10 @@
-import { ArkFile, AstTreeUtils, Stmt, ts } from 'arkanalyzer/lib';
+import { ArkAssignStmt, ArkFile, Stmt } from 'arkanalyzer/lib';
 import { BaseChecker, BaseMetaData } from '../../BaseChecker';
 import { Defects, IssueReport } from '../../../model/Defects';
 import { MatcherCallback, MatcherTypes, FileMatcher } from '../../../matcher/Matchers';
 import { Rule } from '../../../model/Rule';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
+import { StringConstant } from 'arkanalyzer/lib/core/base/Constant';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoHardcodedSensitiveInfoCheck');
 const gMetaData: BaseMetaData = {
@@ -33,8 +34,6 @@ export class NoHardcodedSensitiveInfoCheck implements BaseChecker {
     }
 
     public check = (targetFile: ArkFile): void => {
-        const sourceFile = AstTreeUtils.getSourceFileFromArkFile(targetFile);
-        const sourceFileObject = ts.getParseTreeNode(sourceFile);
         for (const arkClass of targetFile.getClasses()) {
             for (const arkMethod of arkClass.getMethods()) {
                 if (arkMethod.getName() == '_DEFAULT_ARK_METHOD') {
@@ -46,7 +45,15 @@ export class NoHardcodedSensitiveInfoCheck implements BaseChecker {
                     continue;
                 }
                 for (const stmt of cfg.getStmts()) {
-                    console.log(stmt.getOriginalText);
+                    if (
+                        stmt instanceof ArkAssignStmt &&
+                        stmt.getRightOp() instanceof StringConstant &&
+                        SENSITIVE_KEYWORDS.some(keyword => 
+                            ((stmt.getRightOp() as StringConstant).getValue().toLowerCase().includes(keyword))
+                        )
+                    ) {
+                        this.reportIssue(targetFile, stmt, methodName);
+                    }
                 }
             }
         }

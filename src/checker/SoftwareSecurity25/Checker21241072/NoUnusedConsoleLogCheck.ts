@@ -1,4 +1,4 @@
-import { ArkFile, ArkStaticInvokeExpr, AstTreeUtils, Stmt, ts } from 'arkanalyzer/lib';
+import { ArkFile, ArkStaticInvokeExpr, Stmt } from 'arkanalyzer/lib';
 import { BaseChecker, BaseMetaData } from '../../BaseChecker';
 import { Defects, IssueReport } from '../../../model/Defects';
 import { MatcherCallback, MatcherTypes, FileMatcher } from '../../../matcher/Matchers';
@@ -31,8 +31,6 @@ export class NoUnusedConsoleLogCheck implements BaseChecker {
     }
 
     public check = (targetFile: ArkFile): void => {
-        const sourceFile = AstTreeUtils.getSourceFileFromArkFile(targetFile);
-        const sourceFileObject = ts.getParseTreeNode(sourceFile);
         for (const arkClass of targetFile.getClasses()) {
             for (const arkMethod of arkClass.getMethods()) {
                 if (arkMethod.getName() == '_DEFAULT_ARK_METHOD') {
@@ -40,15 +38,18 @@ export class NoUnusedConsoleLogCheck implements BaseChecker {
                 }
                 const methodName = arkMethod.getName();
                 const cfg = arkMethod.getCfg();
-                if (cfg == undefined) {
-                    continue;
-                }
+                if (!cfg) continue;
+                
                 for (const stmt of cfg.getStmts()) {
-                    if (stmt.getExprs().length > 0) {
-                        const expr = stmt.getExprs()[0];
-                        if (expr instanceof ArkStaticInvokeExpr && expr.getMethodSignature().getMethodSubSignature().getMethodName() == "console") {
-                            this.reportIssue(targetFile, stmt, methodName);
-                        }
+                    const expr = stmt.getInvokeExpr();
+                    if (!expr) continue;
+                    
+                    if (
+                        expr instanceof ArkStaticInvokeExpr &&
+                        expr.getMethodSignature().getDeclaringClassSignature().getClassName() === 'console' &&
+                        expr.getMethodSignature().getMethodSubSignature().getMethodName() === 'log'
+                    ) {
+                        this.reportIssue(targetFile, stmt, methodName);
                     }
                 }
             }
