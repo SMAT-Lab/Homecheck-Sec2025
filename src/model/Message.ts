@@ -16,11 +16,12 @@ import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
 import { FileReports } from './Defects';
 import { GeneratingJsonFile } from '../utils/common/GeneratingJsonFile';
 import path from 'path';
+import { CheckEntry } from '../Index';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'Message');
 
 export interface Message {
-    sendResult(fileReports: FileReports[], reportDir?: string): void;
+    sendResult(checkEntry: CheckEntry, fileReports: FileReports[], reportDir?: string): void;
     messageNotify(messageLevel: MessageType, msg: string): void;
     progressNotify(progress: number, msg: string): void;
 }
@@ -31,9 +32,9 @@ export class DefaultMessage implements Message {
      *
      * @param msg 要发送的消息内容
      */
-    async sendResult(fileReports: FileReports[], reportDir?: string | undefined): Promise<void> {
+    async sendResult(checkEntry: CheckEntry, fileReports: FileReports[], reportDir?: string | undefined): Promise<void> {
         if (reportDir && reportDir.length !== 0) {
-            GeneratingJsonFile.generatingJsonFile(path.resolve(reportDir, 'issuesReport.json'), fileReports);
+            GeneratingJsonFile.generatingJsonFile(checkEntry, path.resolve(reportDir, 'issuesReport.json'), fileReports);
         } else {
             process.stdout.write(JSON.stringify(fileReports));
         }

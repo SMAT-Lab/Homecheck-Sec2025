@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { run } from '../../src/Main';
+import { HomeSecReport } from '../../src/utils/common/HomeSecReport';
 
 // Run tests for a specific issue directory
 async function runTestForIssue(issueDir: string): Promise<boolean> {
@@ -48,7 +49,7 @@ async function main(): Promise<void> {
     for (const issueDir of issueDirs) {
         await runTestForIssue(issueDir);
     }
-
+    HomeSecReport.getInstance().generateReport();
     console.log('All tests completed.');
 }
 
