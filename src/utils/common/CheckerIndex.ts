@@ -245,6 +245,8 @@ import { StreamUsageApiCheck } from '../../checker/performance/StreamUsageApiChe
 import { AvoidMemoryLeakInAnimator } from '../../checker/performance/AvoidMemoryLeakInAnimator';
 import { AvoidMemoryLeakInDisplaysync } from '../../checker/performance/AvoidMemoryLeakInDisplaysync';
 import { CommandExecutionCheck } from '../../checker/SoftwareSecurity25/Checker19241042/CommandExecutionCheck';
+import { NoUnusedConsoleLogCheck } from '../../checker/SoftwareSecurity25/Checker21241072/NoUnusedConsoleLogCheck';
+import { NoHardcodedSensitiveInfoCheck } from '../../checker/SoftwareSecurity25/Checker21241072/NoHardcodedSensitiveInfoCheck';
 
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'CheckerIndex');
@@ -460,7 +462,9 @@ export const fileRules = {
     "@stability/call-addInput-before-addOutput-check": CallAddInputBeforeAddOutputCheck,
     "@stability/camera-input-open-check": CameraInputOpenCheck,
     //software-security2025 start
-    "@software-sec/checker19241042/command-execution-check":CommandExecutionCheck
+    "@software-sec/checker19241042/command-execution-check":CommandExecutionCheck,
+    "@software-sec/checker21241072/no-unused-console-log-check": NoUnusedConsoleLogCheck,
+    "@software-sec/checker21241072/no-hardcoded-sensitive-info-check": NoHardcodedSensitiveInfoCheck,
     //software-security2025 end
 };
 
