@@ -61,11 +61,11 @@ https://bhpan.buaa.edu.cn/link/AAE5BECB39B8534C65A587AD9211A965F2
   "hmsSdkPath": "D:/DevEco Studio/sdk/default/hms/ets",
 ```
 
-无论通过以上哪种方式获取的SDK，推荐大家将自己的SDK文件放在./resource/sdk下(resource目录已被我ignore)，所有的projectConfig.json文件中统一按如下所示相对路径配置，这样便于我们最后测试大家的代码。
+无论通过以上哪种方式获取的SDK，推荐大家将自己的SDK文件放在./resources/sdk下(resources目录已被我ignore)，所有的projectConfig.json文件中统一按如下所示相对路径配置，这样便于我们最后测试大家的代码。
 
 ``` Json
-  "ohosSdkPath": "./resource/sdk/openharmony/ets",
-  "hmsSdkPath": "./resource/sdk/hms/ets",
+  "ohosSdkPath": "./resources/sdk/openharmony/ets",
+  "hmsSdkPath": "./resources/sdk/hms/ets",
 ```
 
 ### 运行示例
@@ -104,14 +104,20 @@ All tests completed.
 ``` Json
 [
   {
-    "filePath": "D:\\Elouan\\Research\\ArkAnything\\Homecheck-Sec2025\\sample\\Sample19241042\\Issue1\\sample1.ts",
-    "messages": [
+    "projectName": "TestProject",
+    "projectPath": "./sample/Sample19241042/Issue1",
+    "issues": [
       {
-        "line": 5,
-        "column": 4,
-        "severity": "WARN",
-        "message": "Detects unsafe command execution via exec() calls.",
-        "rule": "@software-sec/checker19241042/command-execution-check"
+        "filePath": "file\\path\\Homecheck-Sec2025\\sample\\Sample19241042\\Issue1\\sample1.ts",
+        "messages": [
+          {
+            "line": 5,
+            "column": 4,
+            "severity": "WARN",
+            "message": "Detects unsafe command execution via exec() calls.",
+            "rule": "@software-sec/checker19241042/command-execution-check"
+          }
+        ]
       }
     ]
   }
@@ -148,8 +154,6 @@ export enum ALERT_LEVEL {
 }
 ```
 
-注：这个文件要一百号人一起修改，请注意代码规范和git使用规范，我相信一个规则加一行这种事情是不会有问题的。
-
 2. 在./src/utils/common/CheckerIndex.ts中的fileRules(文件级规则)或projectRules(项目级规则)最后添加一条自己的规则，命名同上。
 
 ``` Typescript
@@ -162,8 +166,6 @@ export const fileRules = {
 
 冒号后面是checker文件导出的规则检查类。
 
-注：这个文件也要一百号人一起修改，请注意代码规范和git使用规范，我相信一个规则加一行这种事情是不会有问题的。
-
 ### 实现Checker并报告问题
 1. 在./src/checker/SoftwareSecurity25下建一个自己的Checker目录，文件夹命名：Checker学号，例：Checker19241042。
 
@@ -175,6 +177,36 @@ export const fileRules = {
 在./test/SoftwareSecurity25目录下建一个自己的测试文件，文件命名Test学号.ts，例：Test19241042.ts(参考模板，注意修改路径)。
 
 这个文件用于一次测试一个人的所有checker，最后我们会通过运行大家的这个文件来评测，请大家确保这个文件能正确执行。
+
+## 提交
+
+每个人需要基于main分支创建自己的分支，命名为B+学号（例如，B19241042）。只能在自己的分支上提交代码，禁止推送至main分支和其他人的分支。main分支更新后需要从main分支拉取更新以保持代码同步。
+
+可能用到的git命令如下，如果你能熟练运用git可以不用看。
+
+基于main分支创建你的分支（B+学号），我们会为定期为大家的分支添加权限，确保只有你能推送
+
+```
+git checkout main
+git pull origin main
+git checkout -b B<学号>
+git push origin B<学号>
+```
+
+在个人分支上提交代码
+
+```
+git add .
+git commit -m "描述你的更改"
+git push origin B<学号>
+```
+
+从main分支拉取更新，并解决冲突
+
+```
+git checkout B<学号>
+git pull origin main
+```
 
 ## 参考源码
 
@@ -193,5 +225,5 @@ export const fileRules = {
 
 ## P.S.
 
-1. 再次嘱咐，由于本次作业需要近百人在统一仓库甚至同一文件提交代码，请大家千万遵守git使用规范同时注意对自己的代码做好备份。
+1. 再次嘱咐，由于本次作业需要近百人在统一仓库提交代码，请大家千万遵守git使用规范同时注意对自己的代码做好备份。
 2. 如你们所见，整个仓库都是助教们基于Homecheck改编而来，有疏漏之处或改进意见欢迎大家积极与我们沟通，本文档也会持续更新，尽量帮大家少踩坑，有更新会在群里通知请大家关注，感恩。

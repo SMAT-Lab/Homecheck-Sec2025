@@ -3,13 +3,15 @@ import * as path from 'path';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
 import { FileReports } from '../../model/Defects';
 import { FileUtils, WriteFileMode } from './FileUtils';
+import { CheckEntry } from './CheckEntry';
+import { HomeSecReport } from './HomeSecReport';
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'GeneratingJsonFile');
 const severitys: string[] = ['OFF', 'WARN', 'ERROR', 'SUGGESTION'];
 const FILE_NAMING_RULE = '@hw-stylistic/file-naming-convention';
 
 export class GeneratingJsonFile {
-    public static generatingJsonFile(filePath: string, fileReports: FileReports[]): void {
+    public static generatingJsonFile(checkEntry: CheckEntry, filePath: string, fileReports: FileReports[]): void {
         writeFileFix(fileReports);
         const fileDefectInfos = this.format(fileReports);
         let results: Map<string, FileDefectInfo> = new Map();
@@ -17,6 +19,7 @@ export class GeneratingJsonFile {
             this.addResult(fileDefectInfo, results);
         }
         const jsonString = this.format2(results);
+        HomeSecReport.getInstance().addProjectResult(checkEntry.projectConfig.projectName, checkEntry.projectConfig.projectPath, jsonString);
         try {
             FileUtils.writeToFile(filePath, jsonString, WriteFileMode.OVERWRITE);
         } catch (error) {

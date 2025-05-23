@@ -15,5 +15,5 @@ export async function processAfterCheck(checkEntry: CheckEntry): Promise<void> {
         });
     }
     // 发送消息
-    await checkEntry.message?.sendResult(fileReports, checkEntry.projectConfig.reportDir);
+    await checkEntry.message?.sendResult(checkEntry, fileReports, checkEntry.projectConfig.reportDir);
 }
