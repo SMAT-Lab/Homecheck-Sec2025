@@ -12,7 +12,8 @@
     "**/.preview/**/*"
   ],
   "rules": {
-     "@software-sec/checker22371329/hardcoded-credential-check": 2
+    "@performance/foreach-args-check": 3,
+    "@software-sec/checker22373212/PrototypePollution-check": 1
   },
   "ruleSet": [
     "plugin:@correctness/all",

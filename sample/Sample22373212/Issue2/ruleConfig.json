@@ -12,15 +12,10 @@
     "**/.preview/**/*"
   ],
   "rules": {
-     "@software-sec/checker22371329/path-traversal-check": 2
+    "@performance/foreach-args-check": 3,
+    "@software-sec/checker22373212/command-eval-check": 1
   },
-  "ruleSet": [
-    "plugin:@correctness/all",
-    "plugin:@performance/all",
-    "plugin:@cross-device-app-dev/all",
-    "plugin:@security/all",
-    "plugin:@stability/all"
-  ],
+  "ruleSet": [],
   "overrides": [],
   "extRuleSet": []
 }
