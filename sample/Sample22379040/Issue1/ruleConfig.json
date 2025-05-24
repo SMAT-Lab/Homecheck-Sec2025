@@ -1,0 +1,21 @@
+{
+  "files": [
+    "**/*.ets",
+    "**/*.ts"
+  ],
+  "ignore": [
+    "**/ohosTest/**/*",
+    "**/node_modules/**/*",
+    "**/build/**/*",
+    "**/hvigorfile/**/*",
+    "**/oh_modules/**/*",
+    "**/.preview/**/*"
+  ],
+  "rules": {
+    "@software-sec/checker22379040/unsafe-http-transmission-check": 1
+  },
+  "ruleSet": [
+  ],
+  "overrides": [],
+  "extRuleSet": []
+}
