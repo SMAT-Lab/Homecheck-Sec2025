@@ -1,6 +1,6 @@
 {
-  "projectName": "SensitiveInfoCheckSample",
-  "projectPath": "./sample/Sample21241072/Issue2",
+  "projectName": "XSSCheckSample",
+  "projectPath": "./sample/Sample21241072/Issue3",
   "logPath": "./HomeCheck.log",
   "ohosSdkPath": "./resources/sdk/openharmony/ets",
   "hmsSdkPath": "./resources/sdk/hms/ets",

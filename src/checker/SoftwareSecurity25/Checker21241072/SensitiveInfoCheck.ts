@@ -1,4 +1,4 @@
-import { ArkAssignStmt, ArkFile, Stmt } from 'arkanalyzer/lib';
+import { ArkAssignStmt, ArkFile, Local, Stmt } from 'arkanalyzer/lib';
 import { BaseChecker, BaseMetaData } from '../../BaseChecker';
 import { Defects, IssueReport } from '../../../model/Defects';
 import { MatcherCallback, MatcherTypes, FileMatcher } from '../../../matcher/Matchers';
@@ -6,16 +6,16 @@ import { Rule } from '../../../model/Rule';
 import Logger, { LOG_MODULE_TYPE } from 'arkanalyzer/lib/utils/logger';
 import { StringConstant } from 'arkanalyzer/lib/core/base/Constant';
 
-const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'NoHardcodedSensitiveInfoCheck');
+const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'SensitiveInfoCheck');
 const gMetaData: BaseMetaData = {
     severity: 1,
     ruleDocPath: '',
-    description: 'Check for hardcoded sensitive information (e.g., passwords).'
+    description: 'Detects sensitive information (e.g., passwords).'
 };
 
-const SENSITIVE_KEYWORDS = ['password', 'secret', 'token'];
+const SENSITIVE_KEYWORDS = ['password', 'secret', 'token', 'key'];
 
-export class NoHardcodedSensitiveInfoCheck implements BaseChecker {
+export class SensitiveInfoCheck implements BaseChecker {
     readonly metaData: BaseMetaData = gMetaData;
     public rule: Rule;
     public defects: Defects[] = [];
@@ -48,8 +48,9 @@ export class NoHardcodedSensitiveInfoCheck implements BaseChecker {
                     if (
                         stmt instanceof ArkAssignStmt &&
                         stmt.getRightOp() instanceof StringConstant &&
+                        stmt.getLeftOp() instanceof Local &&
                         SENSITIVE_KEYWORDS.some(keyword => 
-                            ((stmt.getRightOp() as StringConstant).getValue().toLowerCase().includes(keyword))
+                            ((stmt.getLeftOp() as Local).getName().toLowerCase().includes(keyword))
                         )
                     ) {
                         this.reportIssue(targetFile, stmt, methodName);

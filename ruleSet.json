@@ -256,6 +256,7 @@
   "plugin:@software-sec/all": {
     "@software-sec/checker19241042/command-execution-check": 1,
     "@software-sec/checker21241072/no-unused-console-log-check": 3,
-    "@software-sec/checker21241072/no-hardcoded-sensitive-info-check": 1
+    "@software-sec/checker21241072/sensitive-info-check": 1,
+    "@software-sec/checker21241072/xss-check": 2
   }
 }

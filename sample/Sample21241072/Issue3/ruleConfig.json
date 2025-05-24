@@ -12,7 +12,7 @@
     "**/.preview/**/*"
   ],
   "rules": {
-    "@software-sec/checker21241072/sensitive-info-check": 1
+    "@software-sec/checker21241072/xss-check": 2
   },
   "ruleSet": [],
   "overrides": [],

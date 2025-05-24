@@ -246,7 +246,8 @@ import { AvoidMemoryLeakInAnimator } from '../../checker/performance/AvoidMemory
 import { AvoidMemoryLeakInDisplaysync } from '../../checker/performance/AvoidMemoryLeakInDisplaysync';
 import { CommandExecutionCheck } from '../../checker/SoftwareSecurity25/Checker19241042/CommandExecutionCheck';
 import { NoUnusedConsoleLogCheck } from '../../checker/SoftwareSecurity25/Checker21241072/NoUnusedConsoleLogCheck';
-import { NoHardcodedSensitiveInfoCheck } from '../../checker/SoftwareSecurity25/Checker21241072/NoHardcodedSensitiveInfoCheck';
+import { SensitiveInfoCheck } from '../../checker/SoftwareSecurity25/Checker21241072/SensitiveInfoCheck';
+import { XSSCheck } from '../../checker/SoftwareSecurity25/Checker21241072/XSSCheck';
 
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'CheckerIndex');
@@ -464,7 +465,8 @@ export const fileRules = {
     //software-security2025 start
     "@software-sec/checker19241042/command-execution-check":CommandExecutionCheck,
     "@software-sec/checker21241072/no-unused-console-log-check": NoUnusedConsoleLogCheck,
-    "@software-sec/checker21241072/no-hardcoded-sensitive-info-check": NoHardcodedSensitiveInfoCheck,
+    "@software-sec/checker21241072/sensitive-info-check": SensitiveInfoCheck,
+    "@software-sec/checker21241072/xss-check": XSSCheck,
     //software-security2025 end
 };
 
