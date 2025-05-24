@@ -7,7 +7,13 @@
   "dependencies": {
     "arkanalyzer": "^1.0.29",
     "commander": "11.0.0",
-    "fs-extra": "11.2.0"
+    "fs-extra": "11.2.0",
+    "mongodb": "^6.16.0",
+    "mysql": "^2.18.1",
+    "pg": "^8.16.0",
+    "sqlite": "^5.1.1",
+    "xml2js": "^0.6.2",
+    "xmldom": "^0.6.0"
   },
   "devDependencies": {
     "@types/fs-extra": "9.0.13",

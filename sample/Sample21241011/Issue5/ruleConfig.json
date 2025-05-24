@@ -1,0 +1,21 @@
+{
+  "files": [
+    "**/*.ets",
+    "**/*.ts"
+  ],
+  "ignore": [
+    "**/ohosTest/**/*",
+    "**/node_modules/**/*",
+    "**/build/**/*",
+    "**/hvigorfile/**/*",
+    "**/oh_modules/**/*",
+    "**/.preview/**/*"
+  ],
+  "rules": {
+    "@software-sec/checker21241011/sql-injection-check": 3
+  },
+  "ruleSet": [
+  ],
+  "overrides": [],
+  "extRuleSet": []
+}

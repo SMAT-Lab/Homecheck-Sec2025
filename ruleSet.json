@@ -251,9 +251,11 @@
     "@stability/ban-callback-operations-check": 3,
     "@stability/call-addInput-before-addOutput-check": 3,
     "@stability/camera-input-open-check": 3,
-    "@stability/image-sync-blur-check": 3
-  },
-  "plugin:@software-sec/all": {
-    "@software-sec/checker19241042/command-execution-check": 1
+    "@stability/image-sync-blur-check": 3  },  "plugin:@software-sec/all": {
+    "@software-sec/checker21241011/hardcoded-secrets-check": 1,
+    "@software-sec/checker21241011/path-traversal-check": 2,
+    "@software-sec/checker21241011/insecure-random-check": 2,
+    "@software-sec/checker21241011/xxe-injection-check": 2,
+    "@software-sec/checker21241011/sql-injection-check": 3
   }
 }

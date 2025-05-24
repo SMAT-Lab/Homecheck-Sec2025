@@ -244,11 +244,16 @@ import { LowerAppBrightnessCheck } from '../../checker/performance/LowerAppBrigh
 import { StreamUsageApiCheck } from '../../checker/performance/StreamUsageApiCheck';
 import { AvoidMemoryLeakInAnimator } from '../../checker/performance/AvoidMemoryLeakInAnimator';
 import { AvoidMemoryLeakInDisplaysync } from '../../checker/performance/AvoidMemoryLeakInDisplaysync';
-import { CommandExecutionCheck } from '../../checker/SoftwareSecurity25/Checker19241042/CommandExecutionCheck';
+import { HardcodedSecretsCheck } from '../../checker/SoftwareSecurity25/Checker21241011/HardcodedSecretsCheck';
+import { PathTraversalCheck } from '../../checker/SoftwareSecurity25/Checker21241011/PathTraversalCheck';
+import { InsecureRandomCheck } from '../../checker/SoftwareSecurity25/Checker21241011/InsecureRandomCheck';
+import { XXEInjectionCheck } from '../../checker/SoftwareSecurity25/Checker21241011/XXEInjectionCheck';
+import { SQLInjectionCheck } from '../../checker/SoftwareSecurity25/Checker21241011/SqlInjectionCheck';
 
 
 const logger = Logger.getLogger(LOG_MODULE_TYPE.HOMECHECK, 'CheckerIndex');
 
+// @ts-ignore
 export const fileRules = {
     // @ArkTS-eslint
     "@ArkTS-eslint/init-declarations-check": InitDeclarationsCheck,
@@ -454,13 +459,13 @@ export const fileRules = {
     "@security/no-unsafe-rsa-key-check": NoUnsafeRsaKeyCheck,
     "@security/no-unsafe-rsa-sign-check": NoUnsafeRsaSignCheck,
     "@cross-device-app-dev/one-multi-breakpoint-check": OneMultiBreakpointCheck,
-    "@stability/avoid-inspector-interface-check": AvoidInspectorInterfaceCheck,
-    "@stability/await-time-sequence-normal-check": AwaitTimeSequenceNormalCheck,
+    "@stability/avoid-inspector-interface-check": AvoidInspectorInterfaceCheck,    "@stability/await-time-sequence-normal-check": AwaitTimeSequenceNormalCheck,
     "@stability/ban-callback-operations-check": BanCallbackOperationsCheck,
-    "@stability/call-addInput-before-addOutput-check": CallAddInputBeforeAddOutputCheck,
-    "@stability/camera-input-open-check": CameraInputOpenCheck,
-    //software-security2025 start
-    "@software-sec/checker19241042/command-execution-check":CommandExecutionCheck
+    "@stability/call-addInput-before-addOutput-check": CallAddInputBeforeAddOutputCheck,    "@stability/camera-input-open-check": CameraInputOpenCheck,    //software-security2025 start
+    "@software-sec/checker21241011/hardcoded-secrets-check": HardcodedSecretsCheck,    "@software-sec/checker21241011/path-traversal-check": PathTraversalCheck,
+    "@software-sec/checker21241011/insecure-random-check": InsecureRandomCheck,
+    "@software-sec/checker21241011/xxe-injection-check": XXEInjectionCheck,
+    "@software-sec/checker21241011/sql-injection-check": SQLInjectionCheck
     //software-security2025 end
 };
 

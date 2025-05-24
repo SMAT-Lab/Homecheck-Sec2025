@@ -8,7 +8,7 @@
             "runtimeArgs": ["-r", "ts-node/register"],
             "args":[
                 // "src/run.ts",
-                "test/SoftwareSecurity25/Test$YourStudentNumber$.ts",
+                "test/SoftwareSecurity25/Test21241011.ts"
             ]
         }
     ]

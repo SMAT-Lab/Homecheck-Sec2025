@@ -27,7 +27,7 @@ async function runTestForIssue(issueDir: string): Promise<boolean> {
 
 // Main function to iterate and run tests for all issue directories
 async function main(): Promise<void> {
-    const sampleDir = path.join(__dirname, '../../sample/Sample19241042');
+    const sampleDir = path.join(__dirname, '../../sample/Sample21241011');
 
     // Check if the sample directory exists
     if (!fs.existsSync(sampleDir)) {
